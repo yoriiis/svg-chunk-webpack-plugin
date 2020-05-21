@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 22.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Calque_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 23 18" style="enable-background:new 0 0 23 18;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+</style>
+<title>tvicon</title>
+<desc>Created with Sketch.</desc>
+<g id="HOME">
+	<g id="home-mobile" transform="translate(-16.000000, -74.000000)">
+		<g id="tvicon" transform="translate(16.000000, 74.000000)">
+			<path id="Shape" class="st0" d="M1,14.9c-0.2,0-0.4-0.1-0.6-0.2l0,0c-0.2-0.2-0.2-0.3-0.2-0.6l0,0V1c0-0.2,0.1-0.4,0.2-0.6l0,0
+				C0.5,0.3,0.7,0.2,1,0.2l0,0H22c0.2,0,0.4,0.1,0.6,0.2l0,0c0.2,0.2,0.2,0.3,0.2,0.6l0,0v13.1c0,0.2-0.1,0.4-0.2,0.6l0,0
+				c-0.2,0.2-0.4,0.2-0.6,0.2l0,0H1L1,14.9z M1.8,13.3h19.5V1.8H1.8V13.3L1.8,13.3z"/>
+			<path id="Path" class="st0" d="M7.5,17.8c-0.4,0-0.8-0.3-0.8-0.8l0,0c0-0.4,0.4-0.8,0.8-0.8l0,0h8c0.4,0,0.8,0.3,0.8,0.8l0,0
+				c0,0.4-0.4,0.8-0.8,0.8l0,0H7.5L7.5,17.8z"/>
+		</g>
+	</g>
+</g>
+</svg>
