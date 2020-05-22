@@ -1,18 +1,17 @@
-const path = require('path')
-const webpack = require('webpack')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const ProgressBarPlugin = require('progress-bar-webpack-plugin')
-const TerserPlugin = require('terser-webpack-plugin')
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
-const SvgLoader = require('./svg-loader')
-const SvgPlugin = require('./svg-plugin')
+const path = require('path');
+const webpack = require('webpack');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ProgressBarPlugin = require('progress-bar-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const SvgPlugin = require('./svg-plugin');
 
 module.exports = (env, argv) => {
-	const isProduction = argv.mode === 'production'
+	const isProduction = argv.mode === 'production';
 	const splitChunksProd = {
 		chunks: 'all',
 		name: false
-	}
+	};
 
 	return {
 		watch: !isProduction,
@@ -80,14 +79,6 @@ module.exports = (env, argv) => {
 						}
 					]
 				}
-				// {
-				// 	test: /\.svg$/,
-				// 	loader: 'svg-sprite-loader',
-				// 	options: {
-				// 		symbolId: 'icon-[name]',
-				// 		extract: false
-				// 	}
-				// }
 			]
 		},
 		resolve: {
@@ -139,5 +130,5 @@ module.exports = (env, argv) => {
 			providedExports: false,
 			splitChunks: isProduction ? splitChunksProd : false
 		}
-	}
-}
+	};
+};

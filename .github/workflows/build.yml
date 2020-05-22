@@ -42,47 +42,7 @@ jobs:
       - name: Test Jest
         run: npm run test
 
-      - name: Test Mutation
-        run: npm run test:mutation
-        if: matrix.node == '12.x'
-        env:
-          STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
-
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v1
-        if: github.ref == 'refs/heads/master' &&
-            github.repository == 'yoriiis/chunks-webpack-plugin' &&
-            github.event_name != 'pull_request'
-        with:
-          name: coverage
-          path: coverage
-
       - name: Build
         run: |
           npm run build:tsc
           npm run build:example
-
-  deploy-coverage:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: build
-    if: success() &&
-        github.ref == 'refs/heads/master' &&
-        github.repository == 'yoriiis/chunks-webpack-plugin' &&
-        github.event_name != 'pull_request'
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Download coverage artifacts
-        uses: actions/download-artifact@v1
-        with:
-          name: coverage
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12.14.0
-
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
