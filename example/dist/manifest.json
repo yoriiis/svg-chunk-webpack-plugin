@@ -2,5 +2,7 @@
   "home.js": "/dist/home.js",
   "home.js.map": "/dist/home.js.map",
   "news.js": "/dist/news.js",
-  "news.js.map": "/dist/news.js.map"
+  "news.js.map": "/dist/news.js.map",
+  "home.svg": "/dist/home.svg",
+  "news.svg": "/dist/news.svg"
 }

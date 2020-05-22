@@ -8,7 +8,6 @@
 
 import { Compiler } from 'webpack';
 import path = require('path');
-import fse = require('fs-extra');
 const svgstore = require('svgstore');
 
 interface Svgs {
@@ -87,11 +86,24 @@ class SvgSprite {
 	}
 
 	createSprites({ entryName, svgs }: { entryName: String; svgs: Array<Svgs> }): void {
-		let sprites = '';
-		svgs.forEach(svg => {
-			sprites += svgstore().add(svg.filename, JSON.parse(svg.source));
+		let sprites = svgstore({
+			cleanDefs: false,
+			cleanSymbols: false,
+			inline: true,
+			svgAttrs: {
+				'aria-hidden': true,
+				style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
+			}
 		});
-		fse.outputFileSync(`${this.outputPath}/${entryName}.svg`, sprites);
+		svgs.forEach(svg => {
+			sprites.add(svg.filename, JSON.parse(svg.source));
+		});
+
+		const output = sprites.toString();
+		this.compilation.assets[`${entryName}.svg`] = {
+			source: () => output,
+			size: () => output.length
+		};
 	}
 
 	/**
