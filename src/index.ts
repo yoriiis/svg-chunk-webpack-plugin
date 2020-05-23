@@ -81,7 +81,8 @@ class SvgSprite {
 	 */
 	processEntry(entryName: string): void {
 		const svgs = this.getSvgsByEntrypoints(entryName);
-		this.createSprites({ entryName, svgs });
+		const sprite = this.generateSprite({ svgs });
+		this.createAsset({ entryName, sprite });
 	}
 
 	/**
@@ -116,10 +117,9 @@ class SvgSprite {
 	/**
 	 * Create SVG sprite with svgstore
 	 *
-	 * @param {String} entryName Entrypoint name
 	 * @param {Array<Object>} Svgs list
 	 */
-	createSprites({ entryName, svgs }: { entryName: String; svgs: Array<Svgs> }): void {
+	generateSprite({ svgs }: { svgs: Array<Svgs> }): String {
 		let sprites = svgstore({
 			cleanDefs: this.options.cleanDefs,
 			cleanSymbols: this.options.cleanSymbols,
@@ -130,7 +130,17 @@ class SvgSprite {
 			sprites.add(svg.filename, JSON.parse(svg.source));
 		});
 
-		const output = sprites.toString();
+		return sprites.toString();
+	}
+
+	/**
+	 * Create asset with Webpack compilation
+	 *
+	 * @param {String} entryName Entrypoint name
+	 * @param {String} sprite Sprite string
+	 */
+	createAsset({ entryName, sprite }: { entryName: String; sprite: String }): void {
+		const output = sprite;
 		this.compilation.assets[`${entryName}.svg`] = {
 			source: () => output,
 			size: () => output.length

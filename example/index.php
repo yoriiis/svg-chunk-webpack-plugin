@@ -6,7 +6,7 @@
 	</head>
 	<body>
 		<fieldset>
-			<legend>home.svg</legend>
+			<legend>app-a.svg</legend>
 			<svg>
 				<use xlink:href="#gradient"></use>
 			</svg>
@@ -16,17 +16,17 @@
 			<svg>
 				<use xlink:href="#smiley"></use>
 			</svg>
-			<?php include './dist/home.svg' ?>
+			<?php include './dist/app-a.svg' ?>
 		</fieldset>
 		<fieldset>
-			<legend>news.svg</legend>
+			<legend>app-b.svg</legend>
 			<svg>
 				<use xlink:href="#tram"></use>
 			</svg>
 			<svg>
 				<use xlink:href="#video"></use>
 			</svg>
-			<?php include './dist/news.svg' ?>
+			<?php include './dist/app-b.svg' ?>
 		</fieldset>
 	</body>
 </html>

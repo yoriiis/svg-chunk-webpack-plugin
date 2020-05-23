@@ -12,7 +12,6 @@ interface Svgs {
 }
 declare class SvgSprite {
     options: {
-        outputPath: null | string;
         cleanDefs: Boolean;
         cleanSymbols: Boolean;
         inline: Boolean;
@@ -38,21 +37,42 @@ declare class SvgSprite {
      */
     hookCallback(compilation: object): void;
     /**
-     * Process for each entry
-
-     * @param {String} entryName Entrypoint name
-     */
-    processEntry(entryName: string): void;
-    getSvgsByEntrypoints(entryName: string): Array<Svgs>;
-    createSprites({ entryName, svgs }: {
-        entryName: String;
-        svgs: Array<Svgs>;
-    }): void;
-    /**
      * Get entrypoint names from the compilation
      *
      * @return {Array} List of entrypoint names
      */
     getEntryNames(): Array<string>;
+    /**
+     * Process for each entry
+
+     * @param {String} entryName Entrypoint name
+     */
+    processEntry(entryName: string): void;
+    /**
+     * Get SVGs filtered by entrypoints
+     *
+     * @param {String} entryName Entrypoint name
+     *
+     * @returns {Array<Object>} Svgs list
+     */
+    getSvgsByEntrypoints(entryName: string): Array<Svgs>;
+    /**
+     * Create SVG sprite with svgstore
+     *
+     * @param {Array<Object>} Svgs list
+     */
+    generateSprite({ svgs }: {
+        svgs: Array<Svgs>;
+    }): String;
+    /**
+     * Create asset with Webpack compilation
+     *
+     * @param {String} entryName Entrypoint name
+     * @param {String} sprite Sprite string
+     */
+    createAsset({ entryName, sprite }: {
+        entryName: String;
+        sprite: String;
+    }): void;
 }
 export = SvgSprite;
