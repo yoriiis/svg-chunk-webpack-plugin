@@ -8,26 +8,23 @@
 		<fieldset>
 			<legend>home.svg</legend>
 			<svg>
-				<use xlink:href="#hand-hello"></use>
-			</svg>
-			<svg>
-				<use xlink:href="#smiley-sad"></use>
-			</svg>
-			<svg>
-				<use xlink:href="#tv-grid"></use>
+				<use xlink:href="#gradient"></use>
 			</svg>
 			<svg>
 				<use xlink:href="#heart"></use>
+			</svg>
+			<svg>
+				<use xlink:href="#smiley"></use>
 			</svg>
 			<?php include './dist/home.svg' ?>
 		</fieldset>
 		<fieldset>
 			<legend>news.svg</legend>
 			<svg>
-				<use xlink:href="#video"></use>
+				<use xlink:href="#tram"></use>
 			</svg>
 			<svg>
-				<use xlink:href="#illustration-alert"></use>
+				<use xlink:href="#video"></use>
 			</svg>
 			<?php include './dist/news.svg' ?>
 		</fieldset>

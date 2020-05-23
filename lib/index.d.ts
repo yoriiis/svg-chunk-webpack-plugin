@@ -13,8 +13,11 @@ interface Svgs {
 declare class SvgSprite {
     options: {
         outputPath: null | string;
+        cleanDefs: Boolean;
+        cleanSymbols: Boolean;
+        inline: Boolean;
+        svgAttrs: Object;
     };
-    outputPath: null | string;
     compilation: any;
     entryNames: Array<string>;
     /**
@@ -51,18 +54,5 @@ declare class SvgSprite {
      * @return {Array} List of entrypoint names
      */
     getEntryNames(): Array<string>;
-    /**
-     * Check if the outputPath is valid, a string and absolute
-     *
-     * @returns {Boolean} outputPath is valid
-     */
-    isValidOutputPath(): boolean;
-    /**
-     * Get the output path from Webpack configuation
-     * or from constructor options
-     *
-     * @return {String} The output path
-     */
-    getOutputPath(): string | null;
 }
 export = SvgSprite;

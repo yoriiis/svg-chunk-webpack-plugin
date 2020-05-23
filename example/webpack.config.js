@@ -16,7 +16,7 @@ module.exports = (env, argv) => {
 		watchOptions: {
 			ignored: /node_modules/
 		},
-		devtool: 'nosources-source-map',
+		devtool: 'none',
 		output: {
 			path: path.resolve(__dirname, './dist'),
 			publicPath: '/dist/',
@@ -24,22 +24,6 @@ module.exports = (env, argv) => {
 		},
 		module: {
 			rules: [
-				{
-					test: /\.js$/,
-					use: [
-						{
-							loader: 'babel-loader'
-						}
-					]
-				},
-				{
-					test: /\.css$/,
-					use: [
-						{
-							loader: 'css-loader'
-						}
-					]
-				},
 				{
 					test: /\.svg$/,
 					use: [

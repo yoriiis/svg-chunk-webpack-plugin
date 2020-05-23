@@ -1,4 +1,2 @@
-import '../css/app-b.css';
-
+import '../svgs/tram.svg';
 import '../svgs/video.svg';
-import '../svgs/illustration-alert.svg';

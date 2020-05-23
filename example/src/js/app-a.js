@@ -1,6 +1,4 @@
-import '../css/app-a.css';
-
-import '../svgs/hand-hello.svg';
-import '../svgs/smiley-sad.svg';
+import '../svgs/gradient.svg';
+import '../svgs/heart.svg';
 
 import './app-c';

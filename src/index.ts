@@ -17,9 +17,11 @@ interface Svgs {
 
 class SvgSprite {
 	options: {
-		outputPath: null | string;
+		cleanDefs: Boolean;
+		cleanSymbols: Boolean;
+		inline: Boolean;
+		svgAttrs: Object;
 	};
-	outputPath!: null | string;
 	compilation: any;
 	entryNames!: Array<string>;
 
@@ -29,7 +31,18 @@ class SvgSprite {
 	 */
 	constructor(options = {}) {
 		// Merge default options with user options
-		this.options = Object.assign({ outputPath: null }, options);
+		this.options = Object.assign(
+			{
+				cleanDefs: false,
+				cleanSymbols: false,
+				inline: true,
+				svgAttrs: {
+					'aria-hidden': true,
+					style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
+				}
+			},
+			options
+		);
 	}
 
 	/**
@@ -48,62 +61,8 @@ class SvgSprite {
 	 */
 	hookCallback(compilation: object): void {
 		this.compilation = compilation;
-		this.outputPath = this.getOutputPath();
 		this.entryNames = this.getEntryNames();
 		this.entryNames.map(entryName => this.processEntry(entryName));
-	}
-
-	/**
-	 * Process for each entry
-
-	 * @param {String} entryName Entrypoint name
-	 */
-	processEntry(entryName: string): void {
-		const svgs = this.getSvgsByEntrypoints(entryName);
-		this.createSprites({ entryName, svgs });
-	}
-
-	getSvgsByEntrypoints(entryName: string): Array<Svgs> {
-		let listSvgs: Array<Svgs> = [];
-
-		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: any) => {
-			chunk.getModules().forEach((module: any) => {
-				module.buildInfo &&
-					module.buildInfo.fileDependencies &&
-					module.buildInfo.fileDependencies.forEach((filepath: string) => {
-						const extension = path.extname(filepath).substr(1);
-						if (extension === 'svg') {
-							listSvgs.push({
-								filename: path.basename(filepath, '.svg'),
-								source: module._source._value
-							});
-						}
-					});
-			});
-		});
-
-		return listSvgs;
-	}
-
-	createSprites({ entryName, svgs }: { entryName: String; svgs: Array<Svgs> }): void {
-		let sprites = svgstore({
-			cleanDefs: false,
-			cleanSymbols: false,
-			inline: true,
-			svgAttrs: {
-				'aria-hidden': true,
-				style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
-			}
-		});
-		svgs.forEach(svg => {
-			sprites.add(svg.filename, JSON.parse(svg.source));
-		});
-
-		const output = sprites.toString();
-		this.compilation.assets[`${entryName}.svg`] = {
-			source: () => output,
-			size: () => output.length
-		};
 	}
 
 	/**
@@ -116,26 +75,66 @@ class SvgSprite {
 	}
 
 	/**
-	 * Check if the outputPath is valid, a string and absolute
-	 *
-	 * @returns {Boolean} outputPath is valid
+	 * Process for each entry
+
+	 * @param {String} entryName Entrypoint name
 	 */
-	isValidOutputPath(): boolean {
-		return !!(this.options.outputPath && path.isAbsolute(this.options.outputPath));
+	processEntry(entryName: string): void {
+		const svgs = this.getSvgsByEntrypoints(entryName);
+		this.createSprites({ entryName, svgs });
 	}
 
 	/**
-	 * Get the output path from Webpack configuation
-	 * or from constructor options
+	 * Get SVGs filtered by entrypoints
 	 *
-	 * @return {String} The output path
+	 * @param {String} entryName Entrypoint name
+	 *
+	 * @returns {Array<Object>} Svgs list
 	 */
-	getOutputPath(): string | null {
-		if (this.isValidOutputPath()) {
-			return this.options.outputPath;
-		} else {
-			return this.compilation.options.output.path || '';
-		}
+	getSvgsByEntrypoints(entryName: string): Array<Svgs> {
+		let listSvgs: Array<Svgs> = [];
+
+		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: any) => {
+			chunk.getModules().forEach((module: any) => {
+				module.buildInfo &&
+					module.buildInfo.fileDependencies &&
+					module.buildInfo.fileDependencies.forEach((filepath: string) => {
+						const extension = path.extname(filepath).substr(1);
+						if (extension === 'svg') {
+							listSvgs.push({
+								filename: path.basename(filepath, '.svg'),
+								source: module.originalSource()._value
+							});
+						}
+					});
+			});
+		});
+
+		return listSvgs;
+	}
+
+	/**
+	 * Create SVG sprite with svgstore
+	 *
+	 * @param {String} entryName Entrypoint name
+	 * @param {Array<Object>} Svgs list
+	 */
+	createSprites({ entryName, svgs }: { entryName: String; svgs: Array<Svgs> }): void {
+		let sprites = svgstore({
+			cleanDefs: this.options.cleanDefs,
+			cleanSymbols: this.options.cleanSymbols,
+			inline: this.options.inline,
+			svgAttrs: this.options.svgAttrs
+		});
+		svgs.forEach(svg => {
+			sprites.add(svg.filename, JSON.parse(svg.source));
+		});
+
+		const output = sprites.toString();
+		this.compilation.assets[`${entryName}.svg`] = {
+			source: () => output,
+			size: () => output.length
+		};
 	}
 }
 
