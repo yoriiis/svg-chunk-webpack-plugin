@@ -7,18 +7,28 @@
  **/
 import { Compiler } from 'webpack';
 interface Svgs {
-    filename: string;
-    source: string;
+    name: string;
+    content: string;
+}
+interface SpriteManifest {
+    [key: string]: Array<string>;
+}
+interface Sprites {
+    [key: string]: string;
 }
 declare class SvgSprite {
     options: {
-        cleanDefs: Boolean;
-        cleanSymbols: Boolean;
-        inline: Boolean;
-        svgAttrs: Object;
+        svgstoreConfig: Object;
+        svgoConfig: Object;
+        generateSpritesManifest: Boolean;
+        generateSpritesPreview: Boolean;
     };
+    svgOptimizer: any;
+    spritesManifest: SpriteManifest;
+    sprites: Sprites;
     compilation: any;
     entryNames: Array<string>;
+    get NAMESPACE(): string;
     /**
      * Instanciate the constructor
      * @param {options}
@@ -35,7 +45,7 @@ declare class SvgSprite {
      *
      * @param {Object} compilation The Webpack compilation variable
      */
-    hookCallback(compilation: object): void;
+    hookCallback(compilation: object): Promise<void>;
     /**
      * Get entrypoint names from the compilation
      *
@@ -47,7 +57,8 @@ declare class SvgSprite {
 
      * @param {String} entryName Entrypoint name
      */
-    processEntry(entryName: string): void;
+    processEntry: (entryName: string) => Promise<void>;
+    optimizeSvgs: (filepath: string) => Promise<Svgs>;
     /**
      * Get SVGs filtered by entrypoints
      *
@@ -55,15 +66,13 @@ declare class SvgSprite {
      *
      * @returns {Array<Object>} Svgs list
      */
-    getSvgsByEntrypoints(entryName: string): Array<Svgs>;
+    getSvgsByEntrypoint(entryName: string): Array<string>;
     /**
      * Create SVG sprite with svgstore
      *
      * @param {Array<Object>} Svgs list
      */
-    generateSprite({ svgs }: {
-        svgs: Array<Svgs>;
-    }): String;
+    generateSprite(svgsOptimized: Array<Svgs>): string;
     /**
      * Create asset with Webpack compilation
      *
@@ -71,8 +80,10 @@ declare class SvgSprite {
      * @param {String} sprite Sprite string
      */
     createAsset({ entryName, sprite }: {
-        entryName: String;
-        sprite: String;
+        entryName: string;
+        sprite: string;
     }): void;
+    createSpritesManifest(): void;
+    createSpritesPreview(): void;
 }
 export = SvgSprite;

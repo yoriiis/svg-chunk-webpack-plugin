@@ -29,18 +29,6 @@ module.exports = (env, argv) => {
 					use: [
 						{
 							loader: SvgSprite.loader
-						},
-						{
-							loader: 'svgo-loader',
-							options: {
-								plugins: [
-									{
-										inlineStyles: {
-											onlyMatchedOnce: false
-										}
-									}
-								]
-							}
 						}
 					]
 				}
@@ -48,7 +36,7 @@ module.exports = (env, argv) => {
 		},
 		plugins: [
 			new SvgSprite({
-				outputPath: path.resolve(__dirname, 'dist/sprites')
+				generateSpritesManifest: true
 			}),
 			new ManifestPlugin({
 				writeToFileEmit: true,
