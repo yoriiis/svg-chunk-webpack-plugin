@@ -14,7 +14,9 @@ interface SpriteManifest {
     [key: string]: Array<string>;
 }
 interface Sprites {
-    [key: string]: string;
+    name: string;
+    content: string;
+    svgs: Array<string>;
 }
 declare class SvgSprite {
     options: {
@@ -25,7 +27,7 @@ declare class SvgSprite {
     };
     svgOptimizer: any;
     spritesManifest: SpriteManifest;
-    sprites: Sprites;
+    sprites: Array<Sprites>;
     compilation: any;
     entryNames: Array<string>;
     get NAMESPACE(): string;

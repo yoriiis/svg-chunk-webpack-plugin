@@ -11,6 +11,8 @@ import fse = require('fs-extra');
 import path = require('path');
 const svgstore = require('svgstore');
 const Svgo = require('svgo');
+const minify = require('html-minifier').minify;
+const templatePreview = require('./template-preview');
 
 interface Svgs {
 	name: string;
@@ -23,7 +25,9 @@ interface SpriteManifest {
 }
 
 interface Sprites {
-	[key: string]: string;
+	name: string;
+	content: string;
+	svgs: Array<string>;
 }
 
 class SvgSprite {
@@ -35,7 +39,7 @@ class SvgSprite {
 	};
 	svgOptimizer: any;
 	spritesManifest: SpriteManifest;
-	sprites: Sprites;
+	sprites: Array<Sprites>;
 	compilation: any;
 	entryNames!: Array<string>;
 
@@ -77,7 +81,7 @@ class SvgSprite {
 		);
 		this.svgOptimizer = new Svgo(this.options.svgoConfig);
 		this.spritesManifest = {};
-		this.sprites = {};
+		this.sprites = [];
 	}
 
 	/**
@@ -144,7 +148,11 @@ class SvgSprite {
 				path.relative(this.compilation.options.context, filepath)
 			);
 
-			this.sprites[entryName] = sprite;
+			this.sprites.push({
+				name: entryName,
+				content: sprite,
+				svgs: svgs.map(filepath => path.basename(filepath, '.svg'))
+			});
 
 			resolve();
 		});
@@ -225,42 +233,14 @@ class SvgSprite {
 	}
 
 	createSpritesPreview() {
-		let html = `<!DOCTYPE html>
-						<html>
-							<head>
-								<title>Preview - Svg Sprite</title>
-								<meta name="viewport" content="width=device-width, initial-scale=1" />
-							</head>
-							<body>
-								${this.sprites}
-								<fieldset>
-									<legend>app-a.svg</legend>
-									<svg>
-										<use xlink:href="#gradient"></use>
-									</svg>
-									<svg>
-										<use xlink:href="#heart"></use>
-									</svg>
-									<svg>
-										<use xlink:href="#smiley"></use>
-									</svg>
-									<?php include './dist/app-a.svg' ?>
-								</fieldset>
-								<fieldset>
-									<legend>app-b.svg</legend>
-									<svg>
-										<use xlink:href="#tram"></use>
-									</svg>
-									<svg>
-										<use xlink:href="#video"></use>
-									</svg>
-									<?php include './dist/app-b.svg' ?>
-								</fieldset>
-							</body>
-						</html>
-						`;
-
-		fse.outputFileSync(`${this.compilation.options.output.path}/sprites-preview.html`, html);
+		fse.outputFileSync(
+			`${this.compilation.options.output.path}/sprites-preview.html`,
+			minify(templatePreview(this.sprites), {
+				collapseWhitespace: true,
+				collapseInlineTagWhitespace: true,
+				minifyCSS: true
+			})
+		);
 	}
 }
 
