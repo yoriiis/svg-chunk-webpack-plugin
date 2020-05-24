@@ -11,6 +11,7 @@ import fse = require('fs-extra');
 import path = require('path');
 const svgstore = require('svgstore');
 const Svgo = require('svgo');
+const extend = require('extend');
 const minify = require('html-minifier').minify;
 const templatePreview = require('./template-preview');
 
@@ -39,13 +40,13 @@ class SvgSprite {
 	};
 	svgOptimizer: any;
 	spritesManifest: SpriteManifest;
-	sprites: Array<Sprites>;
+	spritesList: Array<Sprites>;
 	compilation: any;
 	entryNames!: Array<string>;
 
 	// This need to find plugin from loader context
-	get NAMESPACE() {
-		return fse.realpathSync(__dirname);
+	get PLUGIN_NAME() {
+		return 'svg-sprite';
 	}
 
 	/**
@@ -53,35 +54,33 @@ class SvgSprite {
 	 * @param {options}
 	 */
 	constructor(options = {}) {
-		// Merge default options with user options
-		this.options = Object.assign(
-			{
-				svgstoreConfig: {
-					cleanDefs: false,
-					cleanSymbols: false,
-					inline: true,
-					svgAttrs: {
-						'aria-hidden': true,
-						style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
-					}
-				},
-				svgoConfig: {
-					plugins: [
-						{
-							inlineStyles: {
-								onlyMatchedOnce: false
-							}
-						}
-					]
-				},
-				generateSpritesManifest: false,
-				generateSpritesPreview: true
+		const DEFAULTS = {
+			svgstoreConfig: {
+				cleanDefs: false,
+				cleanSymbols: false,
+				inline: true,
+				svgAttrs: {
+					'aria-hidden': true,
+					style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
+				}
 			},
-			options
-		);
+			svgoConfig: {
+				plugins: [
+					{
+						inlineStyles: {
+							onlyMatchedOnce: false
+						}
+					}
+				]
+			},
+			generateSpritesManifest: false,
+			generateSpritesPreview: false
+		};
+
+		this.options = extend(true, DEFAULTS, options);
 		this.svgOptimizer = new Svgo(this.options.svgoConfig);
 		this.spritesManifest = {};
-		this.sprites = [];
+		this.spritesList = [];
 	}
 
 	/**
@@ -97,15 +96,17 @@ class SvgSprite {
 	 * Hook expose by the Webpack compiler
 	 *
 	 * @param {Object} compilation The Webpack compilation variable
+	 *
+	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
 	hookCallback(compilation: object): Promise<void> {
 		return new Promise(async resolve => {
 			this.compilation = compilation;
 			const isDev = this.compilation.options.mode === 'development';
-			debugger;
-			this.entryNames = this.getEntryNames();
+			const entryNames = this.getEntryNames();
+
 			await Promise.all(
-				this.entryNames.map(async entryName => await this.processEntry(entryName))
+				entryNames.map(async entryName => await this.processEntry(entryName))
 			);
 
 			if (this.options.generateSpritesManifest && isDev) {
@@ -133,22 +134,24 @@ class SvgSprite {
 	 * Process for each entry
 
 	 * @param {String} entryName Entrypoint name
+	 *
+	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
 	processEntry = async (entryName: string): Promise<void> => {
 		return new Promise(async resolve => {
 			const svgs = this.getSvgsByEntrypoint(entryName);
 			const svgsOptimized = await Promise.all(
-				svgs.map(filepath => this.optimizeSvgs(filepath))
+				svgs.map(filepath => this.optimizeSvg(filepath))
 			);
 			const sprite = this.generateSprite(svgsOptimized);
-			this.createAsset({ entryName, sprite });
+			this.createSpriteAsset({ entryName, sprite });
 
 			// Update sprites manifest
 			this.spritesManifest[entryName] = svgs.map(filepath =>
 				path.relative(this.compilation.options.context, filepath)
 			);
 
-			this.sprites.push({
+			this.spritesList.push({
 				name: entryName,
 				content: sprite,
 				svgs: svgs.map(filepath => path.basename(filepath, '.svg'))
@@ -158,7 +161,14 @@ class SvgSprite {
 		});
 	};
 
-	optimizeSvgs = async (filepath: string): Promise<Svgs> => {
+	/**
+	 * Optimize SVG with Svgo
+	 *
+	 * @param {String} filepath SVG filepath from Webpack compilation
+	 *
+	 * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
+	 */
+	optimizeSvg = async (filepath: string): Promise<Svgs> => {
 		const svgContent = await fse.readFile(filepath, 'utf8');
 		const svgOptimized = await this.svgOptimizer.optimize(svgContent);
 
@@ -195,26 +205,29 @@ class SvgSprite {
 	}
 
 	/**
-	 * Create SVG sprite with svgstore
+	 * Generate the SVG sprite with Svgstore
 	 *
-	 * @param {Array<Object>} Svgs list
+	 * @param {Array<Svgs>} svgsOptimized SVGs list
+	 *
+	 * @returns {String} Sprite string
 	 */
 	generateSprite(svgsOptimized: Array<Svgs>): string {
 		let sprites = svgstore(this.options.svgstoreConfig);
 		svgsOptimized.forEach((svg: Svgs) => {
 			sprites.add(svg.name, svg.content);
 		});
-
 		return sprites.toString();
 	}
 
 	/**
-	 * Create asset with Webpack compilation
+	 * Create sprite asset with Webpack compilation
+	 * Expose the manifest file into the assets compilation
+	 * The file is automatically created by the compiler
 	 *
 	 * @param {String} entryName Entrypoint name
 	 * @param {String} sprite Sprite string
 	 */
-	createAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
+	createSpriteAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
 		const output = sprite;
 		this.compilation.assets[`${entryName}.svg`] = {
 			source: () => output,
@@ -222,25 +235,51 @@ class SvgSprite {
 		};
 	}
 
-	createSpritesManifest() {
+	/**
+	 * Create sprite manifest with Webpack compilation
+	 * Expose the manifest file into the assets compilation
+	 * The file is automatically created by the compiler
+	 */
+	createSpritesManifest(): void {
 		const output = JSON.stringify(this.spritesManifest, null, 2);
-		// Expose the manifest file into the assets compilation
-		// The file is automatically created by the compiler
 		this.compilation.assets['sprites-manifest.json'] = {
 			source: () => output,
 			size: () => output.length
 		};
 	}
 
-	createSpritesPreview() {
+	/**
+	 * Create sprites preview
+	 */
+	createSpritesPreview(): void {
 		fse.outputFileSync(
 			`${this.compilation.options.output.path}/sprites-preview.html`,
-			minify(templatePreview(this.sprites), {
-				collapseWhitespace: true,
-				collapseInlineTagWhitespace: true,
-				minifyCSS: true
-			})
+			this.getPreviewTemplate()
 		);
+	}
+
+	/**
+	 * Get preview template
+	 * The template is minify with the minify package
+	 *
+	 * @returns {String} Template for the preview
+	 */
+	getPreviewTemplate(): string {
+		return minify(templatePreview(this.getSpritesList()), {
+			collapseWhitespace: true,
+			collapseInlineTagWhitespace: true,
+			minifyCSS: true
+		});
+	}
+
+	/**
+	 * Get sprites list
+	 * The list is used to create the preview
+	 *
+	 * @returns {Array<Sprites>} Sprites list
+	 */
+	getSpritesList(): Array<Sprites> {
+		return this.spritesList;
 	}
 }
 

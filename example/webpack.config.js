@@ -36,7 +36,8 @@ module.exports = (env, argv) => {
 		},
 		plugins: [
 			new SvgSprite({
-				generateSpritesManifest: true
+				generateSpritesManifest: true,
+				generateSpritesPreview: true
 			}),
 			new ManifestPlugin({
 				writeToFileEmit: true,

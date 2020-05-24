@@ -27,10 +27,10 @@ declare class SvgSprite {
     };
     svgOptimizer: any;
     spritesManifest: SpriteManifest;
-    sprites: Array<Sprites>;
+    spritesList: Array<Sprites>;
     compilation: any;
     entryNames: Array<string>;
-    get NAMESPACE(): string;
+    get PLUGIN_NAME(): string;
     /**
      * Instanciate the constructor
      * @param {options}
@@ -46,6 +46,8 @@ declare class SvgSprite {
      * Hook expose by the Webpack compiler
      *
      * @param {Object} compilation The Webpack compilation variable
+     *
+     * @returns {Promise<void>} Resolve the promise when all actions are done
      */
     hookCallback(compilation: object): Promise<void>;
     /**
@@ -58,9 +60,18 @@ declare class SvgSprite {
      * Process for each entry
 
      * @param {String} entryName Entrypoint name
+     *
+     * @returns {Promise<void>} Resolve the promise when all actions are done
      */
     processEntry: (entryName: string) => Promise<void>;
-    optimizeSvgs: (filepath: string) => Promise<Svgs>;
+    /**
+     * Optimize SVG with Svgo
+     *
+     * @param {String} filepath SVG filepath from Webpack compilation
+     *
+     * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
+     */
+    optimizeSvg: (filepath: string) => Promise<Svgs>;
     /**
      * Get SVGs filtered by entrypoints
      *
@@ -70,22 +81,48 @@ declare class SvgSprite {
      */
     getSvgsByEntrypoint(entryName: string): Array<string>;
     /**
-     * Create SVG sprite with svgstore
+     * Generate the SVG sprite with Svgstore
      *
-     * @param {Array<Object>} Svgs list
+     * @param {Array<Svgs>} svgsOptimized SVGs list
+     *
+     * @returns {String} Sprite string
      */
     generateSprite(svgsOptimized: Array<Svgs>): string;
     /**
-     * Create asset with Webpack compilation
+     * Create sprite asset with Webpack compilation
+     * Expose the manifest file into the assets compilation
+     * The file is automatically created by the compiler
      *
      * @param {String} entryName Entrypoint name
      * @param {String} sprite Sprite string
      */
-    createAsset({ entryName, sprite }: {
+    createSpriteAsset({ entryName, sprite }: {
         entryName: string;
         sprite: string;
     }): void;
+    /**
+     * Create sprite manifest with Webpack compilation
+     * Expose the manifest file into the assets compilation
+     * The file is automatically created by the compiler
+     */
     createSpritesManifest(): void;
+    /**
+     * Create sprites preview
+     */
     createSpritesPreview(): void;
+    /**
+     * Get preview template
+     * The template is minify with the minify package
+     *
+     * @returns {String} Template for the preview
+     */
+    getPreviewTemplate(): string;
+    /**
+     * Get sprites list
+     * The list is used to create the preview
+     *
+     * @returns {Array<Sprites>} Sprites list
+     */
+    getSpritesList(): Array<Sprites>;
 }
 export = SvgSprite;
