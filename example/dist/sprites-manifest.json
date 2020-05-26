@@ -1,0 +1,11 @@
+{
+  "app-b": [
+    "example/src/svgs/smiley-surprised.svg",
+    "example/src/svgs/popcorn.svg"
+  ],
+  "app-a": [
+    "example/src/svgs/gradient.svg",
+    "example/src/svgs/video.svg",
+    "example/src/svgs/smiley-love.svg"
+  ]
+}

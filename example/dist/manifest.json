@@ -2,5 +2,6 @@
   "app-a.js": "/dist/app-a.js",
   "app-b.js": "/dist/app-b.js",
   "app-a.svg": "/dist/app-a.svg",
-  "app-b.svg": "/dist/app-b.svg"
+  "app-b.svg": "/dist/app-b.svg",
+  "sprites-manifest.json": "/dist/sprites-manifest.json"
 }

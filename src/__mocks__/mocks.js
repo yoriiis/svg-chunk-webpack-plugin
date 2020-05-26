@@ -4,6 +4,7 @@ import path from 'path';
  * Mock implementation of getEntryNames function
  *
  * @param {Class} svgSprite Instance of svgSprite
+ * @param {String} entryNames Entrypoint name
  */
 export function mockGetEntryNames (svgSprite, entryNames) {
 	svgSprite.getEntryNames = jest.fn().mockImplementation(() => {
@@ -11,26 +12,43 @@ export function mockGetEntryNames (svgSprite, entryNames) {
 	});
 }
 
+/**
+ * Mock implementation of getSvgsByEntrypoint function
+ *
+ * @param {Class} svgSprite Instance of svgSprite
+ */
 export function mockGetSvgsByEntrypoint (svgSprite) {
 	svgSprite.getSvgsByEntrypoint = jest.fn().mockImplementation(() => {
 		return [
 			'example/src/svgs/gradient.svg',
-			'example/src/svgs/heart.svg',
-			'example/src/svgs/smiley.svg'
+			'example/src/svgs/video.svg',
+			'example/src/svgs/smiley-love.svg'
 		];
 	});
 }
 
+/**
+ * Mock implementation of optimizeSvg function
+ *
+ * @param {Class} svgSprite Instance of svgSprite
+ * @param {Object} svgsFixture List of sprite fixtures
+ */
 export function mockOptimizeSvg (svgSprite, svgsFixture) {
 	svgSprite.optimizeSvg = jest.fn().mockImplementation(filepath => {
-		const svgName = path.basename(filepath, '.svg');
+		const name = path.basename(filepath, '.svg');
 		return {
-			name: svgName,
-			content: svgsFixture[svgName]
+			name,
+			content: svgsFixture[name]
 		};
 	});
 }
 
+/**
+ * Mock implementation of generateSprite function
+ *
+ * @param {Class} svgSprite Instance of svgSprite
+ * @param {String} sprite Sprite fixture
+ */
 export function mockGenerateSprite (svgSprite, sprite) {
 	svgSprite.generateSprite = jest.fn().mockImplementation(() => {
 		return sprite;

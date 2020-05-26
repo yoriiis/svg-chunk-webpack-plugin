@@ -1,1 +1,1 @@
-import '../svgs/smiley.svg';
+import '../svgs/smiley-love.svg';

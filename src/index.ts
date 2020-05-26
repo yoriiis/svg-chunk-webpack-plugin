@@ -7,29 +7,13 @@
  **/
 
 import { Compiler } from 'webpack';
-import fse = require('fs-extra');
-import path = require('path');
+const fse = require('fs-extra');
+const path = require('path');
 const svgstore = require('svgstore');
 const Svgo = require('svgo');
 const extend = require('extend');
-const minify = require('html-minifier').minify;
-const templatePreview = require('./template-preview');
-
-interface Svgs {
-	name: string;
-	content: string;
-}
-
-// Describe the shape of the Manifest object
-interface SpriteManifest {
-	[key: string]: Array<string>;
-}
-
-interface Sprites {
-	name: string;
-	content: string;
-	svgs: Array<string>;
-}
+const templatePreview = require('./preview');
+import { Svgs, SpriteManifest, Sprites } from './interfaces';
 
 class SvgSprite {
 	options: {
@@ -101,6 +85,10 @@ class SvgSprite {
 	 */
 	hookCallback(compilation: object): Promise<void> {
 		return new Promise(async resolve => {
+			// Reset value on every new process
+			this.spritesManifest = {};
+			this.spritesList = [];
+
 			this.compilation = compilation;
 			const isDev = this.compilation.options.mode === 'development';
 			const entryNames = this.getEntryNames();
@@ -138,7 +126,7 @@ class SvgSprite {
 	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
 	processEntry = async (entryName: string): Promise<void> => {
-		return new Promise(async resolve => {
+		return new Promise<void>(async resolve => {
 			const svgs = this.getSvgsByEntrypoint(entryName);
 			const svgsOptimized = await Promise.all(
 				svgs.map(filepath => this.optimizeSvg(filepath))
@@ -265,11 +253,7 @@ class SvgSprite {
 	 * @returns {String} Template for the preview
 	 */
 	getPreviewTemplate(): string {
-		return minify(templatePreview(this.getSpritesList()), {
-			collapseWhitespace: true,
-			collapseInlineTagWhitespace: true,
-			minifyCSS: true
-		});
+		return templatePreview(this.getSpritesList());
 	}
 
 	/**

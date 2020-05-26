@@ -6,18 +6,7 @@
  * @copyright 2020 Joris DANIEL
  **/
 import { Compiler } from 'webpack';
-interface Svgs {
-    name: string;
-    content: string;
-}
-interface SpriteManifest {
-    [key: string]: Array<string>;
-}
-interface Sprites {
-    name: string;
-    content: string;
-    svgs: Array<string>;
-}
+import { Svgs, SpriteManifest, Sprites } from './interfaces';
 declare class SvgSprite {
     options: {
         svgstoreConfig: Object;

@@ -1,4 +1,4 @@
 import '../svgs/gradient.svg';
-import '../svgs/heart.svg';
+import '../svgs/video.svg';
 
 import './app-c';

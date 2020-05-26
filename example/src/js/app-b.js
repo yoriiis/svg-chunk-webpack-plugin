@@ -1,2 +1,2 @@
-import '../svgs/tram.svg';
-import '../svgs/video.svg';
+import '../svgs/smiley-surprised.svg';
+import '../svgs/popcorn.svg';

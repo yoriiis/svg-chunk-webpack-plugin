@@ -4,13 +4,14 @@
 		"outDir": "./lib",
 		"allowJs": true,
 		"checkJs": true,
-		"target": "es5",
+		"target": "es2017",
 		"lib": ["es2017"],
 		"strict": true,
 		"esModuleInterop": true,
 		"declaration": true,
 		"skipLibCheck": true,
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		"module": "commonjs"
 	},
 	"types": ["node"],
 	"include": ["./src/**/*"],
