@@ -13,10 +13,12 @@ import templatePreview from '../preview';
 import path from 'path';
 import fse from 'fs-extra';
 import Svgo from 'svgo';
-const minify = require('html-minifier').minify;
 
 jest.mock('../preview');
-jest.mock('html-minifier');
+
+// Save reference to path.relative because the function is mock inside tests
+// The original function is return after each tests
+const originalPathRelative = path.relative;
 
 let svgSprite;
 let compilationWebpack;
@@ -76,7 +78,9 @@ entrypointsMap.set('app-a', {
 					buildInfo: { fileDependencies: ['example/src/js/app-c.js'] }
 				},
 				{
-					buildInfo: { fileDependencies: ['example/src/svgs/smiley-love.svg'] }
+					buildInfo: {
+						fileDependencies: ['example/src/svgs/smiley-love.svg']
+					}
 				}
 			]
 		}
@@ -86,7 +90,11 @@ entrypointsMap.set('app-b', {
 	chunks: [
 		{
 			getModules: () => [
-				{ buildInfo: { fileDependencies: ['example/src/svgs/smiley-surprised.svg'] } },
+				{
+					buildInfo: {
+						fileDependencies: ['example/src/svgs/smiley-surprised.svg']
+					}
+				},
 				{ buildInfo: { fileDependencies: ['example/src/svgs/popcorn.svg'] } }
 			]
 		}
@@ -109,6 +117,10 @@ beforeEach(() => {
 	};
 
 	svgSprite = getInstance();
+});
+
+afterEach(() => {
+	path.relative = originalPathRelative;
 });
 
 describe('SvgSprite constructor', () => {
@@ -138,6 +150,7 @@ describe('SvgSprite constructor', () => {
 		expect(svgSprite.svgOptimizer).toBeInstanceOf(Svgo);
 		expect(svgSprite.spritesManifest).toEqual({});
 		expect(svgSprite.spritesList).toEqual([]);
+		expect(svgSprite.PLUGIN_NAME).toBe('svg-sprite');
 	});
 
 	it('Should initialize the constructor with default options', () => {
@@ -227,10 +240,13 @@ describe('SvgSprite getEntryNames', () => {
 
 describe('SvgSprite processEntry', () => {
 	it('Should call the processEntry function', async () => {
-		mockGetSvgsByEntrypoint(svgSprite);
+		mockGetSvgsByEntrypoint(svgSprite, svgsFilepath);
 		mockOptimizeSvg(svgSprite, svgsFixture);
 		mockGenerateSprite(svgSprite, spritesFixture['app-a']);
 		svgSprite.createSpriteAsset = jest.fn();
+
+		// Mock core node module to avoid absolute path conflict in the test environment
+		// The original function is return after the test
 		path.relative = jest
 			.fn()
 			.mockImplementation((context, filepath) => `${context}${filepath}`);
@@ -365,7 +381,6 @@ describe('SvgSprite getPreviewTemplate', () => {
 
 		svgSprite.getPreviewTemplate();
 
-		expect(minify).toHaveBeenCalled();
 		expect(svgSprite.getSpritesList).toHaveBeenCalled();
 		expect(templatePreview).toHaveBeenCalledWith(spritesList);
 	});

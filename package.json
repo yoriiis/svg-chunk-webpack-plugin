@@ -35,7 +35,6 @@
 		"test:coverage": "jest --coverage",
 		"test:eslint": "eslint . --ignore-pattern coverage --ignore-pattern reports --ignore-pattern example/dist --ignore-pattern lib",
 		"test:markdown": "markdownlint '**/*.md' --ignore node_modules",
-		"test:mutation": "stryker run",
 		"test:watch": "jest --watchAll --coverage"
 	},
 	"husky": {

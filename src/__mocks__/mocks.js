@@ -17,13 +17,9 @@ export function mockGetEntryNames (svgSprite, entryNames) {
  *
  * @param {Class} svgSprite Instance of svgSprite
  */
-export function mockGetSvgsByEntrypoint (svgSprite) {
+export function mockGetSvgsByEntrypoint (svgSprite, svgsFilepath) {
 	svgSprite.getSvgsByEntrypoint = jest.fn().mockImplementation(() => {
-		return [
-			'example/src/svgs/gradient.svg',
-			'example/src/svgs/video.svg',
-			'example/src/svgs/smiley-love.svg'
-		];
+		return svgsFilepath;
 	});
 }
 

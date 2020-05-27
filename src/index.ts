@@ -29,9 +29,7 @@ class SvgSprite {
 	entryNames!: Array<string>;
 
 	// This need to find plugin from loader context
-	get PLUGIN_NAME() {
-		return 'svg-sprite';
-	}
+	PLUGIN_NAME = 'svg-sprite';
 
 	/**
 	 * Instanciate the constructor
@@ -248,7 +246,6 @@ class SvgSprite {
 
 	/**
 	 * Get preview template
-	 * The template is minify with the minify package
 	 *
 	 * @returns {String} Template for the preview
 	 */

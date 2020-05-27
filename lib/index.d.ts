@@ -19,7 +19,7 @@ declare class SvgSprite {
     spritesList: Array<Sprites>;
     compilation: any;
     entryNames: Array<string>;
-    get PLUGIN_NAME(): string;
+    PLUGIN_NAME: string;
     /**
      * Instanciate the constructor
      * @param {options}
@@ -101,7 +101,6 @@ declare class SvgSprite {
     createSpritesPreview(): void;
     /**
      * Get preview template
-     * The template is minify with the minify package
      *
      * @returns {String} Template for the preview
      */

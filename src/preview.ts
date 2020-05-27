@@ -1,6 +1,6 @@
 import { Sprites } from './interfaces';
 
-export = function templatePreview(sprites: Array<Sprites>) {
+export = function templatePreview(sprites: Array<Sprites>): string {
 	/* prettier-ignore */
 	return `<!DOCTYPE html>
 				<html>
