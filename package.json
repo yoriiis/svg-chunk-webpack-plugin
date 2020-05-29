@@ -5,7 +5,12 @@
 	"keywords": [
 		"webpack"
 	],
-	"files": [],
+	"files": [
+		"src",
+		"!src/__mocks__",
+		"!src/__tests__",
+		"lib"
+	],
 	"homepage": "https://github.com/yoriiis/svg-chunk-webpack-plugin",
 	"bugs": "https://github.com/yoriiis/svg-chunk-webpack-plugin/issues",
 	"repository": "https://github.com/yoriiis/svg-chunk-webpack-plugin.git",
