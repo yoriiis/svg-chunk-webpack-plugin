@@ -7,6 +7,7 @@
  **/
 
 import { Compiler } from 'webpack';
+const { util } = require('webpack');
 const fse = require('fs-extra');
 const path = require('path');
 const svgstore = require('svgstore');
@@ -15,12 +16,19 @@ const extend = require('extend');
 const templatePreview = require('./preview');
 import { Svgs, SpriteManifest, Sprites } from './interfaces';
 
+const PACKAGE_NAME = require('../package.json').name;
+const REGEXP_NAME = /\[name\]/i;
+const REGEXP_HASH = /\[hash\]/i;
+const REGEXP_CHUNKHASH = /\[chunkhash\]/i;
+const REGEXP_CONTENTHASH = /\[contenthash\]/i;
+
 class SvgSprite {
 	options: {
 		svgstoreConfig: Object;
 		svgoConfig: Object;
 		generateSpritesManifest: Boolean;
 		generateSpritesPreview: Boolean;
+		filename: string;
 	};
 	svgOptimizer: any;
 	spritesManifest: SpriteManifest;
@@ -29,7 +37,7 @@ class SvgSprite {
 	entryNames!: Array<string>;
 
 	// This need to find plugin from loader context
-	PLUGIN_NAME = 'svg-sprite';
+	PLUGIN_NAME = PACKAGE_NAME;
 
 	/**
 	 * Instanciate the constructor
@@ -56,7 +64,8 @@ class SvgSprite {
 				]
 			},
 			generateSpritesManifest: false,
-			generateSpritesPreview: false
+			generateSpritesPreview: false,
+			filename: 'sprites/[name].svg'
 		};
 
 		this.options = extend(true, DEFAULTS, options);
@@ -215,10 +224,84 @@ class SvgSprite {
 	 */
 	createSpriteAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
 		const output = sprite;
-		this.compilation.assets[`sprite-${entryName}.svg`] = {
+		const filename = this.getFileName({ entryName, output });
+
+		this.compilation.assets[filename] = {
 			source: () => output,
 			size: () => output.length
 		};
+	}
+
+	/**
+	 * Get the filename for the asset compilation
+	 * Placeholder [name], [hash], [chunkhash], [content] are automatically replaced
+	 *
+	 * @param {String} entryName Entrypoint name
+	 * @param {String} output Sprite content
+	 *
+	 * @returns {String} Sprite filename
+	 */
+	getFileName({ entryName, output }: { entryName: string; output: string }): string {
+		let filename = this.options.filename;
+
+		// Check if the filename option contains the placeholder [name]
+		// [name] corresponds to the entrypoint name
+		if (REGEXP_NAME.test(filename)) {
+			filename = filename.replace('[name]', entryName);
+		}
+
+		// Check if the filename option contains the placeholder [hash]
+		// [hash] corresponds to the Webpack compilation hash
+		if (REGEXP_HASH.test(filename)) {
+			filename = filename.replace('[hash]', this.getBuildHash());
+		}
+
+		// Check if the filename option contains the placeholder [chunkhash]
+		// [chunkhash] corresponds to the chunk hash
+		if (REGEXP_CHUNKHASH.test(filename)) {
+			filename = filename.replace('[chunkhash]', this.getChunkHash(entryName));
+		}
+
+		// Check if the filename option contains the placeholder [contenthash]
+		// [contenthash] corresponds to the sprite content hash
+		if (REGEXP_CONTENTHASH.test(filename)) {
+			filename = filename.replace('[contenthash]', this.getContentHash(output));
+		}
+
+		return filename;
+	}
+
+	/**
+	 * Get the compilation hash
+	 *
+	 * @returns {String} Compilation hash
+	 */
+	getBuildHash(): string {
+		return this.compilation.hash;
+	}
+
+	/**
+	 * Get the chunk hash according to the entrypoint
+	 *
+	 * @returns {String} Chunk hash
+	 */
+	getChunkHash(entryName: string): string {
+		const chunks = this.compilation.entrypoints.get(entryName).chunks;
+		return chunks.length ? chunks[0].hash : '';
+	}
+
+	/**
+	 * Get the contenthash according to the sprite content
+	 *
+	 * @returns {String} Sprite content hash
+	 */
+	getContentHash(output: string): string {
+		const { hashFunction, hashDigest } = this.compilation.outputOptions;
+
+		return util
+			.createHash(hashFunction)
+			.update(output)
+			.digest(hashDigest);
 	}
 
 	/**

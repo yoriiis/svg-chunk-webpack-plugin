@@ -84,6 +84,9 @@ Finally, use the SVG with the `<use>` tag, like the following example. Replace `
 </svg>
 ```
 
+TODO: add loader step
+TODO: add caching step (hash)
+
 ---
 
 ## Using a configuration

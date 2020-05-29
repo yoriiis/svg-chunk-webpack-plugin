@@ -13,13 +13,14 @@ declare class SvgSprite {
         svgoConfig: Object;
         generateSpritesManifest: Boolean;
         generateSpritesPreview: Boolean;
+        filename: string;
     };
     svgOptimizer: any;
     spritesManifest: SpriteManifest;
     spritesList: Array<Sprites>;
     compilation: any;
     entryNames: Array<string>;
-    PLUGIN_NAME: string;
+    PLUGIN_NAME: any;
     /**
      * Instanciate the constructor
      * @param {options}
@@ -89,6 +90,37 @@ declare class SvgSprite {
         entryName: string;
         sprite: string;
     }): void;
+    /**
+     * Get the filename for the asset compilation
+     * Placeholder [name], [hash], [chunkhash], [content] are automatically replaced
+     *
+     * @param {String} entryName Entrypoint name
+     * @param {String} output Sprite content
+     *
+     * @returns {String} Sprite filename
+     */
+    getFileName({ entryName, output }: {
+        entryName: string;
+        output: string;
+    }): string;
+    /**
+     * Get the compilation hash
+     *
+     * @returns {String} Compilation hash
+     */
+    getBuildHash(): string;
+    /**
+     * Get the chunk hash according to the entrypoint
+     *
+     * @returns {String} Chunk hash
+     */
+    getChunkHash(entryName: string): string;
+    /**
+     * Get the contenthash according to the sprite content
+     *
+     * @returns {String} Sprite content hash
+     */
+    getContentHash(output: string): string;
     /**
      * Create sprite manifest with Webpack compilation
      * Expose the manifest file into the assets compilation

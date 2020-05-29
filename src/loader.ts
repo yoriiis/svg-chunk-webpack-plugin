@@ -15,7 +15,7 @@ export = function spriteLoader(this: any, content: string): string {
 
 	// Check if the plugin is also imported
 	const plugin = compiler.options.plugins.find(
-		(plugin: any) => plugin.PLUGIN_NAME && plugin.PLUGIN_NAME === 'svg-sprite'
+		(plugin: any) => plugin.PLUGIN_NAME && plugin.PLUGIN_NAME === PACKAGE_NAME
 	);
 	if (typeof plugin === 'undefined') {
 		throw new Error(`${PACKAGE_NAME} requires the corresponding plugin`);
