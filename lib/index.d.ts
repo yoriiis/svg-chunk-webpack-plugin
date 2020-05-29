@@ -1,6 +1,6 @@
 /**
  * @license MIT
- * @name SvgSprite
+ * @name SvgChunkWebpackPlugin
  * @version 1.0.0
  * @author: Yoriiis aka Joris DANIEL <joris.daniel@gmail.com>
  * @copyright 2020 Joris DANIEL

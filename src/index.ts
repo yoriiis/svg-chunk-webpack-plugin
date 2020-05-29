@@ -1,6 +1,6 @@
 /**
  * @license MIT
- * @name SvgSprite
+ * @name SvgChunkWebpackPlugin
  * @version 1.0.0
  * @author: Yoriiis aka Joris DANIEL <joris.daniel@gmail.com>
  * @copyright 2020 Joris DANIEL
@@ -215,7 +215,7 @@ class SvgSprite {
 	 */
 	createSpriteAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
 		const output = sprite;
-		this.compilation.assets[`${entryName}.svg`] = {
+		this.compilation.assets[`sprite-${entryName}.svg`] = {
 			source: () => output,
 			size: () => output.length
 		};

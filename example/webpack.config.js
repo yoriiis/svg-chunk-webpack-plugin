@@ -2,7 +2,7 @@ const path = require('path');
 const TerserJSPlugin = require('terser-webpack-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const SvgSprite = require('../lib/index.js');
+const SvgChunkWebpackPlugin = require('../lib/index.js');
 
 module.exports = (env, argv) => {
 	const isProduction = argv.mode === 'production';
@@ -28,14 +28,14 @@ module.exports = (env, argv) => {
 					test: /\.svg$/,
 					use: [
 						{
-							loader: SvgSprite.loader
+							loader: SvgChunkWebpackPlugin.loader
 						}
 					]
 				}
 			]
 		},
 		plugins: [
-			new SvgSprite({
+			new SvgChunkWebpackPlugin({
 				generateSpritesManifest: true,
 				generateSpritesPreview: true
 			}),

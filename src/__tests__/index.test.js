@@ -324,13 +324,13 @@ describe('SvgSprite createSpriteAsset', () => {
 		svgSprite.createSpriteAsset({ entryName: 'app-a', sprite: output });
 
 		expect(svgSprite.compilation.assets).toEqual({
-			'app-a.svg': {
+			'sprite-app-a.svg': {
 				source: expect.any(Function),
 				size: expect.any(Function)
 			}
 		});
-		expect(svgSprite.compilation.assets['app-a.svg'].source()).toBe(output);
-		expect(svgSprite.compilation.assets['app-a.svg'].size()).toBe(output.length);
+		expect(svgSprite.compilation.assets['sprite-app-a.svg'].source()).toBe(output);
+		expect(svgSprite.compilation.assets['sprite-app-a.svg'].size()).toBe(output.length);
 	});
 });
 
