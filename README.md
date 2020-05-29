@@ -10,7 +10,7 @@ The plugin includes the popular [svgo](https://github.com/svg/svgo) package with
 
 Code splitting is the key to deliver files without unused content for the pages. It already exists for CSS, Javascript and now for SVG with this plugin.
 
-## When use this plugin?
+## When use this plugin
 
 On multiple page application, each pages must includes only necessary dependencies. In other words, including only the SVG files imported by the entrypoint and all its dependencies.
 

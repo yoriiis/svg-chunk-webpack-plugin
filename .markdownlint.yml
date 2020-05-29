@@ -1,2 +1,2 @@
-MD013: false     # Line length
-MD024: false     # Multiple headers with the same content
+MD013: false     # line-length
+MD036: false     # no-emphasis-as-heading
