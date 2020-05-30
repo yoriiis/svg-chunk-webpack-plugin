@@ -19,6 +19,28 @@ import Svgo from 'svgo';
 
 jest.mock('../preview');
 
+// Mock Webpack util to works with chaining function
+jest.mock('webpack', () => {
+	const mockCreateHash = jest.fn();
+	const mockUpdate = jest.fn();
+	const mockDigest = jest.fn();
+
+	const utils = {
+		createHash: mockCreateHash,
+		update: mockUpdate,
+		digest: mockDigest
+	};
+	return {
+		util: {
+			createHash: mockCreateHash.mockImplementation(() => utils),
+			update: mockUpdate.mockImplementation(() => utils),
+			digest: mockDigest.mockImplementation(() => 'a5934d97b38c748213317d7e5ffd31b6')
+		}
+	};
+});
+
+const { util } = require('webpack');
+
 // Save reference to path.relative because the function is mock inside tests
 // The original function is return after each tests
 const originalPathRelative = path.relative;
@@ -67,6 +89,7 @@ const entrypointsMap = new Map();
 entrypointsMap.set('app-a', {
 	chunks: [
 		{
+			hash: 'beb18939e5093045258b8d24a34dd844',
 			getModules: () => [
 				{
 					buildInfo: { fileDependencies: ['example/src/js/app-a.js'] }
@@ -92,6 +115,7 @@ entrypointsMap.set('app-a', {
 entrypointsMap.set('app-b', {
 	chunks: [
 		{
+			hash: 'beb18939e5093045258b8d24a34dd843',
 			getModules: () => [
 				{
 					buildInfo: {
@@ -117,6 +141,10 @@ beforeEach(() => {
 				path: '/dist',
 				publicPath: '/dist'
 			}
+		},
+		outputOptions: {
+			hashFunction: 'md4',
+			hashDigest: 'hex'
 		}
 	};
 
@@ -431,6 +459,35 @@ describe('SvgChunkWebpackPlugin getBuildHash', () => {
 		const result = svgChunkWebpackPlugin.getBuildHash();
 
 		expect(result).toBe('4cc05208d925b7b31259');
+	});
+});
+
+describe('SvgChunkWebpackPlugin getChunkHash', () => {
+	it('Should call the getChunkHash function', () => {
+		svgChunkWebpackPlugin.compilation = compilationWebpack;
+		const result = svgChunkWebpackPlugin.getChunkHash('app-a');
+
+		expect(result).toBe('beb18939e5093045258b8d24a34dd844');
+	});
+
+	it('Should call the getChunkHash function without chunks[0]', () => {
+		svgChunkWebpackPlugin.compilation = compilationWebpack;
+		svgChunkWebpackPlugin.compilation.entrypoints.get('app-a').chunks = [];
+		const result = svgChunkWebpackPlugin.getChunkHash('app-a');
+
+		expect(result).toBe('');
+	});
+});
+
+describe('SvgChunkWebpackPlugin getContentHash', () => {
+	it('Should call the getContentHash function', () => {
+		svgChunkWebpackPlugin.compilation = compilationWebpack;
+		const result = svgChunkWebpackPlugin.getContentHash(spritesFixture['app-a']);
+
+		expect(util.createHash).toHaveBeenCalledWith('md4');
+		expect(util.update).toHaveBeenCalledWith(spritesFixture['app-a']);
+		expect(util.digest).toHaveBeenCalledWith('hex');
+		expect(result).toBe('a5934d97b38c748213317d7e5ffd31b6');
 	});
 });
 
