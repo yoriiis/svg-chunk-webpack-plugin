@@ -3,9 +3,9 @@ import { Sprites } from './interfaces';
 export = function templatePreview(sprites: Array<Sprites>): string {
 	/* prettier-ignore */
 	return `<!DOCTYPE html>
-				<html>
+				<html lang="en">
 					<head>
-						<title>Preview - Svg Sprite</title>
+						<title>Preview - SvgChunkWebpackPlugin</title>
 						<meta name="viewport" content="width=device-width, initial-scale=1" />
 						<style>
 							body {
@@ -65,7 +65,6 @@ export = function templatePreview(sprites: Array<Sprites>): string {
 											<span class="svgItem-name">${svg}</span>
 										</div>
 									`).join('')}
-
 									${sprite.content}
 								</div>
 							</div>

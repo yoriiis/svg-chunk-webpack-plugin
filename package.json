@@ -1,7 +1,7 @@
 {
 	"name": "svg-chunk-webpack-plugin",
 	"version": "1.0.0",
-	"description": "",
+	"description": "Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped in sprite and optimized by svgo",
 	"keywords": [
 		"svg",
 		"svg-sprite",
@@ -29,7 +29,6 @@
 	"main": "./lib/index.js",
 	"types": "./src/index.d.ts",
 	"scripts": {
-		"analyze:bundle": "webpack --config=./example/webpack.config.js --mode=production --profile --json > webpack-stats.json && webpack-bundle-analyzer ./webpack-stats.json ./ -p 1664",
 		"build:example": "rm -rf ./example/dist/ && webpack --config=./example/webpack.config.js --mode=production",
 		"build:tsc": "tsc",
 		"coverage": "npm run test:coverage && cat ./coverage/lcov.info | coveralls",
@@ -42,9 +41,6 @@
 		"test:watch": "jest --watchAll --coverage"
 	},
 	"babel": {
-		"plugins": [
-			"babel-plugin-dynamic-import-node"
-		],
 		"presets": [
 			[
 				"@babel/preset-env",
@@ -140,7 +136,6 @@
 		"@types/webpack": "^4.41.12",
 		"babel-eslint": "^10.1.0",
 		"babel-loader": "^8.1.0",
-		"babel-plugin-dynamic-import-node": "^2.3.0",
 		"coveralls": "^3.0.11",
 		"css-loader": "^3.4.2",
 		"eslint": "^6.8.0",

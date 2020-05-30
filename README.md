@@ -20,7 +20,7 @@ When you work with SVGs exported by design softwares, like Sketch or Illustrator
 
 ## Zero config
 
-The plugin works without configuration with already the optimized settings. For advanced usage, see the section [using configuration](#using-configuration).
+The plugin works without configuration with already the optimized settings. For advanced usage, see the section [using configuration](#using-a-configuration).
 
 ## Installation
 
@@ -204,7 +204,7 @@ With [Webpack caching](https://webpack.js.org/guides/caching), several placehold
 >
 > With SVG inlined in the page, this option is not useful.
 
-The `[hash]` placeholder will add a unique hash based on the Webpack compilation hash. When the compilation build is updated, `[hash]` will change as well. See the [stats.hash](https://webpack.js.org/configuration/stats/#statshash) on the webpack documentation.
+The `[hash]` placeholder will add a unique hash based on the Webpack compilation hash. When the compilation build is updated, `[hash]` will change as well. See the [`stats.hash`](https://webpack.js.org/configuration/stats/#statshash) on the webpack documentation.
 
 ```javascript
 new SvgChunkWebpackPlugin({

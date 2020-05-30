@@ -110,7 +110,7 @@ declare class SvgSprite {
      */
     getBuildHash(): string;
     /**
-     * Get the chunk hash according to the entrypoint
+     * Get the chunk hash according to the entrypoint content
      *
      * @returns {String} Chunk hash
      */
