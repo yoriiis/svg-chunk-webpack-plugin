@@ -65,7 +65,7 @@ class SvgSprite {
 			},
 			generateSpritesManifest: false,
 			generateSpritesPreview: false,
-			filename: 'sprites/[name].svg'
+			filename: '[name].svg'
 		};
 
 		this.options = extend(true, DEFAULTS, options);
@@ -257,7 +257,7 @@ class SvgSprite {
 		}
 
 		// Check if the filename option contains the placeholder [chunkhash]
-		// [chunkhash] corresponds to the chunk hash
+		// [chunkhash] corresponds to the hash of the chunk content
 		if (REGEXP_CHUNKHASH.test(filename)) {
 			filename = filename.replace('[chunkhash]', this.getChunkHash(entryName));
 		}
@@ -281,7 +281,7 @@ class SvgSprite {
 	}
 
 	/**
-	 * Get the chunk hash according to the entrypoint
+	 * Get the chunk hash according to the entrypoint content
 	 *
 	 * @returns {String} Chunk hash
 	 */

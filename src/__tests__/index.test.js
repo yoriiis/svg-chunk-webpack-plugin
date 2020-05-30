@@ -178,7 +178,7 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 			},
 			generateSpritesManifest: true,
 			generateSpritesPreview: true,
-			filename: 'sprites/[name].svg'
+			filename: '[name].svg'
 		});
 		expect(svgChunkWebpackPlugin.svgOptimizer).toBeInstanceOf(Svgo);
 		expect(svgChunkWebpackPlugin.spritesManifest).toEqual({});
@@ -393,7 +393,7 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		expect(svgChunkWebpackPlugin.getBuildHash).not.toHaveBeenCalled();
 		expect(svgChunkWebpackPlugin.getChunkHash).not.toHaveBeenCalled();
 		expect(svgChunkWebpackPlugin.getContentHash).not.toHaveBeenCalled();
-		expect(result).toBe('sprites/app-a.svg');
+		expect(result).toBe('app-a.svg');
 	});
 
 	it('Should call the getFileName function with custom name', () => {
@@ -401,13 +401,13 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
 
-		svgChunkWebpackPlugin.options.filename = 'sprites/custom-name.svg';
+		svgChunkWebpackPlugin.options.filename = 'custom-name.svg';
 		const result = svgChunkWebpackPlugin.getFileName({
 			entryName: 'app-a',
 			output: spritesFixture['app-a']
 		});
 
-		expect(result).toBe('sprites/custom-name.svg');
+		expect(result).toBe('custom-name.svg');
 	});
 
 	it('Should call the getFileName function with [hash]', () => {
@@ -415,13 +415,13 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
 
-		svgChunkWebpackPlugin.options.filename = 'sprites/[name].[hash].svg';
+		svgChunkWebpackPlugin.options.filename = '[name].[hash].svg';
 		const result = svgChunkWebpackPlugin.getFileName({
 			entryName: 'app-a',
 			output: spritesFixture['app-a']
 		});
 
-		expect(result).toBe('sprites/app-a.4cc05208d925b7b31259.svg');
+		expect(result).toBe('app-a.4cc05208d925b7b31259.svg');
 	});
 
 	it('Should call the getFileName function with [chunkhash]', () => {
@@ -429,13 +429,13 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
 
-		svgChunkWebpackPlugin.options.filename = 'sprites/[name].[chunkhash].svg';
+		svgChunkWebpackPlugin.options.filename = '[name].[chunkhash].svg';
 		const result = svgChunkWebpackPlugin.getFileName({
 			entryName: 'app-a',
 			output: spritesFixture['app-a']
 		});
 
-		expect(result).toBe('sprites/app-a.beb18939e5093045258b8d24a34dd844.svg');
+		expect(result).toBe('app-a.beb18939e5093045258b8d24a34dd844.svg');
 	});
 
 	it('Should call the getFileName function with [contenthash]', () => {
@@ -443,13 +443,13 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
 
-		svgChunkWebpackPlugin.options.filename = 'sprites/[name].[contenthash].svg';
+		svgChunkWebpackPlugin.options.filename = '[name].[contenthash].svg';
 		const result = svgChunkWebpackPlugin.getFileName({
 			entryName: 'app-a',
 			output: spritesFixture['app-a']
 		});
 
-		expect(result).toBe('sprites/app-a.a5934d97b38c748213317d7e5ffd31b6.svg');
+		expect(result).toBe('app-a.a5934d97b38c748213317d7e5ffd31b6.svg');
 	});
 });
 

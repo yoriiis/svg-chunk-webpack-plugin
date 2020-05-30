@@ -3,7 +3,17 @@
 	"version": "1.0.0",
 	"description": "",
 	"keywords": [
-		"webpack"
+		"svg",
+		"svg-sprite",
+		"svgo",
+		"svgstore",
+		"webpack",
+		"webpack-plugin",
+		"webpack-loader",
+		"chunk",
+		"optimization",
+		"minification",
+		"javascript"
 	],
 	"files": [
 		"src",
