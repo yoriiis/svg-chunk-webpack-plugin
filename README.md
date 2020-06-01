@@ -126,7 +126,7 @@ The `filename` parameter is compatible with Webpack caching placeholders, see th
 
 Tells the plugin whether to personalize the default settings for svgo. Update the settings according to your needs from the plugins available on the [svgo](https://github.com/svg/svgo) documentation.
 
-> The `onlyMatchedOnce` property allows to replace all occurences of CSS classes in HTML attributes, not only selectors that match once.
+> 💡 The `onlyMatchedOnce` property allows to replace all occurences of CSS classes in HTML attributes, not only selectors that match once.
 
 ```javascript
 new SvgChunkWebpackPlugin({
@@ -148,7 +148,7 @@ new SvgChunkWebpackPlugin({
 
 SVG sprites are built using the svgstore package. Tells the plugin whether to personalize the default settings for [svgstore](https://github.com/svgstore/svgstore#options).
 
-> Sprites already contain minimal inline styles to hide the sprite on the page to keep full support with all SVG features. To avoid LinearGradient conflicts, avoid the `display: none` property which break SVG defs.
+> 💡 Sprites already contain minimal inline styles to hide the sprite on the page to keep full support with all SVG features. To avoid LinearGradient conflicts, avoid the `display: none` property which break SVG defs.
 
 ```javascript
 new SvgChunkWebpackPlugin({
