@@ -10,8 +10,8 @@ module.exports = (env, argv) => {
 	return {
 		watch: !isProduction,
 		entry: {
-			'app-a': `${path.resolve(__dirname, './src/js/app-a.js')}`,
-			'app-b': `${path.resolve(__dirname, './src/js/app-b.js')}`
+			home: `${path.resolve(__dirname, './src/js/home.js')}`,
+			news: `${path.resolve(__dirname, './src/js/news.js')}`
 		},
 		watchOptions: {
 			ignored: /node_modules/

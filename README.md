@@ -2,21 +2,21 @@
 
 ![SvgChunkWebpackPlugin](https://img.shields.io/badge/svg--chunk--webpack--plugin-v1.0.0-29008a.svg?style=for-the-badge) ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/yoriiis/svg-chunk-webpack-plugin/Build/master?style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=master) ![Node.js](https://img.shields.io/node/v/svg-chunk-webpack-plugin?style=for-the-badge)
 
-> Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped in sprite and optimized by svgo.
+> Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped as a sprite and optimized by svgo.
 
-The SvgChunkWebpackPlugin creates optimized sprites of SVG, according to the Webpack entrypoints. Each sprites contains only SVG dependencies listed on its entrypoints to improved code splitting, even on SVG files.
+The SvgChunkWebpackPlugin creates optimized SVG sprites, according to Webpack's entrypoints. Each sprite contains only the SVG dependencies listed on its entrypoints to improved code splitting, even on SVG files.
 
 The plugin includes the popular [svgo](https://github.com/svg/svgo) package with the optimized settings, to generates clean and optimized SVG sprites.
 
-Code splitting is the key to deliver files without unused content for the pages. It already exists for CSS, Javascript and now for SVG with this plugin.
+Code splitting is the key to deliver files without any content that is unused by the pages. It already exists for CSS, Javascript and now for SVG files with this plugin.
 
 ## When to use this plugin
 
-On multiple page application, each pages must includes only necessary dependencies. In other words, includes only the SVG files imported by the entrypoint and all its dependencies.
+On multiple page application, each pages must includes only its necessary dependencies. In other words, it must include only the SVG files imported by its entrypoint and all its dependencies.
 
-With reusable components, SVGs are often duplicated on all the project. Now, you can create a global SVG library and every Javascript files can import SVG from this library. Entrypoint dependencies are automatically updated, thanks to the Webpack compilation.
+With reusable components, SVGs are often duplicated on all the project. Now, you can create a global SVG library and every Javascript files can easily import any SVG from this library. Entrypoint dependencies are automatically updated, thanks to the Webpack compilation.
 
-When you work with SVGs exported by design softwares, like Sketch or Illustrator. Indeed, source code of these SVG files are commonly not optimized and contains comments, CSS classes and create conflicts betwen them. The plugin automatically clean all SVGs before to create the sprite.
+When you work with SVGs exported by design softwares, like Sketch or Illustrator, their source code is never optimized and often contains comments, CSS classes which can create conflicts between them. The plugin automatically cleans all SVGs before creating the sprite.
 
 ## Zero config
 
@@ -24,7 +24,7 @@ The plugin works without configuration with already the optimized settings. For 
 
 ## Installation
 
-The plugin is available as the `svg-chunk-webpack-plugin` package name on [npm](https://www.npmjs.com/package/svg-chunk-webpack-plugin) and [Github](https://github.com/yoriiis/svg-chunk-webpack-plugin).
+The plugin is available as a package with the name of `svg-chunk-webpack-plugin` on [npm](https://www.npmjs.com/package/svg-chunk-webpack-plugin) and [Github](https://github.com/yoriiis/svg-chunk-webpack-plugin).
 
 ```bash
 npm install svg-chunk-webpack-plugin --save-dev
@@ -40,11 +40,11 @@ SvgChunkWebpackPlugin was built for Node.js `>=8.11.2` and Webpack `>=4.x`.
 
 ## Example
 
-The project includes a minimalist example in the `./example` directory. Run the `npm run build:example` command to execute the Webpack example and see SvgChunkWebpackPlugin implementation in action.
+The project includes a minimalist example in the `./example` directory. Run the `npm run build:example` command to execute the Webpack example and see SvgChunkWebpackPlugin's implementation in action.
 
 ## Basic usage
 
-The plugin will generates one SVG sprite for each entrypoints. Sprites are built in the output path directory with all the other assets. Each sprite filename is composed by the entrypoint name (`sprite-home.svg` in the example below).
+The plugin will generate one SVG sprite for each entrypoints. Sprites are built in the output path directory with all the other assets. Each sprite filename is composed with its entrypoint name (in the example below, that would be `home.svg`).
 
 First, let's add the loader and the plugin to the Webpack configuration.
 
@@ -80,9 +80,9 @@ module.exports = {
 };
 ```
 
-> 💡 Prefer inline SVG for more flexibility and better performance. Fewer HTTP requests, CSS properties to change the style, no flickering during the page load.
+> 💡 For more flexibility and better performance, inline SVG files are better. Fewer HTTP requests, CSS properties to change the style, no flickering during the page load.
 
-Then, include the sprite in the according pages (_we use Twig in the following example_).
+Then, include the sprite in the wanted pages (_we use Twig in the following example_).
 
 **home.html.twig**
 
@@ -148,7 +148,7 @@ new SvgChunkWebpackPlugin({
 
 SVG sprites are built using the svgstore package. Tells the plugin whether to personalize the default settings for [svgstore](https://github.com/svgstore/svgstore).
 
-> Sprites contains already minimal inline styles to hide the sprite on the page to keep full support with all SVG features. To avoid LinearGradient conflicts, avoid the `display: none` property which break SVG defs.
+> Sprites already contain minimal inline styles to hide the sprite on the page to keep full support with all SVG features. To avoid LinearGradient conflicts, avoid the `display: none` property which break SVG defs.
 
 ```javascript
 new SvgChunkWebpackPlugin({
@@ -192,7 +192,7 @@ new SvgChunkWebpackPlugin({
 });
 ```
 
-![Sprites preview](./example/sprites-preview.jpg)
+![Sprites preview](./example/sprites-preview.png)
 
 ### Caching
 
@@ -200,7 +200,7 @@ With [Webpack caching](https://webpack.js.org/guides/caching), several placehold
 
 > 💡 The `[contenthash]` placeholder is the best option because it depends on the sprite content.
 >
-> Cache placeholders are expensive in build performance, use it only with production mode.
+> Cache placeholders are expensive in build performance, use it only in production mode.
 >
 > With SVG inlined in the page, this option is not useful.
 
@@ -212,7 +212,7 @@ new SvgChunkWebpackPlugin({
 });
 ```
 
-The `[chunkhash]` placeholder will add a unique hash based on the content of the chunk. When the chunk's content changes, `[chunkhash]` will change as well.
+The `[chunkhash]` placeholder will add a unique hash based on the content of the entrypoint. When the entrypoint's content changes, `[chunkhash]` will change as well.
 
 ```javascript
 new SvgChunkWebpackPlugin({

@@ -1,6 +1,6 @@
 {
-  "app-a.js": "/dist/app-a.js",
-  "app-b.js": "/dist/app-b.js",
-  "app-a.svg": "/dist/app-a.svg",
-  "app-b.svg": "/dist/app-b.svg"
+  "home.js": "/dist/home.js",
+  "news.js": "/dist/news.js",
+  "home.svg": "/dist/home.svg",
+  "news.svg": "/dist/news.svg"
 }
