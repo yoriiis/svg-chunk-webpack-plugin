@@ -146,7 +146,7 @@ new SvgChunkWebpackPlugin({
 
 `Object`
 
-SVG sprites are built using the svgstore package. Tells the plugin whether to personalize the default settings for [svgstore](https://github.com/svgstore/svgstore).
+SVG sprites are built using the svgstore package. Tells the plugin whether to personalize the default settings for [svgstore](https://github.com/svgstore/svgstore#options).
 
 > Sprites already contain minimal inline styles to hide the sprite on the page to keep full support with all SVG features. To avoid LinearGradient conflicts, avoid the `display: none` property which break SVG defs.
 
@@ -194,17 +194,19 @@ new SvgChunkWebpackPlugin({
 
 ![Sprites preview](./example/sprites-preview.png)
 
-### Caching
+---
 
-With [Webpack caching](https://webpack.js.org/guides/caching), several placeholders are available depending on your needs.
+## Caching
+
+With [Webpack caching](https://webpack.js.org/guides/caching), several placeholders are available depending on your needs. With SVG inlined in the page, this option is not useful.
 
 > 💡 The `[contenthash]` placeholder is the best option because it depends on the sprite content.
 >
 > Cache placeholders are expensive in build performance, use it only in production mode.
->
-> With SVG inlined in the page, this option is not useful.
 
-The `[hash]` placeholder will add a unique hash based on the Webpack compilation hash. When the compilation build is updated, `[hash]` will change as well. See the [`stats.hash`](https://webpack.js.org/configuration/stats/#statshash) on the webpack documentation.
+### `[hash]`
+
+The `[hash]` placeholder will add a unique hash generated for every build. When the compilation build is updated, `[hash]` will change as well. See the [`stats.hash`](https://webpack.js.org/configuration/stats/#statshash) on the webpack documentation.
 
 ```javascript
 new SvgChunkWebpackPlugin({
@@ -212,13 +214,17 @@ new SvgChunkWebpackPlugin({
 });
 ```
 
-The `[chunkhash]` placeholder will add a unique hash based on the content of the entrypoint. When the entrypoint's content changes, `[chunkhash]` will change as well.
+### `[chunkhash]`
+
+The `[chunkhash]` placeholder will add a unique hash based on the content of the entrypoint. When the entrypoint's content changes, `[chunkhash]` will change as well. All the entrypoint dependencies will have the same hash.
 
 ```javascript
 new SvgChunkWebpackPlugin({
   filename: '[name].[chunkhash].svg';
 });
 ```
+
+### `[contenthash]`
 
 The `[contenthash]` placeholder will add a unique hash based on the content of the sprite. When the sprite's content changes, `[contenthash]` will change as well.
 
