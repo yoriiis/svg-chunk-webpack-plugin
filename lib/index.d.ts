@@ -7,6 +7,10 @@
  **/
 import { Compiler } from 'webpack';
 import { Svgs, SpriteManifest, Sprites } from './interfaces';
+interface NormalModule {
+    userRequest: string;
+    originalSource: Function;
+}
 declare class SvgSprite {
     options: {
         svgstoreConfig: Object;
@@ -19,6 +23,7 @@ declare class SvgSprite {
     spritesManifest: SpriteManifest;
     spritesList: Array<Sprites>;
     compilation: any;
+    isWebpack4: Boolean;
     entryNames: Array<string>;
     PLUGIN_NAME: any;
     /**
@@ -36,10 +41,13 @@ declare class SvgSprite {
      * Hook expose by the Webpack compiler
      *
      * @param {Object} compilation The Webpack compilation variable
-     *
-     * @returns {Promise<void>} Resolve the promise when all actions are done
      */
     hookCallback(compilation: object): Promise<void>;
+    /**
+     * Add assets
+     * The hook is triggered by webpack
+     */
+    addAssets(): Promise<void>;
     /**
      * Get entrypoint names from the compilation
      *
@@ -53,7 +61,7 @@ declare class SvgSprite {
      *
      * @returns {Promise<void>} Resolve the promise when all actions are done
      */
-    processEntry: (entryName: string) => Promise<void>;
+    processEntry(entryName: string): Promise<void>;
     /**
      * Optimize SVG with Svgo
      *
@@ -61,7 +69,7 @@ declare class SvgSprite {
      *
      * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
      */
-    optimizeSvg: (filepath: string) => Promise<Svgs>;
+    optimizeSvg: (moduleDependency: NormalModule) => Promise<Svgs>;
     /**
      * Get SVGs filtered by entrypoints
      *
@@ -69,7 +77,7 @@ declare class SvgSprite {
      *
      * @returns {Array<Object>} Svgs list
      */
-    getSvgsByEntrypoint(entryName: string): Array<string>;
+    getSvgsDependenciesByEntrypoint(entryName: string): Array<NormalModule>;
     /**
      * Generate the SVG sprite with Svgstore
      *
