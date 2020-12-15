@@ -320,21 +320,19 @@ describe('SvgChunkWebpackPlugin processEntry', () => {
 
 describe('SvgChunkWebpackPlugin optimizeSvg', () => {
 	it.skip('Should call the optimizeSvg function', async () => {
-		fse.readFile = jest.fn().mockImplementation(() => svgsFixture.gradient);
-		svgChunkWebpackPlugin.svgOptimizer.optimize = jest
-			.fn()
-			.mockImplementation(() => ({ data: svgsFixture.gradient }));
-
-		const result = await svgChunkWebpackPlugin.optimizeSvg(svgsFilepath[0]);
-
-		expect(fse.readFile).toHaveBeenCalledWith(svgsFilepath[0], 'utf8');
-		expect(svgChunkWebpackPlugin.svgOptimizer.optimize).toHaveBeenCalledWith(
-			svgsFixture.gradient
-		);
-		expect(result).toEqual({
-			name: 'gradient',
-			content: svgsFixture.gradient
-		});
+		// fse.readFile = jest.fn().mockImplementation(() => svgsFixture.gradient);
+		// svgChunkWebpackPlugin.svgOptimizer.optimize = jest
+		// 	.fn()
+		// 	.mockImplementation(() => ({ data: svgsFixture.gradient }));
+		// const result = await svgChunkWebpackPlugin.optimizeSvg(svgsFilepath[0]);
+		// expect(fse.readFile).toHaveBeenCalledWith(svgsFilepath[0], 'utf8');
+		// expect(svgChunkWebpackPlugin.svgOptimizer.optimize).toHaveBeenCalledWith(
+		// 	svgsFixture.gradient
+		// );
+		// expect(result).toEqual({
+		// 	name: 'gradient',
+		// 	content: svgsFixture.gradient
+		// });
 	});
 });
 
@@ -519,17 +517,15 @@ describe('SvgChunkWebpackPlugin createSpritesManifest', () => {
 
 describe('SvgChunkWebpackPlugin createSpritesPreview', () => {
 	it.skip('Should call the createSpritesPreview function', () => {
-		fse.outputFileSync = jest.fn();
-		svgChunkWebpackPlugin.getPreviewTemplate = jest.fn().mockImplementation(() => 'template');
-
-		svgChunkWebpackPlugin.compilation = compilationWebpack;
-		svgChunkWebpackPlugin.createSpritesPreview();
-
-		expect(svgChunkWebpackPlugin.getPreviewTemplate).toHaveBeenCalled();
-		expect(fse.outputFileSync).toHaveBeenCalledWith(
-			`${compilationWebpack.options.output.path}/sprites-preview.html`,
-			'template'
-		);
+		// fse.outputFileSync = jest.fn();
+		// svgChunkWebpackPlugin.getPreviewTemplate = jest.fn().mockImplementation(() => 'template');
+		// svgChunkWebpackPlugin.compilation = compilationWebpack;
+		// svgChunkWebpackPlugin.createSpritesPreview();
+		// expect(svgChunkWebpackPlugin.getPreviewTemplate).toHaveBeenCalled();
+		// expect(fse.outputFileSync).toHaveBeenCalledWith(
+		// 	`${compilationWebpack.options.output.path}/sprites-preview.html`,
+		// 	'template'
+		// );
 	});
 });
 
