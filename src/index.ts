@@ -219,15 +219,11 @@ class SvgSprite {
 		let listSvgsDependencies: Array<NormalModule> = [];
 
 		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: any) => {
-			this.compilation.chunkGraph.getChunkModules(chunk).forEach((module: any) => {
-				module.dependencies.forEach((dependency: Dependency) => {
-					const extension = path.extname(dependency.userRequest).substr(1);
-					if (extension === 'svg') {
-						const moduleDependency = this.compilation.moduleGraph.getModule(dependency);
-						listSvgsDependencies.push(moduleDependency);
-					}
-				});
-			});
+			for (const module of this.compilation.chunkGraph.getChunkModulesIterable(chunk)) {
+				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
+					listSvgsDependencies.push(module);
+				}
+			}
 		});
 
 		return listSvgsDependencies;
