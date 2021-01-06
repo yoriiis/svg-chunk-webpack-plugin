@@ -23,7 +23,6 @@ declare class SvgSprite {
     spritesManifest: SpriteManifest;
     spritesList: Array<Sprites>;
     compilation: any;
-    isWebpack4: Boolean;
     entryNames: Array<string>;
     PLUGIN_NAME: any;
     /**

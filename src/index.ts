@@ -9,9 +9,8 @@
 import { Compiler } from 'webpack';
 const webpack = require('webpack');
 
-// webpack v4/v5 compatibility:
 // https://github.com/webpack/webpack/issues/11425#issuecomment-686607633
-const { RawSource } = webpack.sources || require('webpack-sources');
+const { RawSource } = webpack.sources;
 
 const { util } = require('webpack');
 const path = require('path');
@@ -50,7 +49,6 @@ class SvgSprite {
 	spritesManifest: SpriteManifest;
 	spritesList: Array<Sprites>;
 	compilation: any;
-	isWebpack4: Boolean;
 	entryNames!: Array<string>;
 
 	// This need to find plugin from loader context
@@ -87,7 +85,6 @@ class SvgSprite {
 
 		this.options = extend(true, DEFAULTS, options);
 		this.svgOptimizer = new Svgo(this.options.svgoConfig);
-		this.isWebpack4 = false;
 		this.spritesManifest = {};
 		this.spritesList = [];
 		this.hookCallback = this.hookCallback.bind(this);
@@ -100,9 +97,7 @@ class SvgSprite {
 	 * @param {Object} compiler The Webpack compiler variable
 	 */
 	apply(compiler: Compiler): void {
-		this.isWebpack4 = webpack.version.startsWith('4.');
-		const compilerHook = this.isWebpack4 ? 'emit' : 'thisCompilation';
-		compiler.hooks[compilerHook].tap('SvgSprite', this.hookCallback);
+		compiler.hooks.thisCompilation.tap('SvgSprite', this.hookCallback);
 	}
 
 	/**
@@ -113,18 +108,14 @@ class SvgSprite {
 	async hookCallback(compilation: object): Promise<void> {
 		this.compilation = compilation;
 
-		if (this.isWebpack4) {
-			this.addAssets();
-		} else {
-			// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
-			this.compilation.hooks.processAssets.tapPromise(
-				{
-					name: 'SvgSprite',
-					stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
-				},
-				this.addAssets
-			);
-		}
+		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
+		this.compilation.hooks.processAssets.tapPromise(
+			{
+				name: 'SvgSprite',
+				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+			},
+			this.addAssets
+		);
 	}
 
 	/**
@@ -174,7 +165,6 @@ class SvgSprite {
 		);
 		const sprite = this.generateSprite(svgsOptimized);
 
-		// TODO: the "smiley-love.svg" disappear inside the sprite
 		this.createSpriteAsset({ entryName, sprite });
 
 		// Update sprites manifest
@@ -313,8 +303,6 @@ class SvgSprite {
 	 */
 	getChunkHash(entryName: string): string {
 		const chunks = this.compilation.entrypoints.get(entryName).chunks;
-		// TODO warning DEP_WEBPACK_DEPRECATION_ARRAY_TO_SET_LENGTH
-		// DeprecationWarning: Compilation.chunks was changed from Array to Set (using Array property 'length' is deprecated)
 		return chunks.length ? chunks[0].hash : '';
 	}
 
@@ -354,17 +342,7 @@ class SvgSprite {
 	 * @returns {String} Template for the preview
 	 */
 	getPreviewTemplate(): string {
-		return templatePreview(this.getSpritesList());
-	}
-
-	/**
-	 * Get sprites list
-	 * The list is used to create the preview
-	 *
-	 * @returns {Array<Sprites>} Sprites list
-	 */
-	getSpritesList(): Array<Sprites> {
-		return this.spritesList;
+		return templatePreview(this.spritesList);
 	}
 }
 

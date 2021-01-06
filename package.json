@@ -171,7 +171,7 @@
 		"webpack-cli": "^4.2.0"
 	},
 	"peerDependencies": {
-		"webpack": "^4.0.0 || ^5.0.0"
+		"webpack": ">= 5.10.3"
 	},
 	"engines": {
 		"node": ">= 10.13.0"

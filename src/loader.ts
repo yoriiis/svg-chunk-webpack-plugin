@@ -13,6 +13,7 @@ export = function spriteLoader(this: any, content: string): string {
 	this._module.factoryMeta = this._module.factoryMeta || {};
 	this._module.factoryMeta.sideEffectFree = false;
 
+	// Flag all SVG files to find them more easily on the plugin side
 	this._module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN = true;
 
 	// Check if content is a SVG file

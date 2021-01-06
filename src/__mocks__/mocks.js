@@ -30,7 +30,7 @@ export function mockGetSvgsByEntrypoint(svgChunkWebpackPlugin, svgsFilepath) {
  * @param {Object} svgsFixture List of sprite fixtures
  */
 export function mockOptimizeSvg(svgChunkWebpackPlugin, svgsFixture) {
-	svgChunkWebpackPlugin.optimizeSvg = jest.fn().mockImplementation(filepath => {
+	svgChunkWebpackPlugin.optimizeSvg = jest.fn().mockImplementation((filepath) => {
 		const name = path.basename(filepath, '.svg');
 		return {
 			name,
