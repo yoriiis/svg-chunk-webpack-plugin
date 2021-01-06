@@ -4,7 +4,7 @@ import SvgChunkWebpackPlugin from '../index';
 
 import {
 	mockGetEntryNames,
-	mockGetSvgsByEntrypoint,
+	mockGetSvgsDependenciesByEntrypoint,
 	mockOptimizeSvg,
 	mockGenerateSprite,
 	mockGetBuildHash,
@@ -18,6 +18,10 @@ import Svgo from 'svgo';
 
 jest.mock('../preview');
 
+const webpack = require('webpack');
+const { util } = require('webpack');
+const { RawSource } = webpack.sources;
+
 // Mock Webpack util to works with chaining function
 jest.mock('webpack', () => {
 	const mockCreateHash = jest.fn();
@@ -30,15 +34,19 @@ jest.mock('webpack', () => {
 		digest: mockDigest
 	};
 	return {
+		Compilation: {
+			PROCESS_ASSETS_STAGE_ADDITIONAL: ''
+		},
 		util: {
 			createHash: mockCreateHash.mockImplementation(() => utils),
 			update: mockUpdate.mockImplementation(() => utils),
 			digest: mockDigest.mockImplementation(() => 'a5934d97b38c748213317d7e5ffd31b6')
+		},
+		sources: {
+			RawSource: jest.fn()
 		}
 	};
 });
-
-const { util } = require('webpack');
 
 // Save reference to path.relative because the function is mock inside tests
 // The original function is return after each tests
@@ -61,10 +69,34 @@ const spritesFixture = {
 		'<svg aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden;"><defs><linearGradient id="a"><stop offset="5%" stop-color="green"/><stop offset="95%" stop-color="gold"/></linearGradient></defs><symbol id="gradient"><rect fill="url(#a)" width="100%" height="100%"/></symbol><symbol id="video" viewBox="0 0 16 16"><path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm3.3 8.5l-4.5 3c-.1 0-.1.1-.2.1s-.2 0-.3-.1c-.2-.1-.3-.3-.3-.5V5c0-.2.1-.4.2-.5.2-.1.3-.1.5 0l4.5 3c.2.1.3.3.3.5s-.1.4-.2.5z" fill="#ff004b"/></symbol><symbol id="smiley-love" viewBox="0 0 48 48"><circle class="st0" cx="24" cy="24" r="24" fill="#fbd971"/><path class="st1" d="M24 41.1c-7.6 0-13.7-6.2-13.7-13.7 0-.6.5-1.1 1.1-1.1.6 0 1.1.5 1.1 1.1 0 6.3 5.1 11.4 11.4 11.4s11.4-5.1 11.4-11.4c0-.6.5-1.1 1.1-1.1.6 0 1.1.5 1.1 1.1.2 7.6-5.9 13.7-13.5 13.7z" fill="#d8b11a"/><path d="M14.3 12.2c.5-1.1 1.6-1.9 3-1.9 1.8 0 3.1 1.5 3.2 3.2 0 0 .1.4-.1 1.2-.3 1.1-.9 2-1.7 2.8l-4.4 3.8-4.3-3.8c-.8-.7-1.4-1.7-1.7-2.8-.2-.8-.1-1.2-.1-1.2.2-1.8 1.5-3.2 3.2-3.2 1.4 0 2.4.8 2.9 1.9z" fill="#e64c3c"/><path data-name="Calque 1-2-2" d="M33.6 12.2c.5-1.1 1.6-1.9 3-1.9 1.8 0 3.1 1.5 3.2 3.2 0 0 .1.4-.1 1.2-.3 1.1-.9 2-1.7 2.8l-4.4 3.8-4.3-3.8c-.8-.7-1.4-1.7-1.7-2.8-.2-.8-.1-1.2-.1-1.2.2-1.8 1.5-3.2 3.2-3.2 1.3 0 2.4.8 2.9 1.9z" fill="#e64c3c"/></symbol></svg>'
 };
 
-const svgsFilepath = [
-	'example/src/svgs/gradient.svg',
-	'example/src/svgs/video.svg',
-	'example/src/svgs/smiley-love.svg'
+const svgsDependencies = [
+	{
+		buildInfo: {
+			SVG_CHUNK_WEBPACK_PLUGIN: true
+		},
+		userRequest: '/Applications/svg-chunk-webpack-plugin/example/src/svgs/gradient.svg',
+		originalSource: () => ({
+			_value: JSON.stringify(svgsFixture.gradient)
+		})
+	},
+	{
+		buildInfo: {
+			SVG_CHUNK_WEBPACK_PLUGIN: true
+		},
+		userRequest: '/Applications/svg-chunk-webpack-plugin/example/src/svgs/video.svg',
+		originalSource: () => ({
+			_value: JSON.stringify(svgsFixture.video)
+		})
+	},
+	{
+		buildInfo: {
+			SVG_CHUNK_WEBPACK_PLUGIN: true
+		},
+		userRequest: '/Applications/svg-chunk-webpack-plugin/example/src/svgs/smiley-love.svg',
+		originalSource: () => ({
+			_value: JSON.stringify(svgsFixture['smiley-love'])
+		})
+	}
 ];
 const svgsSprite = [
 	{ name: 'gradient', content: svgsFixture.gradient },
@@ -88,41 +120,14 @@ const entrypointsMap = new Map();
 entrypointsMap.set('home', {
 	chunks: [
 		{
-			hash: 'beb18939e5093045258b8d24a34dd844',
-			getModules: () => [
-				{
-					buildInfo: { fileDependencies: ['example/src/js/home.js'] }
-				},
-				{
-					buildInfo: { fileDependencies: ['example/src/svgs/gradient.svg'] }
-				},
-				{
-					buildInfo: { fileDependencies: ['example/src/svgs/video.svg'] }
-				},
-				{
-					buildInfo: { fileDependencies: ['example/src/js/component.js'] }
-				},
-				{
-					buildInfo: {
-						fileDependencies: ['example/src/svgs/smiley-love.svg']
-					}
-				}
-			]
+			hash: 'beb18939e5093045258b8d24a34dd844'
 		}
 	]
 });
 entrypointsMap.set('news', {
 	chunks: [
 		{
-			hash: 'beb18939e5093045258b8d24a34dd843',
-			getModules: () => [
-				{
-					buildInfo: {
-						fileDependencies: ['example/src/svgs/smiley-surprised.svg']
-					}
-				},
-				{ buildInfo: { fileDependencies: ['example/src/svgs/popcorn.svg'] } }
-			]
+			hash: 'beb18939e5093045258b8d24a34dd843'
 		}
 	]
 });
@@ -144,6 +149,14 @@ beforeEach(() => {
 		outputOptions: {
 			hashFunction: 'md4',
 			hashDigest: 'hex'
+		},
+		hooks: {
+			processAssets: {
+				tapPromise: jest.fn()
+			}
+		},
+		chunkGraph: {
+			getChunkModulesIterable: () => svgsDependencies
 		}
 	};
 
@@ -155,8 +168,9 @@ afterEach(() => {
 });
 
 describe('SvgChunkWebpackPlugin constructor', () => {
-	it.skip('Should initialize the constructor with custom options', () => {
+	it('Should initialize the constructor with custom options', () => {
 		expect(svgChunkWebpackPlugin.options).toMatchObject({
+			filename: '[name].svg',
 			svgstoreConfig: {
 				cleanDefs: false,
 				cleanSymbols: false,
@@ -176,8 +190,7 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 				]
 			},
 			generateSpritesManifest: true,
-			generateSpritesPreview: true,
-			filename: '[name].svg'
+			generateSpritesPreview: true
 		});
 		expect(svgChunkWebpackPlugin.svgOptimizer).toBeInstanceOf(Svgo);
 		expect(svgChunkWebpackPlugin.spritesManifest).toEqual({});
@@ -185,7 +198,7 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 		expect(svgChunkWebpackPlugin.PLUGIN_NAME).toBe('svg-chunk-webpack-plugin');
 	});
 
-	it.skip('Should initialize the constructor with default options', () => {
+	it('Should initialize the constructor with default options', () => {
 		const instance = new SvgChunkWebpackPlugin();
 		expect(instance.options).toMatchObject({
 			svgstoreConfig: {
@@ -213,32 +226,49 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 });
 
 describe('SvgChunkWebpackPlugin apply', () => {
-	it.skip('Should call the apply function', () => {
+	it('Should call the apply function', () => {
 		const compilerWebpack = {
 			hooks: {
-				emit: {
-					tapPromise: () => {}
+				thisCompilation: {
+					tap: () => {}
 				}
 			}
 		};
-		compilerWebpack.hooks.emit.tapPromise = jest.fn();
+		compilerWebpack.hooks.thisCompilation.tap = jest.fn();
 
 		svgChunkWebpackPlugin.apply(compilerWebpack);
 
-		expect(compilerWebpack.hooks.emit.tapPromise).toHaveBeenCalled();
+		expect(compilerWebpack.hooks.thisCompilation.tap).toHaveBeenCalled();
 	});
 });
 
 describe('SvgChunkWebpackPlugin hookCallback', () => {
-	it.skip('Should call the hookCallback function', async () => {
+	it('Should call the hookCallback function', () => {
+		svgChunkWebpackPlugin.hookCallback(compilationWebpack);
+
+		expect(
+			svgChunkWebpackPlugin.compilation.hooks.processAssets.tapPromise
+		).toHaveBeenCalledWith(
+			{
+				name: 'SvgChunkWebpackPlugin',
+				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+			},
+			svgChunkWebpackPlugin.addAssets
+		);
+	});
+});
+
+describe('SvgChunkWebpackPlugin addAssets', () => {
+	it('Should call the addAssets function', async () => {
 		mockGetEntryNames(svgChunkWebpackPlugin, entryNames);
 		svgChunkWebpackPlugin.processEntry = jest.fn();
 		svgChunkWebpackPlugin.createSpritesManifest = jest.fn();
 		svgChunkWebpackPlugin.createSpritesPreview = jest.fn();
 
-		await svgChunkWebpackPlugin.hookCallback(compilationWebpack);
+		await svgChunkWebpackPlugin.addAssets();
 
-		expect(svgChunkWebpackPlugin.compilation).toEqual(compilationWebpack);
+		expect(svgChunkWebpackPlugin.spritesManifest).toStrictEqual({});
+		expect(svgChunkWebpackPlugin.spritesList).toStrictEqual([]);
 		expect(svgChunkWebpackPlugin.getEntryNames).toHaveBeenCalled();
 		expect(svgChunkWebpackPlugin.processEntry).toHaveBeenCalledTimes(2);
 		expect(svgChunkWebpackPlugin.processEntry).toHaveBeenCalledWith('home');
@@ -247,7 +277,7 @@ describe('SvgChunkWebpackPlugin hookCallback', () => {
 		expect(svgChunkWebpackPlugin.createSpritesPreview).toHaveBeenCalled();
 	});
 
-	it.skip('Should call the hookCallback function without manifest and preview', async () => {
+	it('Should call the addAssets function without manifest and preview', async () => {
 		mockGetEntryNames(svgChunkWebpackPlugin, entryNames);
 		svgChunkWebpackPlugin.processEntry = jest.fn();
 		svgChunkWebpackPlugin.createSpritesManifest = jest.fn();
@@ -255,7 +285,7 @@ describe('SvgChunkWebpackPlugin hookCallback', () => {
 
 		svgChunkWebpackPlugin.options.generateSpritesManifest = false;
 		svgChunkWebpackPlugin.options.generateSpritesPreview = false;
-		await svgChunkWebpackPlugin.hookCallback(compilationWebpack);
+		await svgChunkWebpackPlugin.addAssets();
 
 		expect(svgChunkWebpackPlugin.createSpritesManifest).not.toHaveBeenCalled();
 		expect(svgChunkWebpackPlugin.createSpritesPreview).not.toHaveBeenCalled();
@@ -263,7 +293,7 @@ describe('SvgChunkWebpackPlugin hookCallback', () => {
 });
 
 describe('SvgChunkWebpackPlugin getEntryNames', () => {
-	it.skip('Should call the getEntryNames function', () => {
+	it('Should call the getEntryNames function', () => {
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 
 		expect(svgChunkWebpackPlugin.getEntryNames()).toEqual(['home', 'news']);
@@ -271,8 +301,8 @@ describe('SvgChunkWebpackPlugin getEntryNames', () => {
 });
 
 describe('SvgChunkWebpackPlugin processEntry', () => {
-	it.skip('Should call the processEntry function', async () => {
-		mockGetSvgsByEntrypoint(svgChunkWebpackPlugin, svgsFilepath);
+	it('Should call the processEntry function', async () => {
+		mockGetSvgsDependenciesByEntrypoint(svgChunkWebpackPlugin, svgsDependencies);
 		mockOptimizeSvg(svgChunkWebpackPlugin, svgsFixture);
 		mockGenerateSprite(svgChunkWebpackPlugin, spritesFixture.home);
 		svgChunkWebpackPlugin.createSpriteAsset = jest.fn();
@@ -281,31 +311,30 @@ describe('SvgChunkWebpackPlugin processEntry', () => {
 		// The original function is return after the test
 		path.relative = jest
 			.fn()
-			.mockImplementation((context, filepath) => `${context}${filepath}`);
+			.mockImplementation(
+				(context, moduleDependency) => `${context}${moduleDependency.userRequest}`
+			);
 
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 		await svgChunkWebpackPlugin.processEntry('home');
 
 		const entry = 'home';
-		expect(svgChunkWebpackPlugin.getSvgsByEntrypoint).toHaveBeenCalledWith(entry);
+		expect(svgChunkWebpackPlugin.getSvgsDependenciesByEntrypoint).toHaveBeenCalledWith(entry);
 		expect(svgChunkWebpackPlugin.optimizeSvg).toHaveBeenCalledTimes(3);
-		expect(svgChunkWebpackPlugin.optimizeSvg).toHaveBeenCalledWith(
-			'example/src/svgs/gradient.svg'
-		);
-		expect(svgChunkWebpackPlugin.optimizeSvg).toHaveBeenCalledWith(
-			'example/src/svgs/video.svg'
-		);
-		expect(svgChunkWebpackPlugin.optimizeSvg).toHaveBeenCalledWith(
-			'example/src/svgs/smiley-love.svg'
-		);
+		expect(svgChunkWebpackPlugin.optimizeSvg).toHaveBeenCalledWith(svgsDependencies[0]);
+		expect(svgChunkWebpackPlugin.optimizeSvg).toHaveBeenCalledWith(svgsDependencies[1]);
+		expect(svgChunkWebpackPlugin.optimizeSvg).toHaveBeenCalledWith(svgsDependencies[2]);
 		expect(svgChunkWebpackPlugin.generateSprite).toHaveBeenCalledWith(svgsSprite);
 		expect(svgChunkWebpackPlugin.createSpriteAsset).toHaveBeenCalledWith({
 			entryName: entry,
 			sprite: spritesFixture.home
 		});
 		expect(svgChunkWebpackPlugin.spritesManifest).toEqual({
-			home: svgsFilepath.map(
-				(filepath) => `${svgChunkWebpackPlugin.compilation.options.context}${filepath}`
+			home: svgsDependencies.map((moduleDependency) =>
+				path.relative(
+					svgChunkWebpackPlugin.compilation.options.context,
+					moduleDependency.userRequest
+				)
 			)
 		});
 		expect(svgChunkWebpackPlugin.spritesList).toEqual([
@@ -319,35 +348,59 @@ describe('SvgChunkWebpackPlugin processEntry', () => {
 });
 
 describe('SvgChunkWebpackPlugin optimizeSvg', () => {
-	it.skip('Should call the optimizeSvg function', async () => {
-		// fse.readFile = jest.fn().mockImplementation(() => svgsFixture.gradient);
-		// svgChunkWebpackPlugin.svgOptimizer.optimize = jest
-		// 	.fn()
-		// 	.mockImplementation(() => ({ data: svgsFixture.gradient }));
-		// const result = await svgChunkWebpackPlugin.optimizeSvg(svgsFilepath[0]);
-		// expect(fse.readFile).toHaveBeenCalledWith(svgsFilepath[0], 'utf8');
-		// expect(svgChunkWebpackPlugin.svgOptimizer.optimize).toHaveBeenCalledWith(
-		// 	svgsFixture.gradient
-		// );
-		// expect(result).toEqual({
-		// 	name: 'gradient',
-		// 	content: svgsFixture.gradient
-		// });
+	it('Should call the optimizeSvg function', async () => {
+		svgChunkWebpackPlugin.svgOptimizer.optimize = jest
+			.fn()
+			.mockImplementation(() => ({ data: svgsFixture.gradient }));
+
+		const result = await svgChunkWebpackPlugin.optimizeSvg(svgsDependencies[0]);
+
+		expect(svgChunkWebpackPlugin.svgOptimizer.optimize).toHaveBeenCalledWith(
+			svgsFixture.gradient
+		);
+		expect(result).toEqual({
+			name: 'gradient',
+			content: svgsFixture.gradient
+		});
 	});
 });
 
-describe('SvgChunkWebpackPlugin getSvgsByEntrypoint', () => {
-	it.skip('Should call the getSvgsByEntrypoint function', () => {
+describe('SvgChunkWebpackPlugin getSvgsDependenciesByEntrypoint', () => {
+	it('Should call the getSvgsDependenciesByEntrypoint function', () => {
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
+		const homeChunks = svgChunkWebpackPlugin.compilation.entrypoints.get('home');
+		svgChunkWebpackPlugin.compilation.entrypoints.get = jest.fn().mockReturnValue(homeChunks);
+		svgChunkWebpackPlugin.compilation.chunkGraph.getChunkModulesIterable = jest
+			.fn()
+			.mockReturnValue(svgsDependencies);
 
-		const result = svgChunkWebpackPlugin.getSvgsByEntrypoint('home');
+		const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypoint('home');
 
-		expect(result).toEqual(svgsFilepath);
+		expect(svgChunkWebpackPlugin.compilation.entrypoints.get).toHaveBeenCalledWith('home');
+		expect(
+			svgChunkWebpackPlugin.compilation.chunkGraph.getChunkModulesIterable
+		).toHaveBeenCalledWith(homeChunks.chunks[0]);
+		expect(result).toEqual(svgsDependencies);
+	});
+
+	it('Should call the getSvgsDependenciesByEntrypoint function with no flag on the last item', () => {
+		svgChunkWebpackPlugin.compilation = compilationWebpack;
+		svgChunkWebpackPlugin.compilation.chunkGraph.getChunkModulesIterable = jest
+			.fn()
+			.mockReturnValue([
+				{
+					buildInfo: {}
+				}
+			]);
+
+		const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypoint('home');
+
+		expect(result).toEqual([]);
 	});
 });
 
 describe('SvgChunkWebpackPlugin generateSprite', () => {
-	it.skip('Should call the generateSprite function', () => {
+	it('Should call the generateSprite function', () => {
 		const result = svgChunkWebpackPlugin.generateSprite(svgsSprite);
 
 		expect(result).toBe(spritesFixture.home);
@@ -375,7 +428,7 @@ describe('SvgChunkWebpackPlugin createSpriteAsset', () => {
 });
 
 describe('SvgChunkWebpackPlugin getFileName', () => {
-	it.skip('Should call the getFileName function with default options', () => {
+	it('Should call the getFileName function with default options', () => {
 		mockGetBuildHash(svgChunkWebpackPlugin);
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
@@ -391,7 +444,7 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		expect(result).toBe('home.svg');
 	});
 
-	it.skip('Should call the getFileName function with custom name', () => {
+	it('Should call the getFileName function with custom name', () => {
 		mockGetBuildHash(svgChunkWebpackPlugin);
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
@@ -405,7 +458,7 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		expect(result).toBe('sprite/custom-name.svg');
 	});
 
-	it.skip('Should call the getFileName function with [hash]', () => {
+	it('Should call the getFileName function with [hash]', () => {
 		mockGetBuildHash(svgChunkWebpackPlugin);
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
@@ -419,7 +472,7 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		expect(result).toBe('home.4cc05208d925b7b31259.svg');
 	});
 
-	it.skip('Should call the getFileName function with [chunkhash]', () => {
+	it('Should call the getFileName function with [chunkhash]', () => {
 		mockGetBuildHash(svgChunkWebpackPlugin);
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
@@ -433,7 +486,7 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 		expect(result).toBe('home.beb18939e5093045258b8d24a34dd844.svg');
 	});
 
-	it.skip('Should call the getFileName function with [contenthash]', () => {
+	it('Should call the getFileName function with [contenthash]', () => {
 		mockGetBuildHash(svgChunkWebpackPlugin);
 		mockGetChunkHash(svgChunkWebpackPlugin);
 		mockGetContentHash(svgChunkWebpackPlugin);
@@ -449,7 +502,7 @@ describe('SvgChunkWebpackPlugin getFileName', () => {
 });
 
 describe('SvgChunkWebpackPlugin getBuildHash', () => {
-	it.skip('Should call the getBuildHash function', () => {
+	it('Should call the getBuildHash function', () => {
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 		const result = svgChunkWebpackPlugin.getBuildHash();
 
@@ -458,14 +511,14 @@ describe('SvgChunkWebpackPlugin getBuildHash', () => {
 });
 
 describe('SvgChunkWebpackPlugin getChunkHash', () => {
-	it.skip('Should call the getChunkHash function', () => {
+	it('Should call the getChunkHash function', () => {
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 		const result = svgChunkWebpackPlugin.getChunkHash('home');
 
 		expect(result).toBe('beb18939e5093045258b8d24a34dd844');
 	});
 
-	it.skip('Should call the getChunkHash function without chunks[0]', () => {
+	it('Should call the getChunkHash function without chunks[0]', () => {
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 		svgChunkWebpackPlugin.compilation.entrypoints.get('home').chunks = [];
 		const result = svgChunkWebpackPlugin.getChunkHash('home');
@@ -475,7 +528,7 @@ describe('SvgChunkWebpackPlugin getChunkHash', () => {
 });
 
 describe('SvgChunkWebpackPlugin getContentHash', () => {
-	it.skip('Should call the getContentHash function', () => {
+	it('Should call the getContentHash function', () => {
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 		const result = svgChunkWebpackPlugin.getContentHash(spritesFixture.home);
 
@@ -517,34 +570,24 @@ describe('SvgChunkWebpackPlugin createSpritesManifest', () => {
 
 describe('SvgChunkWebpackPlugin createSpritesPreview', () => {
 	it.skip('Should call the createSpritesPreview function', () => {
-		// fse.outputFileSync = jest.fn();
-		// svgChunkWebpackPlugin.getPreviewTemplate = jest.fn().mockImplementation(() => 'template');
-		// svgChunkWebpackPlugin.compilation = compilationWebpack;
-		// svgChunkWebpackPlugin.createSpritesPreview();
-		// expect(svgChunkWebpackPlugin.getPreviewTemplate).toHaveBeenCalled();
-		// expect(fse.outputFileSync).toHaveBeenCalledWith(
-		// 	`${compilationWebpack.options.output.path}/sprites-preview.html`,
-		// 	'template'
-		// );
+		fse.outputFileSync = jest.fn();
+		svgChunkWebpackPlugin.getPreviewTemplate = jest.fn().mockImplementation(() => 'template');
+		svgChunkWebpackPlugin.compilation = compilationWebpack;
+
+		svgChunkWebpackPlugin.createSpritesPreview();
+
+		expect(svgChunkWebpackPlugin.getPreviewTemplate).toHaveBeenCalled();
+		expect(fse.outputFileSync).toHaveBeenCalledWith(
+			`${compilationWebpack.options.output.path}/sprites-preview.html`,
+			'template'
+		);
 	});
 });
 
 describe('SvgChunkWebpackPlugin getPreviewTemplate', () => {
-	it.skip('Should call the getPreviewTemplate function', () => {
-		svgChunkWebpackPlugin.getSpritesList = jest.fn().mockImplementation(() => spritesList);
-
+	it('Should call the getPreviewTemplate function', () => {
 		svgChunkWebpackPlugin.getPreviewTemplate();
 
-		expect(svgChunkWebpackPlugin.getSpritesList).toHaveBeenCalled();
-		expect(templatePreview).toHaveBeenCalledWith(spritesList);
-	});
-});
-
-describe('SvgChunkWebpackPlugin getSpritesList', () => {
-	it.skip('Should call the getSpritesList function', () => {
-		svgChunkWebpackPlugin.spritesList = spritesList;
-		const result = svgChunkWebpackPlugin.getSpritesList();
-
-		expect(result).toEqual(spritesList);
+		expect(templatePreview).toHaveBeenCalledWith(svgChunkWebpackPlugin.spritesList);
 	});
 });

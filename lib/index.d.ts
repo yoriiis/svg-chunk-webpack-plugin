@@ -144,12 +144,5 @@ declare class SvgSprite {
      * @returns {String} Template for the preview
      */
     getPreviewTemplate(): string;
-    /**
-     * Get sprites list
-     * The list is used to create the preview
-     *
-     * @returns {Array<Sprites>} Sprites list
-     */
-    getSpritesList(): Array<Sprites>;
 }
 export = SvgSprite;

@@ -32,11 +32,6 @@ interface NormalModule {
 	originalSource: Function;
 }
 
-// Describe the shape of the Dependency object
-interface Dependency {
-	userRequest: string;
-}
-
 class SvgSprite {
 	options: {
 		svgstoreConfig: Object;
@@ -111,7 +106,7 @@ class SvgSprite {
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
 		this.compilation.hooks.processAssets.tapPromise(
 			{
-				name: 'SvgSprite',
+				name: 'SvgChunkWebpackPlugin',
 				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
 			},
 			this.addAssets
