@@ -23,7 +23,6 @@ declare class SvgSprite {
     spritesManifest: SpriteManifest;
     spritesList: Array<Sprites>;
     compilation: any;
-    entryNames: Array<string>;
     PLUGIN_NAME: any;
     /**
      * Instanciate the constructor

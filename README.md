@@ -36,7 +36,7 @@ yarn add svg-chunk-webpack-plugin  --dev
 
 ## Environment
 
-SvgChunkWebpackPlugin was built for Node.js `>=8.11.2` and Webpack `>=4.x`.
+SvgChunkWebpackPlugin was built for Node.js `>=10.13.0` and Webpack `>=5.10.3`.
 
 ## Example
 
@@ -53,16 +53,16 @@ First, let's add the loader and the plugin to the Webpack configuration.
 **webpack.config.js**
 
 ```javascript
-var SvgChunkWebpackPlugin = require("svg-chunk-webpack-plugin");
-var path = require("path");
+var SvgChunkWebpackPlugin = require('svg-chunk-webpack-plugin');
+var path = require('path');
 
 module.exports = {
   entry: {
-    home: "home.js"
+    home: 'home.js'
   },
   output: {
-    path: path.resolve(__dirname, "./dist"),
-    filename: "main.js"
+    path: path.resolve(__dirname, './dist'),
+    filename: 'main.js'
   },
   module: {
     rules: [
@@ -157,8 +157,8 @@ new SvgChunkWebpackPlugin({
     cleanSymbols: false,
     inline: true,
     svgAttrs: {
-      "aria-hidden": true,
-      style: "position: absolute; width: 0; height: 0; overflow: hidden;"
+      'aria-hidden': true,
+      style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
     }
   }
 });

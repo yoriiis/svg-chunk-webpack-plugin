@@ -103,12 +103,6 @@ const svgsSprite = [
 	{ name: 'video', content: svgsFixture.video },
 	{ name: 'smiley-love', content: svgsFixture['smiley-love'] }
 ];
-const spritesList = {
-	name: 'home',
-	content: spritesFixture.home,
-	svgs: ['gradient', 'video', 'smiley-love']
-};
-
 const options = {
 	generateSpritesManifest: true,
 	generateSpritesPreview: true
@@ -150,6 +144,7 @@ beforeEach(() => {
 			hashFunction: 'md4',
 			hashDigest: 'hex'
 		},
+		emitAsset: jest.fn(),
 		hooks: {
 			processAssets: {
 				tapPromise: jest.fn()
@@ -408,7 +403,7 @@ describe('SvgChunkWebpackPlugin generateSprite', () => {
 });
 
 describe('SvgChunkWebpackPlugin createSpriteAsset', () => {
-	it.skip('Should call the createSpriteAsset function', () => {
+	it('Should call the createSpriteAsset function', () => {
 		svgChunkWebpackPlugin.getFileName = jest.fn().mockImplementation(() => 'home.svg');
 
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
@@ -416,14 +411,15 @@ describe('SvgChunkWebpackPlugin createSpriteAsset', () => {
 
 		svgChunkWebpackPlugin.createSpriteAsset({ entryName: 'home', sprite: output });
 
-		expect(svgChunkWebpackPlugin.compilation.assets).toEqual({
-			'home.svg': {
-				source: expect.any(Function),
-				size: expect.any(Function)
-			}
+		expect(svgChunkWebpackPlugin.getFileName).toHaveBeenCalledWith({
+			entryName: 'home',
+			output
 		});
-		expect(svgChunkWebpackPlugin.compilation.assets['home.svg'].source()).toBe(output);
-		expect(svgChunkWebpackPlugin.compilation.assets['home.svg'].size()).toBe(output.length);
+		expect(RawSource).toHaveBeenCalledWith(output, false);
+		expect(svgChunkWebpackPlugin.compilation.emitAsset).toHaveBeenCalledWith(
+			'home.svg',
+			new RawSource(output, false)
+		);
 	});
 });
 
@@ -540,7 +536,8 @@ describe('SvgChunkWebpackPlugin getContentHash', () => {
 });
 
 describe('SvgChunkWebpackPlugin createSpritesManifest', () => {
-	it.skip('Should call the createSpritesManifest function', () => {
+	it('Should call the createSpritesManifest function', () => {
+		jest.spyOn(JSON, 'stringify');
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 
 		svgChunkWebpackPlugin.spritesManifest = {
@@ -553,33 +550,27 @@ describe('SvgChunkWebpackPlugin createSpritesManifest', () => {
 		const output = JSON.stringify(svgChunkWebpackPlugin.spritesManifest, null, 2);
 		svgChunkWebpackPlugin.createSpritesManifest();
 
-		expect(svgChunkWebpackPlugin.compilation.assets).toEqual({
-			'sprites-manifest.json': {
-				source: expect.any(Function),
-				size: expect.any(Function)
-			}
-		});
-		expect(svgChunkWebpackPlugin.compilation.assets['sprites-manifest.json'].source()).toBe(
-			output
-		);
-		expect(svgChunkWebpackPlugin.compilation.assets['sprites-manifest.json'].size()).toBe(
-			output.length
+		expect(JSON.stringify).toHaveBeenCalledWith(svgChunkWebpackPlugin.spritesManifest, null, 2);
+		expect(RawSource).toHaveBeenCalledWith(output, false);
+		expect(svgChunkWebpackPlugin.compilation.emitAsset).toHaveBeenCalledWith(
+			'sprites-manifest.json',
+			new RawSource(output, false)
 		);
 	});
 });
 
 describe('SvgChunkWebpackPlugin createSpritesPreview', () => {
-	it.skip('Should call the createSpritesPreview function', () => {
-		fse.outputFileSync = jest.fn();
+	it('Should call the createSpritesPreview function', () => {
 		svgChunkWebpackPlugin.getPreviewTemplate = jest.fn().mockImplementation(() => 'template');
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 
 		svgChunkWebpackPlugin.createSpritesPreview();
 
 		expect(svgChunkWebpackPlugin.getPreviewTemplate).toHaveBeenCalled();
-		expect(fse.outputFileSync).toHaveBeenCalledWith(
-			`${compilationWebpack.options.output.path}/sprites-preview.html`,
-			'template'
+		expect(RawSource).toHaveBeenCalledWith(svgChunkWebpackPlugin.getPreviewTemplate(), false);
+		expect(svgChunkWebpackPlugin.compilation.emitAsset).toHaveBeenCalledWith(
+			'sprites-preview.html',
+			new RawSource(svgChunkWebpackPlugin.getPreviewTemplate(), false)
 		);
 	});
 });

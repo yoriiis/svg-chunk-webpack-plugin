@@ -7,18 +7,17 @@
  **/
 
 import { Compiler } from 'webpack';
+import { Svgs, SpriteManifest, Sprites, NormalModule, Chunk } from './interfaces';
 const webpack = require('webpack');
 
 // https://github.com/webpack/webpack/issues/11425#issuecomment-686607633
 const { RawSource } = webpack.sources;
-
 const { util } = require('webpack');
 const path = require('path');
 const svgstore = require('svgstore');
 const Svgo = require('svgo');
 const extend = require('extend');
 const templatePreview = require('./preview');
-import { Svgs, SpriteManifest, Sprites } from './interfaces';
 
 const PACKAGE_NAME = require('../package.json').name;
 const REGEXP_NAME = /\[name\]/i;
@@ -26,25 +25,19 @@ const REGEXP_HASH = /\[hash\]/i;
 const REGEXP_CHUNKHASH = /\[chunkhash\]/i;
 const REGEXP_CONTENTHASH = /\[contenthash\]/i;
 
-// Describe the shape of the NormalModule object
-interface NormalModule {
-	userRequest: string;
-	originalSource: Function;
-}
-
 class SvgSprite {
 	options: {
+		filename: string;
 		svgstoreConfig: Object;
 		svgoConfig: Object;
 		generateSpritesManifest: Boolean;
 		generateSpritesPreview: Boolean;
-		filename: string;
 	};
+
 	svgOptimizer: any;
 	spritesManifest: SpriteManifest;
 	spritesList: Array<Sprites>;
 	compilation: any;
-	entryNames!: Array<string>;
 
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
@@ -100,7 +93,7 @@ class SvgSprite {
 	 *
 	 * @param {Object} compilation The Webpack compilation variable
 	 */
-	async hookCallback(compilation: object): Promise<void> {
+	async hookCallback(compilation: Object): Promise<void> {
 		this.compilation = compilation;
 
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
@@ -163,14 +156,14 @@ class SvgSprite {
 		this.createSpriteAsset({ entryName, sprite });
 
 		// Update sprites manifest
-		this.spritesManifest[entryName] = svgsDependencies.map((moduleDependency) =>
+		this.spritesManifest[entryName] = svgsDependencies.map((moduleDependency: NormalModule) =>
 			path.relative(this.compilation.options.context, moduleDependency.userRequest)
 		);
 
 		this.spritesList.push({
 			name: entryName,
 			content: sprite,
-			svgs: svgsDependencies.map((moduleDependency) =>
+			svgs: svgsDependencies.map((moduleDependency: NormalModule) =>
 				path.basename(moduleDependency.userRequest, '.svg')
 			)
 		});
@@ -201,9 +194,9 @@ class SvgSprite {
 	 * @returns {Array<Object>} Svgs list
 	 */
 	getSvgsDependenciesByEntrypoint(entryName: string): Array<NormalModule> {
-		let listSvgsDependencies: Array<NormalModule> = [];
+		const listSvgsDependencies: Array<NormalModule> = [];
 
-		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: any) => {
+		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: Chunk) => {
 			for (const module of this.compilation.chunkGraph.getChunkModulesIterable(chunk)) {
 				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
 					listSvgsDependencies.push(module);
@@ -222,7 +215,7 @@ class SvgSprite {
 	 * @returns {String} Sprite string
 	 */
 	generateSprite(svgsOptimized: Array<Svgs>): string {
-		let sprites = svgstore(this.options.svgstoreConfig);
+		const sprites = svgstore(this.options.svgstoreConfig);
 		svgsOptimized.forEach((svg: Svgs) => {
 			sprites.add(svg.name, svg.content);
 		});
@@ -344,4 +337,4 @@ class SvgSprite {
 // @ts-ignore
 SvgSprite.loader = require.resolve('./loader');
 
-export = SvgSprite;
+export type Class = SvgSprite;
