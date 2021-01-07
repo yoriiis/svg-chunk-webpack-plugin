@@ -6,18 +6,14 @@
  * @copyright 2020 Joris DANIEL
  **/
 import { Compiler } from 'webpack';
-import { Svgs, SpriteManifest, Sprites } from './interfaces';
-interface NormalModule {
-    userRequest: string;
-    originalSource: Function;
-}
+import { Svgs, SpriteManifest, Sprites, NormalModule } from './interfaces';
 declare class SvgSprite {
     options: {
+        filename: string;
         svgstoreConfig: Object;
         svgoConfig: Object;
         generateSpritesManifest: Boolean;
         generateSpritesPreview: Boolean;
-        filename: string;
     };
     svgOptimizer: any;
     spritesManifest: SpriteManifest;
@@ -40,7 +36,7 @@ declare class SvgSprite {
      *
      * @param {Object} compilation The Webpack compilation variable
      */
-    hookCallback(compilation: object): Promise<void>;
+    hookCallback(compilation: Object): Promise<void>;
     /**
      * Add assets
      * The hook is triggered by webpack

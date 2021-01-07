@@ -7,13 +7,13 @@
  **/
 
 import { Compiler } from 'webpack';
-import { Svgs, SpriteManifest, Sprites, NormalModule, Chunk } from './interfaces';
 const webpack = require('webpack');
+import { Svgs, SpriteManifest, Sprites, NormalModule, Chunk } from './interfaces';
 
 // https://github.com/webpack/webpack/issues/11425#issuecomment-686607633
 const { RawSource } = webpack.sources;
 const { util } = require('webpack');
-const path = require('path');
+import path = require('path');
 const svgstore = require('svgstore');
 const Svgo = require('svgo');
 const extend = require('extend');
@@ -337,4 +337,4 @@ class SvgSprite {
 // @ts-ignore
 SvgSprite.loader = require.resolve('./loader');
 
-export type Class = SvgSprite;
+export = SvgSprite;
