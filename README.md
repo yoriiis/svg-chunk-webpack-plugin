@@ -1,6 +1,6 @@
 # SvgChunkWebpackPlugin
 
-![SvgChunkWebpackPlugin](https://img.shields.io/badge/svg--chunk--webpack--plugin-v1.0.0-29008a.svg?style=for-the-badge) ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/yoriiis/svg-chunk-webpack-plugin/Build/master?style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=master) ![Node.js](https://img.shields.io/node/v/svg-chunk-webpack-plugin?style=for-the-badge)
+![SvgChunkWebpackPlugin](https://img.shields.io/badge/svg--chunk--webpack--plugin-v2.0.0-29008a.svg?style=for-the-badge) ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/yoriiis/svg-chunk-webpack-plugin/Build/master?style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=master) ![Node.js](https://img.shields.io/node/v/svg-chunk-webpack-plugin?style=for-the-badge)
 
 > Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped as a sprite and optimized by svgo.
 
@@ -61,8 +61,8 @@ module.exports = {
     home: 'home.js'
   },
   output: {
-    path: path.resolve(__dirname, './dist'),
-    filename: 'main.js'
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, './dist')
   },
   module: {
     rules: [
@@ -170,8 +170,6 @@ new SvgChunkWebpackPlugin({
 
 Tells the plugin whether to generate the `sprites-manifest.json`. The JSON file contains the list of all SVG included by entrypoints. It becomes very easy to known which SVG are included in which sprite.
 
-> The file is only generated when the Webpack mode is set to `development`, even if the option is enabled.
-
 ```javascript
 new SvgChunkWebpackPlugin({
   generateSpritesManifest: false
@@ -183,8 +181,6 @@ new SvgChunkWebpackPlugin({
 `Boolean = false`
 
 Tells the plugin whether to generate the `sprites-preview.html`. The HTML preview contains a display list of all SVG included by entrypoints with the SVG overviews and the names.
-
-> The file is only generated when the Webpack mode is set to `development`, even if the option is enabled.
 
 ```javascript
 new SvgChunkWebpackPlugin({

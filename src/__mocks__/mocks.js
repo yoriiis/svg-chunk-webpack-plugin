@@ -16,6 +16,7 @@ export function mockGetEntryNames(svgChunkWebpackPlugin, entryNames) {
  * Mock implementation of getSvgsDependenciesByEntrypoint function
  *
  * @param {Class} svgChunkWebpackPlugin Instance of svgChunkWebpackPlugin
+ * @param {Array} svgsDependencies List of SVG dependencies
  */
 export function mockGetSvgsDependenciesByEntrypoint(svgChunkWebpackPlugin, svgsDependencies) {
 	svgChunkWebpackPlugin.getSvgsDependenciesByEntrypoint = jest.fn().mockImplementation(() => {

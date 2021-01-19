@@ -1,7 +1,7 @@
 /**
  * @license MIT
  * @name SvgChunkWebpackPlugin
- * @version 1.0.0
+ * @version 2.0.0
  * @author: Yoriiis aka Joris DANIEL <joris.daniel@gmail.com>
  * @copyright 2020 Joris DANIEL
  **/
@@ -320,17 +320,8 @@ class SvgSprite {
 	createSpritesPreview(): void {
 		this.compilation.emitAsset(
 			'sprites-preview.html',
-			new RawSource(this.getPreviewTemplate(), false)
+			new RawSource(templatePreview(this.spritesList), false)
 		);
-	}
-
-	/**
-	 * Get preview template
-	 *
-	 * @returns {String} Template for the preview
-	 */
-	getPreviewTemplate(): string {
-		return templatePreview(this.spritesList);
 	}
 }
 

@@ -561,24 +561,18 @@ describe('SvgChunkWebpackPlugin createSpritesManifest', () => {
 
 describe('SvgChunkWebpackPlugin createSpritesPreview', () => {
 	it('Should call the createSpritesPreview function', () => {
-		svgChunkWebpackPlugin.getPreviewTemplate = jest.fn().mockImplementation(() => 'template');
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 
 		svgChunkWebpackPlugin.createSpritesPreview();
 
-		expect(svgChunkWebpackPlugin.getPreviewTemplate).toHaveBeenCalled();
-		expect(RawSource).toHaveBeenCalledWith(svgChunkWebpackPlugin.getPreviewTemplate(), false);
+		expect(templatePreview).toHaveBeenCalledWith(svgChunkWebpackPlugin.spritesList);
+		expect(RawSource).toHaveBeenCalledWith(
+			templatePreview(svgChunkWebpackPlugin.spritesList),
+			false
+		);
 		expect(svgChunkWebpackPlugin.compilation.emitAsset).toHaveBeenCalledWith(
 			'sprites-preview.html',
-			new RawSource(svgChunkWebpackPlugin.getPreviewTemplate(), false)
+			new RawSource(templatePreview(svgChunkWebpackPlugin.spritesList), false)
 		);
-	});
-});
-
-describe('SvgChunkWebpackPlugin getPreviewTemplate', () => {
-	it('Should call the getPreviewTemplate function', () => {
-		svgChunkWebpackPlugin.getPreviewTemplate();
-
-		expect(templatePreview).toHaveBeenCalledWith(svgChunkWebpackPlugin.spritesList);
 	});
 });
