@@ -1,20 +1,23 @@
 /**
  * @license MIT
  * @name SvgChunkWebpackPlugin
- * @version 1.0.0
+ * @version 2.0.0
  * @author: Yoriiis aka Joris DANIEL <joris.daniel@gmail.com>
  * @copyright 2020 Joris DANIEL
  **/
 
 import { Compiler } from 'webpack';
+const webpack = require('webpack');
+import { Svgs, SpriteManifest, Sprites, NormalModule, Chunk } from './interfaces';
+
+// https://github.com/webpack/webpack/issues/11425#issuecomment-686607633
+const { RawSource } = webpack.sources;
 const { util } = require('webpack');
-const fse = require('fs-extra');
-const path = require('path');
+import path = require('path');
 const svgstore = require('svgstore');
 const Svgo = require('svgo');
 const extend = require('extend');
 const templatePreview = require('./preview');
-import { Svgs, SpriteManifest, Sprites } from './interfaces';
 
 const PACKAGE_NAME = require('../package.json').name;
 const REGEXP_NAME = /\[name\]/i;
@@ -24,17 +27,17 @@ const REGEXP_CONTENTHASH = /\[contenthash\]/i;
 
 class SvgSprite {
 	options: {
+		filename: string;
 		svgstoreConfig: Object;
 		svgoConfig: Object;
 		generateSpritesManifest: Boolean;
 		generateSpritesPreview: Boolean;
-		filename: string;
 	};
+
 	svgOptimizer: any;
 	spritesManifest: SpriteManifest;
 	spritesList: Array<Sprites>;
 	compilation: any;
-	entryNames!: Array<string>;
 
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
@@ -45,6 +48,7 @@ class SvgSprite {
 	 */
 	constructor(options = {}) {
 		const DEFAULTS = {
+			filename: '[name].svg',
 			svgstoreConfig: {
 				cleanDefs: false,
 				cleanSymbols: false,
@@ -64,14 +68,15 @@ class SvgSprite {
 				]
 			},
 			generateSpritesManifest: false,
-			generateSpritesPreview: false,
-			filename: '[name].svg'
+			generateSpritesPreview: false
 		};
 
 		this.options = extend(true, DEFAULTS, options);
 		this.svgOptimizer = new Svgo(this.options.svgoConfig);
 		this.spritesManifest = {};
 		this.spritesList = [];
+		this.hookCallback = this.hookCallback.bind(this);
+		this.addAssets = this.addAssets.bind(this);
 	}
 
 	/**
@@ -80,40 +85,47 @@ class SvgSprite {
 	 * @param {Object} compiler The Webpack compiler variable
 	 */
 	apply(compiler: Compiler): void {
-		compiler.hooks.emit.tapPromise('SvgSprite', this.hookCallback.bind(this));
+		compiler.hooks.thisCompilation.tap('SvgSprite', this.hookCallback);
 	}
 
 	/**
 	 * Hook expose by the Webpack compiler
 	 *
 	 * @param {Object} compilation The Webpack compilation variable
-	 *
-	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
-	hookCallback(compilation: object): Promise<void> {
-		return new Promise(async resolve => {
-			// Reset value on every new process
-			this.spritesManifest = {};
-			this.spritesList = [];
+	async hookCallback(compilation: Object): Promise<void> {
+		this.compilation = compilation;
 
-			this.compilation = compilation;
-			const isDev = this.compilation.options.mode === 'development';
-			const entryNames = this.getEntryNames();
+		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
+		this.compilation.hooks.processAssets.tapPromise(
+			{
+				name: 'SvgChunkWebpackPlugin',
+				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+			},
+			this.addAssets
+		);
+	}
 
-			await Promise.all(
-				entryNames.map(async entryName => await this.processEntry(entryName))
-			);
+	/**
+	 * Add assets
+	 * The hook is triggered by webpack
+	 */
+	async addAssets(): Promise<void> {
+		// Reset value on every new process
+		this.spritesManifest = {};
+		this.spritesList = [];
 
-			if (this.options.generateSpritesManifest && isDev) {
-				this.createSpritesManifest();
-			}
+		const entryNames = this.getEntryNames();
 
-			if (this.options.generateSpritesPreview && isDev) {
-				this.createSpritesPreview();
-			}
+		await Promise.all(entryNames.map(async (entryName) => await this.processEntry(entryName)));
 
-			resolve();
-		});
+		if (this.options.generateSpritesManifest) {
+			this.createSpritesManifest();
+		}
+
+		if (this.options.generateSpritesPreview) {
+			this.createSpritesPreview();
+		}
 	}
 
 	/**
@@ -132,29 +144,30 @@ class SvgSprite {
 	 *
 	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
-	processEntry = async (entryName: string): Promise<void> => {
-		return new Promise<void>(async resolve => {
-			const svgs = this.getSvgsByEntrypoint(entryName);
-			const svgsOptimized = await Promise.all(
-				svgs.map(filepath => this.optimizeSvg(filepath))
-			);
-			const sprite = this.generateSprite(svgsOptimized);
-			this.createSpriteAsset({ entryName, sprite });
+	async processEntry(entryName: string): Promise<void> {
+		const svgsDependencies = this.getSvgsDependenciesByEntrypoint(entryName);
+		const svgsOptimized = await Promise.all(
+			svgsDependencies.map((moduleDependency: NormalModule) =>
+				this.optimizeSvg(moduleDependency)
+			)
+		);
+		const sprite = this.generateSprite(svgsOptimized);
 
-			// Update sprites manifest
-			this.spritesManifest[entryName] = svgs.map(filepath =>
-				path.relative(this.compilation.options.context, filepath)
-			);
+		this.createSpriteAsset({ entryName, sprite });
 
-			this.spritesList.push({
-				name: entryName,
-				content: sprite,
-				svgs: svgs.map(filepath => path.basename(filepath, '.svg'))
-			});
+		// Update sprites manifest
+		this.spritesManifest[entryName] = svgsDependencies.map((moduleDependency: NormalModule) =>
+			path.relative(this.compilation.options.context, moduleDependency.userRequest)
+		);
 
-			resolve();
+		this.spritesList.push({
+			name: entryName,
+			content: sprite,
+			svgs: svgsDependencies.map((moduleDependency: NormalModule) =>
+				path.basename(moduleDependency.userRequest, '.svg')
+			)
 		});
-	};
+	}
 
 	/**
 	 * Optimize SVG with Svgo
@@ -163,12 +176,12 @@ class SvgSprite {
 	 *
 	 * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
 	 */
-	optimizeSvg = async (filepath: string): Promise<Svgs> => {
-		const svgContent = await fse.readFile(filepath, 'utf8');
-		const svgOptimized = await this.svgOptimizer.optimize(svgContent);
+	optimizeSvg = async (moduleDependency: NormalModule): Promise<Svgs> => {
+		const source = JSON.parse(moduleDependency.originalSource()._value);
+		const svgOptimized = await this.svgOptimizer.optimize(source);
 
 		return {
-			name: path.basename(filepath, '.svg'),
+			name: path.basename(moduleDependency.userRequest, '.svg'),
 			content: svgOptimized.data
 		};
 	};
@@ -180,23 +193,18 @@ class SvgSprite {
 	 *
 	 * @returns {Array<Object>} Svgs list
 	 */
-	getSvgsByEntrypoint(entryName: string): Array<string> {
-		let listSvgs: Array<string> = [];
+	getSvgsDependenciesByEntrypoint(entryName: string): Array<NormalModule> {
+		const listSvgsDependencies: Array<NormalModule> = [];
 
-		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: any) => {
-			chunk.getModules().forEach((module: any) => {
-				module.buildInfo &&
-					module.buildInfo.fileDependencies &&
-					module.buildInfo.fileDependencies.forEach((filepath: string) => {
-						const extension = path.extname(filepath).substr(1);
-						if (extension === 'svg') {
-							listSvgs.push(filepath);
-						}
-					});
-			});
+		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: Chunk) => {
+			for (const module of this.compilation.chunkGraph.getChunkModulesIterable(chunk)) {
+				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
+					listSvgsDependencies.push(module);
+				}
+			}
 		});
 
-		return listSvgs;
+		return listSvgsDependencies;
 	}
 
 	/**
@@ -207,7 +215,7 @@ class SvgSprite {
 	 * @returns {String} Sprite string
 	 */
 	generateSprite(svgsOptimized: Array<Svgs>): string {
-		let sprites = svgstore(this.options.svgstoreConfig);
+		const sprites = svgstore(this.options.svgstoreConfig);
 		svgsOptimized.forEach((svg: Svgs) => {
 			sprites.add(svg.name, svg.content);
 		});
@@ -225,11 +233,7 @@ class SvgSprite {
 	createSpriteAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
 		const output = sprite;
 		const filename = this.getFileName({ entryName, output });
-
-		this.compilation.assets[filename] = {
-			source: () => output,
-			size: () => output.length
-		};
+		this.compilation.emitAsset(filename, new RawSource(output, false));
 	}
 
 	/**
@@ -297,11 +301,7 @@ class SvgSprite {
 	 */
 	getContentHash(output: string): string {
 		const { hashFunction, hashDigest } = this.compilation.outputOptions;
-
-		return util
-			.createHash(hashFunction)
-			.update(output)
-			.digest(hashDigest);
+		return util.createHash(hashFunction).update(output).digest(hashDigest);
 	}
 
 	/**
@@ -311,39 +311,17 @@ class SvgSprite {
 	 */
 	createSpritesManifest(): void {
 		const output = JSON.stringify(this.spritesManifest, null, 2);
-		this.compilation.assets['sprites-manifest.json'] = {
-			source: () => output,
-			size: () => output.length
-		};
+		this.compilation.emitAsset('sprites-manifest.json', new RawSource(output, false));
 	}
 
 	/**
 	 * Create sprites preview
 	 */
 	createSpritesPreview(): void {
-		fse.outputFileSync(
-			`${this.compilation.options.output.path}/sprites-preview.html`,
-			this.getPreviewTemplate()
+		this.compilation.emitAsset(
+			'sprites-preview.html',
+			new RawSource(templatePreview(this.spritesList), false)
 		);
-	}
-
-	/**
-	 * Get preview template
-	 *
-	 * @returns {String} Template for the preview
-	 */
-	getPreviewTemplate(): string {
-		return templatePreview(this.getSpritesList());
-	}
-
-	/**
-	 * Get sprites list
-	 * The list is used to create the preview
-	 *
-	 * @returns {Array<Sprites>} Sprites list
-	 */
-	getSpritesList(): Array<Sprites> {
-		return this.spritesList;
 	}
 }
 

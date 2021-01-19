@@ -6,20 +6,21 @@ import path from 'path';
  * @param {Class} svgChunkWebpackPlugin Instance of svgChunkWebpackPlugin
  * @param {String} entryNames Entrypoint name
  */
-export function mockGetEntryNames (svgChunkWebpackPlugin, entryNames) {
+export function mockGetEntryNames(svgChunkWebpackPlugin, entryNames) {
 	svgChunkWebpackPlugin.getEntryNames = jest.fn().mockImplementation(() => {
 		return entryNames;
 	});
 }
 
 /**
- * Mock implementation of getSvgsByEntrypoint function
+ * Mock implementation of getSvgsDependenciesByEntrypoint function
  *
  * @param {Class} svgChunkWebpackPlugin Instance of svgChunkWebpackPlugin
+ * @param {Array} svgsDependencies List of SVG dependencies
  */
-export function mockGetSvgsByEntrypoint (svgChunkWebpackPlugin, svgsFilepath) {
-	svgChunkWebpackPlugin.getSvgsByEntrypoint = jest.fn().mockImplementation(() => {
-		return svgsFilepath;
+export function mockGetSvgsDependenciesByEntrypoint(svgChunkWebpackPlugin, svgsDependencies) {
+	svgChunkWebpackPlugin.getSvgsDependenciesByEntrypoint = jest.fn().mockImplementation(() => {
+		return svgsDependencies;
 	});
 }
 
@@ -29,9 +30,9 @@ export function mockGetSvgsByEntrypoint (svgChunkWebpackPlugin, svgsFilepath) {
  * @param {Class} svgChunkWebpackPlugin Instance of svgChunkWebpackPlugin
  * @param {Object} svgsFixture List of sprite fixtures
  */
-export function mockOptimizeSvg (svgChunkWebpackPlugin, svgsFixture) {
-	svgChunkWebpackPlugin.optimizeSvg = jest.fn().mockImplementation(filepath => {
-		const name = path.basename(filepath, '.svg');
+export function mockOptimizeSvg(svgChunkWebpackPlugin, svgsFixture) {
+	svgChunkWebpackPlugin.optimizeSvg = jest.fn().mockImplementation((moduleDependency) => {
+		const name = path.basename(moduleDependency.userRequest, '.svg');
 		return {
 			name,
 			content: svgsFixture[name]
@@ -45,7 +46,7 @@ export function mockOptimizeSvg (svgChunkWebpackPlugin, svgsFixture) {
  * @param {Class} svgChunkWebpackPlugin Instance of svgChunkWebpackPlugin
  * @param {String} sprite Sprite fixture
  */
-export function mockGenerateSprite (svgChunkWebpackPlugin, sprite) {
+export function mockGenerateSprite(svgChunkWebpackPlugin, sprite) {
 	svgChunkWebpackPlugin.generateSprite = jest.fn().mockImplementation(() => {
 		return sprite;
 	});
@@ -56,7 +57,7 @@ export function mockGenerateSprite (svgChunkWebpackPlugin, sprite) {
  *
  * @param {Class} svgChunkWebpackPlugin Instance of svgChunkWebpackPlugin
  */
-export function mockGetBuildHash (svgChunkWebpackPlugin) {
+export function mockGetBuildHash(svgChunkWebpackPlugin) {
 	svgChunkWebpackPlugin.getBuildHash = jest.fn().mockImplementation(() => '4cc05208d925b7b31259');
 }
 
@@ -65,7 +66,7 @@ export function mockGetBuildHash (svgChunkWebpackPlugin) {
  *
  * @param {Class} svgChunkWebpackPlugin Instance of svgChunkWebpackPlugin
  */
-export function mockGetChunkHash (svgChunkWebpackPlugin) {
+export function mockGetChunkHash(svgChunkWebpackPlugin) {
 	svgChunkWebpackPlugin.getChunkHash = jest
 		.fn()
 		.mockImplementation(() => 'beb18939e5093045258b8d24a34dd844');
@@ -76,7 +77,7 @@ export function mockGetChunkHash (svgChunkWebpackPlugin) {
  *
  * @param {Class} svgChunkWebpackPlugin Instance of svgChunkWebpackPlugin
  */
-export function mockGetContentHash (svgChunkWebpackPlugin) {
+export function mockGetContentHash(svgChunkWebpackPlugin) {
 	svgChunkWebpackPlugin.getContentHash = jest
 		.fn()
 		.mockImplementation(() => 'a5934d97b38c748213317d7e5ffd31b6');

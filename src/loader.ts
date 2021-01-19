@@ -8,6 +8,14 @@ const PACKAGE_NAME = require('../package.json').name;
 export = function spriteLoader(this: any, content: string): string {
 	const compiler = this._compiler;
 
+	// Declare all SVG files as side effect
+	// https://github.com/webpack/webpack/issues/12202#issuecomment-745537821
+	this._module.factoryMeta = this._module.factoryMeta || {};
+	this._module.factoryMeta.sideEffectFree = false;
+
+	// Flag all SVG files to find them more easily on the plugin side
+	this._module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN = true;
+
 	// Check if content is a SVG file
 	if (!content.includes('<svg')) {
 		throw new Error(`${PACKAGE_NAME} exception. ${content}`);

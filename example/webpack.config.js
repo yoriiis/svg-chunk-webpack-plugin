@@ -1,7 +1,6 @@
 const path = require('path');
 const TerserJSPlugin = require('terser-webpack-plugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const SvgChunkWebpackPlugin = require('../lib/index.js');
 
 module.exports = (env, argv) => {
@@ -16,11 +15,11 @@ module.exports = (env, argv) => {
 		watchOptions: {
 			ignored: /node_modules/
 		},
-		devtool: 'none',
+		devtool: isProduction ? false : 'nosources-source-map',
 		output: {
 			path: path.resolve(__dirname, './dist'),
 			publicPath: '/dist/',
-			filename: '[name].js'
+			filename: `js/[name]${isProduction ? '.[contenthash]' : ''}.js`
 		},
 		module: {
 			rules: [
@@ -36,12 +35,9 @@ module.exports = (env, argv) => {
 		},
 		plugins: [
 			new SvgChunkWebpackPlugin({
+				filename: `sprites/[name]${isProduction ? '.[contenthash]' : ''}.svg`,
 				generateSpritesManifest: true,
 				generateSpritesPreview: true
-			}),
-			new ManifestPlugin({
-				writeToFileEmit: true,
-				fileName: 'manifest.json'
 			})
 		],
 		stats: {
@@ -63,14 +59,12 @@ module.exports = (env, argv) => {
 				new TerserJSPlugin({
 					extractComments: false
 				}),
-				new OptimizeCSSAssetsPlugin({})
+				new CssMinimizerPlugin()
 			],
-			namedChunks: false,
-			namedModules: false,
+			chunkIds: 'deterministic', // or 'named'
 			removeAvailableModules: true,
 			removeEmptyChunks: true,
 			mergeDuplicateChunks: true,
-			occurrenceOrder: true,
 			providedExports: false,
 			mangleWasmImports: true,
 			splitChunks: false
