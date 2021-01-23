@@ -74,7 +74,7 @@ const svgsDependencies = [
 		buildInfo: {
 			SVG_CHUNK_WEBPACK_PLUGIN: true
 		},
-		userRequest: '/Applications/svg-chunk-webpack-plugin/example/src/svgs/gradient.svg',
+		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/gradient.svg',
 		originalSource: () => ({
 			_value: JSON.stringify(svgsFixture.gradient)
 		})
@@ -83,7 +83,7 @@ const svgsDependencies = [
 		buildInfo: {
 			SVG_CHUNK_WEBPACK_PLUGIN: true
 		},
-		userRequest: '/Applications/svg-chunk-webpack-plugin/example/src/svgs/video.svg',
+		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/video.svg',
 		originalSource: () => ({
 			_value: JSON.stringify(svgsFixture.video)
 		})
@@ -92,7 +92,7 @@ const svgsDependencies = [
 		buildInfo: {
 			SVG_CHUNK_WEBPACK_PLUGIN: true
 		},
-		userRequest: '/Applications/svg-chunk-webpack-plugin/example/src/svgs/smiley-love.svg',
+		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/smiley-love.svg',
 		originalSource: () => ({
 			_value: JSON.stringify(svgsFixture['smiley-love'])
 		})
@@ -134,9 +134,9 @@ beforeEach(() => {
 		entrypoints: entrypointsMap,
 		options: {
 			mode: 'development',
-			context: '/svg-chunk-webpack-plugin/',
+			context: '/svg-chunk-webpack-plugin/example',
 			output: {
-				path: '/dist',
+				path: '/svg-chunk-webpack-plugin/example/dist',
 				publicPath: '/dist'
 			}
 		},
@@ -304,11 +304,7 @@ describe('SvgChunkWebpackPlugin processEntry', () => {
 
 		// Mock core node module to avoid absolute path conflict in the test environment
 		// The original function is return after the test
-		path.relative = jest
-			.fn()
-			.mockImplementation(
-				(context, moduleDependency) => `${context}${moduleDependency.userRequest}`
-			);
+		path.relative = jest.fn().mockImplementation((from, to) => to.split(from)[1].substr(1));
 
 		svgChunkWebpackPlugin.compilation = compilationWebpack;
 		await svgChunkWebpackPlugin.processEntry('home');
