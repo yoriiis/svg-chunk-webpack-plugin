@@ -7,6 +7,7 @@ module.exports = (env, argv) => {
 	const isProduction = argv.mode === 'production';
 
 	return {
+		context: __dirname,
 		watch: !isProduction,
 		entry: {
 			home: `${path.resolve(__dirname, './src/js/home.js')}`,

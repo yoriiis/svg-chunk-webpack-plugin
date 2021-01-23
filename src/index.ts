@@ -3,7 +3,7 @@
  * @name SvgChunkWebpackPlugin
  * @version 2.0.0
  * @author: Yoriiis aka Joris DANIEL <joris.daniel@gmail.com>
- * @copyright 2020 Joris DANIEL
+ * @copyright 2021 Joris DANIEL
  **/
 
 import { Compiler } from 'webpack';
