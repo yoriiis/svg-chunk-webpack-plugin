@@ -1,7 +1,7 @@
 /**
  * @license MIT
  * @name SvgChunkWebpackPlugin
- * @version 2.0.0
+ * @version 2.0.1
  * @author: Yoriiis aka Joris DANIEL <joris.daniel@gmail.com>
  * @copyright 2021 Joris DANIEL
  **/

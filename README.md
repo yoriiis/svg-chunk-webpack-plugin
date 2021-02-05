@@ -1,12 +1,12 @@
 # SvgChunkWebpackPlugin
 
-![SvgChunkWebpackPlugin](https://img.shields.io/badge/svg--chunk--webpack--plugin-v2.0.0-29008a.svg?style=for-the-badge) ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/yoriiis/svg-chunk-webpack-plugin/Build/master?style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=master) ![Node.js](https://img.shields.io/node/v/svg-chunk-webpack-plugin?style=for-the-badge)
+![SvgChunkWebpackPlugin](https://img.shields.io/badge/svg--chunk--webpack--plugin-v2.0.1-29008a.svg?style=for-the-badge) ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/yoriiis/svg-chunk-webpack-plugin/Build/master?style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=master) ![Node.js](https://img.shields.io/node/v/svg-chunk-webpack-plugin?style=for-the-badge)
 
 > Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped as a sprite and optimized by svgo.
 
 The SvgChunkWebpackPlugin creates optimized SVG sprites, according to Webpack's entrypoints. Each sprite contains only the SVG dependencies listed on its entrypoints to improved code splitting, even on SVG files.
 
-The plugin includes the popular [svgo](https://github.com/svg/svgo) package with the optimized settings, to generates clean and optimized SVG sprites.
+The plugin includes the popular [svgo](https://github.com/svg/svgo) package to generates clean and optimized SVG sprites.
 
 Code splitting is the key to deliver files without any content that is unused by the pages. It already exists for CSS, Javascript and now for SVG files with this plugin.
 
@@ -122,11 +122,11 @@ The `filename` parameter is compatible with Webpack caching placeholders, see th
 
 ### `svgoConfig`
 
-`Object`
+`Object = {}`
 
-Tells the plugin whether to personalize the default settings for svgo. Update the settings according to your needs from the plugins available on the [svgo](https://github.com/svg/svgo) documentation.
+Tells the plugin whether to personalize the plugins for svgo. Update the settings according to your needs from the plugins available on the [svgo](https://github.com/svg/svgo#what-it-can-do) documentation.
 
-> 💡 The `onlyMatchedOnce` property allows to replace all occurences of CSS classes in HTML attributes, not only selectors that match once.
+> 💡 The disabled `onlyMatchedOnce` property allows to replace all occurences of CSS classes in HTML attributes, not only selectors that match once. The disabled `removeViewBox` property allows to keep viewBow attributes.
 
 ```javascript
 new SvgChunkWebpackPlugin({
@@ -136,6 +136,9 @@ new SvgChunkWebpackPlugin({
         inlineStyles: {
           onlyMatchedOnce: false
         }
+      },
+      {
+        removeViewBox: false
       }
     ]
   }
@@ -144,20 +147,17 @@ new SvgChunkWebpackPlugin({
 
 ### `svgstoreConfig`
 
-`Object`
+`Object = { cleanDefs: false, cleanSymbols: false, inline: true }`
 
-SVG sprites are built using the svgstore package. Tells the plugin whether to personalize the default settings for [svgstore](https://github.com/svgstore/svgstore#options).
+SVG sprites are built using the svgstore package. Tells the plugin whether to personalize the default settings for [svgstore](https://github.com/svgstore/svgstore#options). The transmitted parameters will be merged with the default parameters listed above.
 
-> 💡 Sprites already contain minimal inline styles to hide the sprite on the page to keep full support with all SVG features. To avoid LinearGradient conflicts, avoid the `display: none` property which break SVG defs.
+> 💡 To avoid LinearGradient conflicts, avoid the `display: none` property which break SVG defs.
 
 ```javascript
 new SvgChunkWebpackPlugin({
   svgstoreConfig: {
-    cleanDefs: false,
-    cleanSymbols: false,
-    inline: true,
     svgAttrs: {
-      'aria-hidden': true,
+      'aria-hidden': false,
       style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
     }
   }
@@ -172,7 +172,7 @@ Tells the plugin whether to generate the `sprites-manifest.json`. The JSON file 
 
 ```javascript
 new SvgChunkWebpackPlugin({
-  generateSpritesManifest: false
+  generateSpritesManifest: true
 });
 ```
 
@@ -184,7 +184,7 @@ Tells the plugin whether to generate the `sprites-preview.html`. The HTML previe
 
 ```javascript
 new SvgChunkWebpackPlugin({
-  generateSpritesManifest: false
+  generateSpritesManifest: true
 });
 ```
 

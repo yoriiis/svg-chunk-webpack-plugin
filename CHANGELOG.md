@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.0.1
+
+### Updates
+
+- TODO
+
 ## 2.0.0
 
 ### Updates
