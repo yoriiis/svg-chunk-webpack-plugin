@@ -105,7 +105,25 @@ const svgsSprite = [
 ];
 const options = {
 	generateSpritesManifest: true,
-	generateSpritesPreview: true
+	generateSpritesPreview: true,
+	svgstoreConfig: {
+		svgAttrs: {
+			'aria-hidden': true,
+			style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
+		}
+	},
+	svgoConfig: {
+		plugins: [
+			{
+				inlineStyles: {
+					onlyMatchedOnce: false
+				}
+			},
+			{
+				removeViewBox: false
+			}
+		]
+	}
 };
 
 const getInstance = () => new SvgChunkWebpackPlugin(options);
@@ -164,7 +182,7 @@ afterEach(() => {
 
 describe('SvgChunkWebpackPlugin constructor', () => {
 	it('Should initialize the constructor with custom options', () => {
-		expect(svgChunkWebpackPlugin.options).toMatchObject({
+		expect(svgChunkWebpackPlugin.options).toStrictEqual({
 			filename: '[name].svg',
 			svgstoreConfig: {
 				cleanDefs: false,
@@ -181,6 +199,9 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 						inlineStyles: {
 							onlyMatchedOnce: false
 						}
+					},
+					{
+						removeViewBox: false
 					}
 				]
 			},
@@ -195,25 +216,14 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 
 	it('Should initialize the constructor with default options', () => {
 		const instance = new SvgChunkWebpackPlugin();
-		expect(instance.options).toMatchObject({
+		expect(instance.options).toStrictEqual({
+			filename: '[name].svg',
 			svgstoreConfig: {
 				cleanDefs: false,
 				cleanSymbols: false,
-				inline: true,
-				svgAttrs: {
-					'aria-hidden': true,
-					style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
-				}
+				inline: true
 			},
-			svgoConfig: {
-				plugins: [
-					{
-						inlineStyles: {
-							onlyMatchedOnce: false
-						}
-					}
-				]
-			},
+			svgoConfig: {},
 			generateSpritesManifest: false,
 			generateSpritesPreview: false
 		});
