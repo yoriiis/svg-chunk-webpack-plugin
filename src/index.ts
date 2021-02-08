@@ -1,7 +1,7 @@
 /**
  * @license MIT
  * @name SvgChunkWebpackPlugin
- * @version 2.0.0
+ * @version 2.0.1
  * @author: Yoriiis aka Joris DANIEL <joris.daniel@gmail.com>
  * @copyright 2021 Joris DANIEL
  **/
@@ -52,21 +52,9 @@ class SvgSprite {
 			svgstoreConfig: {
 				cleanDefs: false,
 				cleanSymbols: false,
-				inline: true,
-				svgAttrs: {
-					'aria-hidden': true,
-					style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
-				}
+				inline: true
 			},
-			svgoConfig: {
-				plugins: [
-					{
-						inlineStyles: {
-							onlyMatchedOnce: false
-						}
-					}
-				]
-			},
+			svgoConfig: {},
 			generateSpritesManifest: false,
 			generateSpritesPreview: false
 		};

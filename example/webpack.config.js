@@ -38,7 +38,25 @@ module.exports = (env, argv) => {
 			new SvgChunkWebpackPlugin({
 				filename: `sprites/[name]${isProduction ? '.[contenthash]' : ''}.svg`,
 				generateSpritesManifest: true,
-				generateSpritesPreview: true
+				generateSpritesPreview: true,
+				svgstoreConfig: {
+					svgAttrs: {
+						'aria-hidden': true,
+						style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
+					}
+				},
+				svgoConfig: {
+					plugins: [
+						{
+							inlineStyles: {
+								onlyMatchedOnce: false
+							}
+						},
+						{
+							removeViewBox: false
+						}
+					]
+				}
 			})
 		],
 		stats: {
