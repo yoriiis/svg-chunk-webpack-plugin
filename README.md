@@ -104,11 +104,11 @@ Finally, use the SVG with the `<use>` tag, like the following example. Replace `
 
 ## Using a configuration
 
-You can pass configuration options to SvgChunkWebpackPlugin to overrides default settings. Allowed values are as follows:
+You can pass configuration options to SvgChunkWebpackPlugin to overrides default settings. The transmitted parameters will be merged with the default parameters listed above. Allowed values are as follows:
 
 ### `filename`
 
-`String`
+`String = '[name].svg'`
 
 Tells the plugin whether to personalize the default sprite filename. The placeholder `[name]` is automatically replaced by entrypoints names.
 
@@ -124,7 +124,7 @@ The `filename` parameter is compatible with Webpack caching placeholders, see th
 
 `Object = {}`
 
-Tells the plugin whether to personalize the plugins for svgo. Update the settings according to your needs from the plugins available on the [svgo](https://github.com/svg/svgo#what-it-can-do) documentation.
+Tells the plugin whether to personalize the plugins for svgo. Update the parameters according to your needs from the plugins list available on the [svgo](https://github.com/svg/svgo#what-it-can-do) documentation.
 
 > 💡 The disabled `onlyMatchedOnce` property allows to replace all occurences of CSS classes in HTML attributes, not only selectors that match once. The disabled `removeViewBox` property allows to keep viewBow attributes.
 
@@ -149,15 +149,15 @@ new SvgChunkWebpackPlugin({
 
 `Object = { cleanDefs: false, cleanSymbols: false, inline: true }`
 
-SVG sprites are built using the svgstore package. Tells the plugin whether to personalize the default settings for [svgstore](https://github.com/svgstore/svgstore#options). The transmitted parameters will be merged with the default parameters listed above.
+SVG sprites are built using the svgstore package. Update the parameters according to your needs from the options list available on the [svgstore](https://github.com/svgstore/svgstore#options) documentation.
 
-> 💡 To avoid LinearGradient conflicts, avoid the `display: none` property which break SVG defs.
+> 💡 To avoid LinearGradient conflicts, avoid the `display: none` property which breaks SVG definitions.
 
 ```javascript
 new SvgChunkWebpackPlugin({
   svgstoreConfig: {
     svgAttrs: {
-      'aria-hidden': false,
+      'aria-hidden': true,
       style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
     }
   }

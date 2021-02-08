@@ -4,7 +4,9 @@
 
 ### Updates
 
-- TODO
+- Remove the default `svgo` config to avoid conflicts when merging config (svgo config object array is malformed).
+- Remove the default `svgstore` config to allow user to override them (svgAttrs cannot be overriden otherwise).
+- Move the configuration of these package into the webpack configuration for example purpose and to keep the TUs up to date.
 
 ## 2.0.0
 
