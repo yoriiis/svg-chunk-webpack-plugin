@@ -1,4 +1,6 @@
 const PACKAGE_NAME = require('../package.json').name;
+const REGEXP_VIEWBOX = /viewBox="([^"]+)"/i;
+const path = require('path');
 
 /**
  * Loader for SVG files
@@ -29,5 +31,14 @@ export = function spriteLoader(this: any, content: string): string {
 		throw new Error(`${PACKAGE_NAME} requires the corresponding plugin`);
 	}
 
-	return JSON.stringify(content);
+	const extractViewBox = REGEXP_VIEWBOX.exec(content);
+	const data = {
+		name: path.basename(this.resourcePath, '.svg'),
+		viewBox: extractViewBox && extractViewBox[1] ? extractViewBox[1] : '',
+		content
+	};
+
+	return `module.exports = ${JSON.stringify(data)}`;
+
+	// return JSON.stringify(content);
 };

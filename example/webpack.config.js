@@ -1,5 +1,6 @@
 const path = require('path');
 const TerserJSPlugin = require('terser-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const SvgChunkWebpackPlugin = require('../lib/index.js');
 
@@ -24,6 +25,10 @@ module.exports = (env, argv) => {
 		},
 		module: {
 			rules: [
+				// {
+				// 	test: /\.css$/,
+				// 	use: [MiniCssExtractPlugin.loader, { loader: 'css-loader' }]
+				// },
 				{
 					test: /\.svg$/,
 					use: [
@@ -58,6 +63,10 @@ module.exports = (env, argv) => {
 					]
 				}
 			})
+			// new MiniCssExtractPlugin({
+			// 	filename: 'css/[name].css',
+			// 	chunkFilename: 'css/[name].css'
+			// })
 		],
 		stats: {
 			builtAt: false,

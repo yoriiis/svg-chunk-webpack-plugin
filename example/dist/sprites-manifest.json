@@ -1,8 +1,8 @@
 {
   "home": [
     "src/svgs/gradient.svg",
-    "src/svgs/smiley-love.svg",
-    "src/svgs/video.svg"
+    "src/svgs/video.svg",
+    "src/svgs/smiley-love.svg"
   ],
   "news": [
     "src/svgs/smiley-surprised.svg",

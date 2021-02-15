@@ -165,8 +165,12 @@ class SvgSprite {
 	 * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
 	 */
 	optimizeSvg = async (moduleDependency: NormalModule): Promise<Svgs> => {
-		const source = JSON.parse(moduleDependency.originalSource()._value);
-		const svgOptimized = await this.svgOptimizer.optimize(source);
+		// const source = JSON.parse(moduleDependency.originalSource()._value);
+		// const svgOptimized = await this.svgOptimizer.optimize(source);
+
+		const source = moduleDependency.originalSource()._value;
+		const sourceWithoutPrefix = JSON.parse(source.split('module.exports = ')[1]);
+		const svgOptimized = await this.svgOptimizer.optimize(sourceWithoutPrefix.content);
 
 		return {
 			name: path.basename(moduleDependency.userRequest, '.svg'),
