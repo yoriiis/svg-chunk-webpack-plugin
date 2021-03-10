@@ -10,6 +10,10 @@
 
 ## 2.0.0
 
+### ⚠ Breaking changes
+
+- Webpack `v4` no longer supported
+
 ### Updates
 
 - Add the webpack `v5` compatibility (`>=5.10.3`)
