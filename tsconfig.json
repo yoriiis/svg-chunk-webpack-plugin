@@ -12,7 +12,7 @@
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"module": "commonjs",
-        "resolveJsonModule": true
+		"resolveJsonModule": true
 	},
 	"types": ["node"],
 	"include": ["./src/**/*"],
