@@ -45,18 +45,7 @@ module.exports = (env, argv) => {
 						style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
 					}
 				},
-				svgoConfig: {
-					plugins: [
-						{
-							inlineStyles: {
-								onlyMatchedOnce: false
-							}
-						},
-						{
-							removeViewBox: false
-						}
-					]
-				}
+				svgoConfigFile: path.resolve(__dirname, './svgo.config.js')
 			})
 		],
 		stats: {

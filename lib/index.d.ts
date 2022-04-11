@@ -11,14 +11,14 @@ declare class SvgSprite {
     options: {
         filename: string;
         svgstoreConfig: Object;
-        svgoConfig: Object;
+        svgoConfigFile: string;
         generateSpritesManifest: Boolean;
         generateSpritesPreview: Boolean;
     };
-    svgOptimizer: any;
     spritesManifest: SpriteManifest;
     spritesList: Array<Sprites>;
     compilation: any;
+    svgoConfig: any;
     PLUGIN_NAME: any;
     /**
      * Instanciate the constructor

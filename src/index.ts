@@ -15,7 +15,7 @@ const { RawSource } = webpack.sources;
 const { util } = require('webpack');
 import path = require('path');
 const svgstore = require('svgstore');
-const Svgo = require('svgo');
+const { loadConfig, optimize } = require('svgo');
 const extend = require('extend');
 const templatePreview = require('./preview');
 
@@ -29,15 +29,15 @@ class SvgSprite {
 	options: {
 		filename: string;
 		svgstoreConfig: Object;
-		svgoConfig: Object;
+		svgoConfigFile: string;
 		generateSpritesManifest: Boolean;
 		generateSpritesPreview: Boolean;
 	};
 
-	svgOptimizer: any;
 	spritesManifest: SpriteManifest;
 	spritesList: Array<Sprites>;
 	compilation: any;
+	svgoConfig: any;
 
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
@@ -54,13 +54,12 @@ class SvgSprite {
 				cleanSymbols: false,
 				inline: true
 			},
-			svgoConfig: {},
+			svgoConfigFile: null,
 			generateSpritesManifest: false,
 			generateSpritesPreview: false
 		};
 
 		this.options = extend(true, DEFAULTS, options);
-		this.svgOptimizer = new Svgo(this.options.svgoConfig);
 		this.spritesManifest = {};
 		this.spritesList = [];
 		this.hookCallback = this.hookCallback.bind(this);
@@ -83,6 +82,12 @@ class SvgSprite {
 	 */
 	async hookCallback(compilation: Object): Promise<void> {
 		this.compilation = compilation;
+
+		if (this.options.svgoConfigFile) {
+			this.svgoConfig = await loadConfig(this.options.svgoConfigFile);
+		} else {
+			this.svgoConfig = {};
+		}
 
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
 		this.compilation.hooks.processAssets.tapPromise(
@@ -166,7 +171,7 @@ class SvgSprite {
 	 */
 	optimizeSvg = async (moduleDependency: NormalModule): Promise<Svgs> => {
 		const source = JSON.parse(moduleDependency.originalSource()._value);
-		const svgOptimized = await this.svgOptimizer.optimize(source);
+		const svgOptimized = await optimize(source, { ...this.svgoConfig });
 
 		return {
 			name: path.basename(moduleDependency.userRequest, '.svg'),
