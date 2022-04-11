@@ -7,6 +7,8 @@ body:
       label: If the feature solves a problem you have, specify it here.
       description: A description of what the problem is.
       placeholder: Ex. I'm always frustrated when...
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: Describe the proposed feature.
@@ -16,12 +18,19 @@ body:
   - type: textarea
     attributes:
       label: Describe alternatives you've considered
-      description: A description of any alternative solutions or features you've considered. This can also include other plugins.
+      description: A description of any alternative solutions or features you've considered.
   - type: textarea
     attributes:
       label: Additional context
       description: Add any other context or screenshots about the feature request here. Also if you have any PRs related to this issue that are already open that you would like us to look at.
-  - type: textarea
+  - type: dropdown
+    id: importance
     attributes:
-      label: Related Issues
-      description: Is there any open or closed issues that is related to this feature request? If so please link them below!
+      label: Importance
+      description: How important is this feature to you?
+      options:
+        - Nice to have
+        - Would make my life easier
+        - I cannot use Costro without it
+    validations:
+      required: true
