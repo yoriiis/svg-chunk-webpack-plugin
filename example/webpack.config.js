@@ -20,7 +20,7 @@ module.exports = (env, argv) => {
 		output: {
 			path: path.resolve(__dirname, './dist'),
 			publicPath: '/dist/',
-			filename: `js/[name]${isProduction ? '.[contenthash]' : ''}.js`
+			filename: 'js/[name].js'
 		},
 		module: {
 			rules: [
@@ -36,7 +36,7 @@ module.exports = (env, argv) => {
 		},
 		plugins: [
 			new SvgChunkWebpackPlugin({
-				filename: `sprites/[name]${isProduction ? '.[contenthash]' : ''}.svg`,
+				filename: 'sprites/[name].svg',
 				generateSpritesManifest: true,
 				generateSpritesPreview: true,
 				svgstoreConfig: {
