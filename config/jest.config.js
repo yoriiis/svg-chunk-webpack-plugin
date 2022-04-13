@@ -4,8 +4,8 @@ module.exports = {
 	preset: 'ts-jest/presets/js-with-babel',
 	resetModules: true,
 	rootDir: '../',
-    transform: {
+	transform: {
 		'\\.(js|jsx|ts|tsx)$': ['ts-jest', { configFile: './config/babel.config.js' }]
 	},
 	verbose: true
-}
+};
