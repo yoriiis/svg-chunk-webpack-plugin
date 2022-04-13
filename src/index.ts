@@ -28,10 +28,10 @@ const REGEXP_CONTENTHASH = /\[contenthash\]/i;
 class SvgSprite {
 	options: {
 		filename: string;
-		svgstoreConfig: Object;
-		svgoConfig: Object;
-		generateSpritesManifest: Boolean;
-		generateSpritesPreview: Boolean;
+		svgstoreConfig: any;
+		svgoConfig: any;
+		generateSpritesManifest: boolean;
+		generateSpritesPreview: boolean;
 	};
 
 	spritesManifest: SpriteManifest;
@@ -77,7 +77,7 @@ class SvgSprite {
 	 * Hook expose by the Webpack compiler
 	 * @param {Object} compilation The Webpack compilation variable
 	 */
-	async hookCallback(compilation: Object): Promise<void> {
+	async hookCallback(compilation: any): Promise<void> {
 		this.compilation = compilation;
 
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation

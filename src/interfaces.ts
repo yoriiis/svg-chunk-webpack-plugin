@@ -1,3 +1,5 @@
+export type Fn = () => void;
+
 export interface Svgs {
 	name: string;
 	content: string;
@@ -15,11 +17,11 @@ export interface Sprites {
 
 export interface NormalModule {
 	userRequest: string;
-	originalSource: Function;
+	originalSource: Fn;
 }
 
 export interface Chunk {
-	buildInfo: Object;
+	buildInfo: any;
 	userRequest: string;
-	originalSource: Function;
+	originalSource: Fn;
 }

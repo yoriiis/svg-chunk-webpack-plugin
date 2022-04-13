@@ -234,7 +234,9 @@ describe('SvgChunkWebpackPlugin apply', () => {
 		const compilerWebpack = {
 			hooks: {
 				thisCompilation: {
-					tap: () => {}
+					tap: () => {
+						/* Empty */
+					}
 				}
 			}
 		};
