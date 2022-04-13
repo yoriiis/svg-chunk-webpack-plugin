@@ -12,7 +12,7 @@ import {
 import templatePreview from '../preview';
 
 import path from 'path';
-import { loadConfig, optimize } from 'svgo';
+import { optimize } from 'svgo';
 
 jest.mock('../preview');
 jest.mock('svgo', () => {
