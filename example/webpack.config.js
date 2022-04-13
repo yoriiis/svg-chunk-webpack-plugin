@@ -54,7 +54,8 @@ module.exports = (env, argv) => {
 								overrides: {
 									inlineStyles: {
 										onlyMatchedOnce: false
-									}
+									},
+									removeViewBox: false
 								}
 							}
 						},

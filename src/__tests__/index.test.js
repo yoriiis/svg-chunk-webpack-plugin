@@ -124,7 +124,8 @@ const options = {
 					overrides: {
 						inlineStyles: {
 							onlyMatchedOnce: false
-						}
+						},
+						removeViewBox: false
 					}
 				}
 			},
@@ -203,24 +204,7 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 					style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
 				}
 			},
-			svgoConfig: {
-				multipass: true,
-				plugins: [
-					{
-						name: 'preset-default',
-						params: {
-							overrides: {
-								inlineStyles: {
-									onlyMatchedOnce: false
-								}
-							}
-						}
-					},
-					{
-						name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
-					}
-				]
-			},
+			svgoConfig: options.svgoConfig,
 			generateSpritesManifest: true,
 			generateSpritesPreview: true
 		});
