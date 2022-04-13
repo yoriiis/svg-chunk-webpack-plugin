@@ -19,9 +19,6 @@ jest.mock('svgo', () => {
 	const originalModule = jest.requireActual('svgo');
 	return {
 		...originalModule,
-		loadConfig: jest.fn().mockReturnValue({
-			multipass: true
-		}),
 		optimize: jest.fn().mockReturnValue({ data: svgsFixture.gradient })
 	};
 });
@@ -118,7 +115,24 @@ const options = {
 			style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
 		}
 	},
-	svgoConfigFile: '/svg-chunk-webpack-plugin/example/svgo.config.js'
+	svgoConfig: {
+		multipass: true,
+		plugins: [
+			{
+				name: 'preset-default',
+				params: {
+					overrides: {
+						inlineStyles: {
+							onlyMatchedOnce: false
+						}
+					}
+				}
+			},
+			{
+				name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
+			}
+		]
+	}
 };
 
 const getInstance = () => new SvgChunkWebpackPlugin(options);
@@ -189,7 +203,24 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 					style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
 				}
 			},
-			svgoConfigFile: '/svg-chunk-webpack-plugin/example/svgo.config.js',
+			svgoConfig: {
+				multipass: true,
+				plugins: [
+					{
+						name: 'preset-default',
+						params: {
+							overrides: {
+								inlineStyles: {
+									onlyMatchedOnce: false
+								}
+							}
+						}
+					},
+					{
+						name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
+					}
+				]
+			},
 			generateSpritesManifest: true,
 			generateSpritesPreview: true
 		});
@@ -207,7 +238,7 @@ describe('SvgChunkWebpackPlugin constructor', () => {
 				cleanSymbols: false,
 				inline: true
 			},
-			svgoConfigFile: null,
+			svgoConfig: {},
 			generateSpritesManifest: false,
 			generateSpritesPreview: false
 		});
@@ -232,13 +263,9 @@ describe('SvgChunkWebpackPlugin apply', () => {
 });
 
 describe('SvgChunkWebpackPlugin hookCallback', () => {
-	it('Should call the hookCallback function', async () => {
-		await svgChunkWebpackPlugin.hookCallback(compilationWebpack);
+	it('Should call the hookCallback function', () => {
+		svgChunkWebpackPlugin.hookCallback(compilationWebpack);
 
-		expect(loadConfig).toHaveBeenCalledWith('/svg-chunk-webpack-plugin/example/svgo.config.js');
-		expect(svgChunkWebpackPlugin.svgoConfig).toStrictEqual({
-			multipass: true
-		});
 		expect(
 			svgChunkWebpackPlugin.compilation.hooks.processAssets.tapPromise
 		).toHaveBeenCalledWith(
@@ -247,22 +274,6 @@ describe('SvgChunkWebpackPlugin hookCallback', () => {
 				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
 			},
 			svgChunkWebpackPlugin.addAssets
-		);
-	});
-
-	it('Should call the hookCallback function without svgo config file', () => {
-		const instance = new SvgChunkWebpackPlugin();
-
-		instance.hookCallback(compilationWebpack);
-
-		expect(loadConfig).not.toHaveBeenCalled();
-		expect(instance.svgoConfig).toStrictEqual({});
-		expect(instance.compilation.hooks.processAssets.tapPromise).toHaveBeenCalledWith(
-			{
-				name: 'SvgChunkWebpackPlugin',
-				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
-			},
-			instance.addAssets
 		);
 	});
 });
@@ -356,7 +367,9 @@ describe('SvgChunkWebpackPlugin optimizeSvg', () => {
 	it('Should call the optimizeSvg function', async () => {
 		const result = await svgChunkWebpackPlugin.optimizeSvg(svgsDependencies[0]);
 
-		expect(optimize).toHaveBeenCalledWith(svgsFixture.gradient, {});
+		expect(optimize).toHaveBeenCalledWith(svgsFixture.gradient, {
+			...svgChunkWebpackPlugin.options.svgoConfig
+		});
 		expect(result).toEqual({
 			name: 'gradient',
 			content: svgsFixture.gradient

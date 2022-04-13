@@ -45,7 +45,24 @@ module.exports = (env, argv) => {
 						style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
 					}
 				},
-				svgoConfigFile: path.resolve(__dirname, './svgo.config.js')
+				svgoConfig: {
+					multipass: true,
+					plugins: [
+						{
+							name: 'preset-default',
+							params: {
+								overrides: {
+									inlineStyles: {
+										onlyMatchedOnce: false
+									}
+								}
+							}
+						},
+						{
+							name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
+						}
+					]
+				}
 			})
 		],
 		stats: {
