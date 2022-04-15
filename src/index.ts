@@ -7,13 +7,13 @@
  **/
 
 import { Compiler } from 'webpack';
-const webpack = require('webpack');
 import { Svgs, SpriteManifest, Sprites, NormalModule, Chunk } from './interfaces';
+import path = require('path');
+const webpack = require('webpack');
 
 // https://github.com/webpack/webpack/issues/11425#issuecomment-686607633
 const { RawSource } = webpack.sources;
 const { util } = require('webpack');
-import path = require('path');
 const svgstore = require('svgstore');
 const { optimize } = require('svgo');
 const extend = require('extend');
