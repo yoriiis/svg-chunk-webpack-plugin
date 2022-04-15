@@ -15,7 +15,6 @@ declare class SvgSprite {
         generateSpritesManifest: Boolean;
         generateSpritesPreview: Boolean;
     };
-    svgOptimizer: any;
     spritesManifest: SpriteManifest;
     spritesList: Array<Sprites>;
     compilation: any;

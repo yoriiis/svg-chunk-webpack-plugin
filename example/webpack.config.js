@@ -46,14 +46,21 @@ module.exports = (env, argv) => {
 					}
 				},
 				svgoConfig: {
+					multipass: true,
 					plugins: [
 						{
-							inlineStyles: {
-								onlyMatchedOnce: false
+							name: 'preset-default',
+							params: {
+								overrides: {
+									inlineStyles: {
+										onlyMatchedOnce: false
+									},
+									removeViewBox: false
+								}
 							}
 						},
 						{
-							removeViewBox: false
+							name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
 						}
 					]
 				}

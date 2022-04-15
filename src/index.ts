@@ -15,7 +15,7 @@ const { RawSource } = webpack.sources;
 const { util } = require('webpack');
 import path = require('path');
 const svgstore = require('svgstore');
-const Svgo = require('svgo');
+const { optimize } = require('svgo');
 const extend = require('extend');
 const templatePreview = require('./preview');
 
@@ -34,7 +34,6 @@ class SvgSprite {
 		generateSpritesPreview: Boolean;
 	};
 
-	svgOptimizer: any;
 	spritesManifest: SpriteManifest;
 	spritesList: Array<Sprites>;
 	compilation: any;
@@ -60,7 +59,6 @@ class SvgSprite {
 		};
 
 		this.options = extend(true, DEFAULTS, options);
-		this.svgOptimizer = new Svgo(this.options.svgoConfig);
 		this.spritesManifest = {};
 		this.spritesList = [];
 		this.hookCallback = this.hookCallback.bind(this);
@@ -166,7 +164,7 @@ class SvgSprite {
 	 */
 	optimizeSvg = async (moduleDependency: NormalModule): Promise<Svgs> => {
 		const source = JSON.parse(moduleDependency.originalSource()._value);
-		const svgOptimized = await this.svgOptimizer.optimize(source);
+		const svgOptimized = await optimize(source, { ...this.options.svgoConfig });
 
 		return {
 			name: path.basename(moduleDependency.userRequest, '.svg'),
