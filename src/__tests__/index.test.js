@@ -19,7 +19,7 @@ jest.mock('svgo', () => {
 	const originalModule = jest.requireActual('svgo');
 	return {
 		...originalModule,
-		optimize: jest.fn().mockReturnValue({ data: svgsFixture.gradient })
+		optimize: jest.fn().mockImplementation(() => ({ data: svgsFixture.gradient }))
 	};
 });
 
