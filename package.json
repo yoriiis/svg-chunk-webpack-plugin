@@ -20,18 +20,19 @@
 	"repository": "https://github.com/yoriiis/svg-chunk-webpack-plugin.git",
 	"license": "MIT",
 	"author": "Yoriiis aka Joris DANIEL",
+	"main": "./lib/index.js",
+	"types": "./src/index.d.ts",
 	"files": [
 		"src",
 		"!src/__mocks__",
 		"!src/__tests__",
 		"lib"
 	],
-	"main": "./lib/index.js",
-	"types": "./src/index.d.ts",
 	"scripts": {
 		"build:example": "rm -rf ./example/dist/ && webpack --config=./example/webpack.config.js --mode=production",
 		"build:tsc": "tsc",
 		"coverage": "npm run test:coverage && cat ./coverage/lcov.info | coveralls",
+		"dev:types": "tsc --watch",
 		"inspect:example": "rm -rf ./example/dist/ && node --inspect node_modules/webpack/bin/webpack.js --config=./example/webpack.config.js --mode=development",
 		"start:example": "rm -rf ./example/dist/ && webpack --config=./example/webpack.config.js --mode=development",
 		"test": "jest --config ./config/jest.config.js --verbose --coverage",
