@@ -129,7 +129,7 @@ Tells the plugin whether to personalize the [svgo configuration](https://github.
 ```javascript
 new SvgChunkWebpackPlugin({
   svgoConfig: {
-    multipass: true, // Recommanded
+    multipass: true, // Recommended
     plugins: [
       {
         name: 'preset-default',

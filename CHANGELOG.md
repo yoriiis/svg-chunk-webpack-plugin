@@ -2,7 +2,7 @@
 
 ## 3.0.0
 
-⚠️ Breaking changes
+### ⚠️ Breaking changes
 
 SVGO configuration has changed since the `v2.x`. Check the [SVGO changelog](https://github.com/svg/svgo/releases) on the releases page.
 
