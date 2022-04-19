@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2.1.0
+
+### Fixes
+
+- Update SVGO to 2.x ([#5](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/5))
+
+### Updates
+
+- Update packages and config ([#6](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/6))
+
 ## 2.0.1
 
 ### Updates
