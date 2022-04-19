@@ -7,13 +7,13 @@
  **/
 
 import { Compiler } from 'webpack';
-const webpack = require('webpack');
 import { Svgs, SpriteManifest, Sprites, NormalModule, Chunk } from './interfaces';
+import path = require('path');
+const webpack = require('webpack');
 
 // https://github.com/webpack/webpack/issues/11425#issuecomment-686607633
 const { RawSource } = webpack.sources;
 const { util } = require('webpack');
-import path = require('path');
 const svgstore = require('svgstore');
 const { optimize } = require('svgo');
 const extend = require('extend');
@@ -28,10 +28,10 @@ const REGEXP_CONTENTHASH = /\[contenthash\]/i;
 class SvgSprite {
 	options: {
 		filename: string;
-		svgstoreConfig: Object;
-		svgoConfig: Object;
-		generateSpritesManifest: Boolean;
-		generateSpritesPreview: Boolean;
+		svgstoreConfig: any;
+		svgoConfig: any;
+		generateSpritesManifest: boolean;
+		generateSpritesPreview: boolean;
 	};
 
 	spritesManifest: SpriteManifest;
@@ -67,7 +67,6 @@ class SvgSprite {
 
 	/**
 	 * Apply function is automatically called by the Webpack main compiler
-	 *
 	 * @param {Object} compiler The Webpack compiler variable
 	 */
 	apply(compiler: Compiler): void {
@@ -76,10 +75,9 @@ class SvgSprite {
 
 	/**
 	 * Hook expose by the Webpack compiler
-	 *
 	 * @param {Object} compilation The Webpack compilation variable
 	 */
-	async hookCallback(compilation: Object): Promise<void> {
+	async hookCallback(compilation: any): Promise<void> {
 		this.compilation = compilation;
 
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
@@ -116,7 +114,6 @@ class SvgSprite {
 
 	/**
 	 * Get entrypoint names from the compilation
-	 *
 	 * @return {Array} List of entrypoint names
 	 */
 	getEntryNames(): Array<string> {
@@ -125,9 +122,7 @@ class SvgSprite {
 
 	/**
 	 * Process for each entry
-
 	 * @param {String} entryName Entrypoint name
-	 *
 	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
 	async processEntry(entryName: string): Promise<void> {
@@ -157,9 +152,7 @@ class SvgSprite {
 
 	/**
 	 * Optimize SVG with Svgo
-	 *
 	 * @param {String} filepath SVG filepath from Webpack compilation
-	 *
 	 * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
 	 */
 	optimizeSvg = async (moduleDependency: NormalModule): Promise<Svgs> => {
@@ -174,9 +167,7 @@ class SvgSprite {
 
 	/**
 	 * Get SVGs filtered by entrypoints
-	 *
 	 * @param {String} entryName Entrypoint name
-	 *
 	 * @returns {Array<Object>} Svgs list
 	 */
 	getSvgsDependenciesByEntrypoint(entryName: string): Array<NormalModule> {
@@ -195,9 +186,7 @@ class SvgSprite {
 
 	/**
 	 * Generate the SVG sprite with Svgstore
-	 *
 	 * @param {Array<Svgs>} svgsOptimized SVGs list
-	 *
 	 * @returns {String} Sprite string
 	 */
 	generateSprite(svgsOptimized: Array<Svgs>): string {
@@ -212,7 +201,6 @@ class SvgSprite {
 	 * Create sprite asset with Webpack compilation
 	 * Expose the manifest file into the assets compilation
 	 * The file is automatically created by the compiler
-	 *
 	 * @param {String} entryName Entrypoint name
 	 * @param {String} sprite Sprite string
 	 */
@@ -225,10 +213,8 @@ class SvgSprite {
 	/**
 	 * Get the filename for the asset compilation
 	 * Placeholder [name], [hash], [chunkhash], [content] are automatically replaced
-	 *
 	 * @param {String} entryName Entrypoint name
 	 * @param {String} output Sprite content
-	 *
 	 * @returns {String} Sprite filename
 	 */
 	getFileName({ entryName, output }: { entryName: string; output: string }): string {
@@ -263,7 +249,6 @@ class SvgSprite {
 
 	/**
 	 * Get the compilation hash
-	 *
 	 * @returns {String} Compilation hash
 	 */
 	getBuildHash(): string {
@@ -272,7 +257,6 @@ class SvgSprite {
 
 	/**
 	 * Get the chunk hash according to the entrypoint content
-	 *
 	 * @returns {String} Chunk hash
 	 */
 	getChunkHash(entryName: string): string {
@@ -282,7 +266,6 @@ class SvgSprite {
 
 	/**
 	 * Get the contenthash according to the sprite content
-	 *
 	 * @returns {String} Sprite content hash
 	 */
 	getContentHash(output: string): string {

@@ -3,7 +3,7 @@
 		"moduleResolution": "node",
 		"outDir": "./lib",
 		"allowJs": true,
-		"checkJs": true,
+		"checkJs": false,
 		"target": "es2017",
 		"lib": ["es2017"],
 		"strict": true,
@@ -11,7 +11,8 @@
 		"declaration": true,
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
-		"module": "commonjs"
+		"module": "commonjs",
+		"resolveJsonModule": true
 	},
 	"types": ["node"],
 	"include": ["./src/**/*"],

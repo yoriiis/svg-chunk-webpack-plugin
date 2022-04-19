@@ -13,13 +13,17 @@ export interface Sprites {
 	svgs: Array<string>;
 }
 
+export interface NormalModuleSource {
+	_value: string;
+}
+
 export interface NormalModule {
 	userRequest: string;
-	originalSource: Function;
+	originalSource: () => NormalModuleSource;
 }
 
 export interface Chunk {
-	buildInfo: Object;
+	buildInfo: any;
 	userRequest: string;
-	originalSource: Function;
+	originalSource: () => NormalModuleSource;
 }
