@@ -1,6 +1,13 @@
 # CHANGELOG
 
-## 2.1.0
+## 3.0.0
+
+⚠️ Breaking changes
+
+SVGO configuration has changed since the `v2.x`. Check the [SVGO changelog](https://github.com/svg/svgo/releases) on the releases page.
+
+- Each plugins must have a `name` property
+- New plugin `preset-default` and override rules
 
 ### Fixes
 

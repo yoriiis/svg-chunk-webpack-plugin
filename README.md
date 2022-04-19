@@ -31,7 +31,7 @@ npm install svg-chunk-webpack-plugin --save-dev
 ```
 
 ```bash
-yarn add svg-chunk-webpack-plugin  --dev
+yarn add svg-chunk-webpack-plugin --dev
 ```
 
 ## Environment
@@ -124,21 +124,26 @@ The `filename` parameter is compatible with Webpack caching placeholders, see th
 
 `Object = {}`
 
-Tells the plugin whether to personalize the plugins for svgo. Update the parameters according to your needs from the plugins list available on the [svgo](https://github.com/svg/svgo#what-it-can-do) documentation.
-
-> 💡 The disabled `onlyMatchedOnce` property allows to replace all occurences of CSS classes in HTML attributes, not only selectors that match once. The disabled `removeViewBox` property allows to keep viewBow attributes.
+Tells the plugin whether to personalize the [svgo configuration](https://github.com/svg/svgo#configuration).
 
 ```javascript
 new SvgChunkWebpackPlugin({
   svgoConfig: {
+    multipass: true, // Recommanded
     plugins: [
       {
-        inlineStyles: {
-          onlyMatchedOnce: false
+        name: 'preset-default',
+        params: {
+          overrides: {
+            inlineStyles: {
+              onlyMatchedOnce: false
+            },
+            removeViewBox: false
+          }
         }
       },
       {
-        removeViewBox: false
+        name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
       }
     ]
   }
