@@ -274,8 +274,12 @@ class SvgSprite {
 	 * @returns {String} Sprite content hash
 	 */
 	getContentHash(output: string): string {
-		const { hashFunction, hashDigest } = this.compilation.outputOptions;
-		return util.createHash(hashFunction).update(output).digest(hashDigest);
+		const { hashFunction, hashDigest, hashDigestLength } = this.compilation.outputOptions;
+		return util
+			.createHash(hashFunction)
+			.update(output)
+			.digest(hashDigest)
+			.substring(0, hashDigestLength);
 	}
 
 	/**
