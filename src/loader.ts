@@ -1,3 +1,4 @@
+const { optimize, loadConfig } = require('svgo');
 const PACKAGE_NAME = require('../package.json').name;
 
 /**
@@ -5,8 +6,22 @@ const PACKAGE_NAME = require('../package.json').name;
  * Content are not edited, just stringified
  * The plugin create sprites
  */
-export = function spriteLoader(this: any, content: string): string {
+async function loader(content: string) {
+	const { configFile } = this.getOptions();
+	let config;
+	if (typeof configFile === 'string') {
+		config = await loadConfig(configFile, this.context);
+	} else if (configFile !== false) {
+		config = await loadConfig(null, this.context);
+	}
+
+	const result = optimize(content, { path: this.resourcePath, ...config });
+	return JSON.stringify(result.data);
+}
+
+export = function spriteLoader(this: any, content: string): Promise<string> {
 	const compiler = this._compiler;
+	const callback = this.async();
 
 	// Declare all SVG files as side effect
 	// https://github.com/webpack/webpack/issues/12202#issuecomment-745537821
@@ -29,5 +44,8 @@ export = function spriteLoader(this: any, content: string): string {
 		throw new Error(`${PACKAGE_NAME} requires the corresponding plugin`);
 	}
 
-	return JSON.stringify(content);
+	return loader
+		.call(this, content)
+		.then((result) => callback(null, result))
+		.catch((error) => callback(error));
 };

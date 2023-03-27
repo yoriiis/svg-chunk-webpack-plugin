@@ -15,7 +15,6 @@ const webpack = require('webpack');
 const { RawSource } = webpack.sources;
 const { util } = require('webpack');
 const svgstore = require('svgstore');
-const { optimize } = require('svgo');
 const extend = require('extend');
 const templatePreview = require('./preview');
 
@@ -29,7 +28,6 @@ class SvgSprite {
 	options: {
 		filename: string;
 		svgstoreConfig: any;
-		svgoConfig: any;
 		generateSpritesManifest: boolean;
 		generateSpritesPreview: boolean;
 	};
@@ -37,6 +35,7 @@ class SvgSprite {
 	spritesManifest: SpriteManifest;
 	spritesList: Array<Sprites>;
 	compilation: any;
+	cache: any;
 
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
@@ -53,7 +52,6 @@ class SvgSprite {
 				cleanSymbols: false,
 				inline: true
 			},
-			svgoConfig: {},
 			generateSpritesManifest: false,
 			generateSpritesPreview: false
 		};
@@ -63,6 +61,7 @@ class SvgSprite {
 		this.spritesList = [];
 		this.hookCallback = this.hookCallback.bind(this);
 		this.addAssets = this.addAssets.bind(this);
+		this.getSvgData = this.getSvgData.bind(this);
 	}
 
 	/**
@@ -79,6 +78,7 @@ class SvgSprite {
 	 */
 	async hookCallback(compilation: any): Promise<void> {
 		this.compilation = compilation;
+		this.cache = compilation.getCache('SvgChunkWebpackPlugin');
 
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
 		this.compilation.hooks.processAssets.tapPromise(
@@ -127,48 +127,53 @@ class SvgSprite {
 	 */
 	async processEntry(entryName: string): Promise<void> {
 		const svgsDependencies = this.getSvgsDependenciesByEntrypoint(entryName);
-		const svgsOptimized = await Promise.all(
-			svgsDependencies.map((moduleDependency: NormalModule) =>
-				this.optimizeSvg(moduleDependency)
-			)
+		const svgsData = await Promise.all(
+			svgsDependencies.map((normalModule: NormalModule) => this.getSvgData(normalModule))
 		);
-		const sprite = this.generateSprite(svgsOptimized);
+		const sprite = this.generateSprite(svgsData);
+		const filename = this.getFileName({ entryName, output: sprite });
 
-		this.createSpriteAsset({ entryName, sprite });
+		const source = new RawSource(sprite, false);
+		const eTag = this.cache.getLazyHashedEtag(source);
+		const cacheItem = this.cache.getItemCache(filename, eTag);
+		const output = await cacheItem.getPromise();
+		if (!output) {
+			await cacheItem.storePromise({
+				source
+			});
+		}
+		this.compilation.emitAsset(filename, source);
 
 		// Update sprites manifest
-		this.spritesManifest[entryName] = svgsDependencies.map((moduleDependency: NormalModule) =>
-			path.relative(this.compilation.options.context, moduleDependency.userRequest)
+		this.spritesManifest[entryName] = svgsDependencies.map((normalModule: NormalModule) =>
+			path.relative(this.compilation.options.context, normalModule.userRequest)
 		);
 
 		this.spritesList.push({
 			name: entryName,
 			content: sprite,
-			svgs: svgsDependencies.map((moduleDependency: NormalModule) =>
-				path.basename(moduleDependency.userRequest, '.svg')
+			svgs: svgsDependencies.map((normalModule: NormalModule) =>
+				path.basename(normalModule.userRequest, '.svg')
 			)
 		});
 	}
 
 	/**
-	 * Optimize SVG with Svgo
-	 * @param {String} filepath SVG filepath from Webpack compilation
-	 * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
+	 * Get SVG data
+	 * @param {NormalModule} normalModule Normal module from Webpack compilation
+	 * @returns {Svgs} Svg name and optimized content with Svgo
 	 */
-	optimizeSvg = async (moduleDependency: NormalModule): Promise<Svgs> => {
-		const source = JSON.parse(
-			this.compilation.codeGenerationResults
-				.get(moduleDependency)
-				.sources.get('javascript')
-				.source()
-		);
-		const svgOptimized = await optimize(source, { ...this.options.svgoConfig });
-
+	getSvgData(normalModule: NormalModule): Svgs {
 		return {
-			name: path.basename(moduleDependency.userRequest, '.svg'),
-			content: svgOptimized.data
+			name: path.basename(normalModule.userRequest, '.svg'),
+			content: JSON.parse(
+				this.compilation.codeGenerationResults
+					.get(normalModule)
+					.sources.get('javascript')
+					.source()
+			)
 		};
-	};
+	}
 
 	/**
 	 * Get SVGs filtered by entrypoints
@@ -191,28 +196,15 @@ class SvgSprite {
 
 	/**
 	 * Generate the SVG sprite with Svgstore
-	 * @param {Array<Svgs>} svgsOptimized SVGs list
+	 * @param {Array<Svgs>} svgsData SVGs list
 	 * @returns {String} Sprite string
 	 */
-	generateSprite(svgsOptimized: Array<Svgs>): string {
+	generateSprite(svgsData: Array<Svgs>): string {
 		const sprites = svgstore(this.options.svgstoreConfig);
-		svgsOptimized.forEach((svg: Svgs) => {
+		svgsData.forEach((svg: Svgs) => {
 			sprites.add(svg.name, svg.content);
 		});
 		return sprites.toString();
-	}
-
-	/**
-	 * Create sprite asset with Webpack compilation
-	 * Expose the manifest file into the assets compilation
-	 * The file is automatically created by the compiler
-	 * @param {String} entryName Entrypoint name
-	 * @param {String} sprite Sprite string
-	 */
-	createSpriteAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
-		const output = sprite;
-		const filename = this.getFileName({ entryName, output });
-		this.compilation.emitAsset(filename, new RawSource(output, false));
 	}
 
 	/**
