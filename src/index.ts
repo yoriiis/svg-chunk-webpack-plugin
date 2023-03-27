@@ -164,15 +164,19 @@ class SvgSprite {
 	 * @returns {Svgs} Svg name and optimized content with Svgo
 	 */
 	getSvgData(normalModule: NormalModule): Svgs {
-		return {
-			name: path.basename(normalModule.userRequest, '.svg'),
-			content: JSON.parse(
-				this.compilation.codeGenerationResults
-					.get(normalModule)
-					.sources.get('javascript')
-					.source()
-			)
-		};
+		try {
+			return {
+				name: path.basename(normalModule.userRequest, '.svg'),
+				content: JSON.parse(
+					this.compilation.codeGenerationResults
+						.get(normalModule)
+						.sources.get('javascript')
+						.source()
+				)
+			};
+		} catch (error) {
+			this.compilation.errors.push(error);
+		}
 	}
 
 	/**

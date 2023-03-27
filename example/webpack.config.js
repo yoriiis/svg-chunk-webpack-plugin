@@ -7,7 +7,7 @@ module.exports = (env, argv) => {
 	const isProduction = argv.mode === 'production';
 
 	return {
-		// infrastructureLogging: { debug: /PackFileCache/ },
+		infrastructureLogging: { debug: /PackFileCache/ },
 		context: __dirname,
 		watch: !isProduction,
 		entry: {
