@@ -59,9 +59,9 @@ class SvgChunkWebpackPlugin {
 		this.options = extend(true, DEFAULTS, options);
 		this.spritesManifest = {};
 		this.spritesList = [];
+		this.cache = new Map();
 		this.hookCallback = this.hookCallback.bind(this);
 		this.addAssets = this.addAssets.bind(this);
-		this.getSvgData = this.getSvgData.bind(this);
 	}
 
 	/**
@@ -78,7 +78,6 @@ class SvgChunkWebpackPlugin {
 	 */
 	async hookCallback(compilation: any): Promise<void> {
 		this.compilation = compilation;
-		this.cache = compilation.options.cache && compilation.getCache('SvgChunkWebpackPlugin');
 
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
 		this.compilation.hooks.processAssets.tapPromise(
@@ -123,62 +122,52 @@ class SvgChunkWebpackPlugin {
 	/**
 	 * Process for each entry
 	 * @param {String} entryName Entrypoint name
-	 * @returns {Promise<void>} Resolve the promise when all actions are done
+	 * @returns {void} Resolve the promise when all actions are done
 	 */
-	async processEntry(entryName: string): Promise<void> {
-		const svgsDependencies = this.getSvgsDependenciesByEntrypoint(entryName);
-		const svgsData = await Promise.all(
-			svgsDependencies.map((normalModule: NormalModule) => this.getSvgData(normalModule))
-		);
-		const sprite = this.generateSprite(svgsData);
-		const filename = this.getFileName({ entryName, output: sprite });
-		const source = new RawSource(sprite, false);
+	processEntry(entryName: string): void {
+		const hash: string[] = [];
+		const listSvgPath: string[] = [];
+		const listSvgName: string[] = [];
 
-		if (this.cache) {
-			const eTag = this.cache.getLazyHashedEtag(source);
-			const cacheItem = this.cache.getItemCache(filename, eTag);
-			const output = await cacheItem.getPromise();
-			if (!output) {
-				await cacheItem.storePromise({
-					source
-				});
+		const svgsData = this.getSvgsDependenciesByEntrypoint(entryName).map(
+			(normalModule: NormalModule) => {
+				hash.push(normalModule.buildInfo.hash);
+				listSvgPath.push(
+					path.relative(this.compilation.options.context, normalModule.userRequest)
+				);
+				listSvgName.push(path.basename(normalModule.userRequest, '.svg'));
+
+				return {
+					name: path.basename(normalModule.userRequest, '.svg'),
+					content: JSON.parse(
+						this.compilation.codeGenerationResults
+							.get(normalModule)
+							.sources.get('javascript')
+							.source()
+					)
+				};
 			}
+		);
+
+		const cache = this.cache.get(entryName);
+		const hashMerged = hash.join('|');
+		if (!cache || cache.hash !== hashMerged) {
+			const sprite = this.generateSprite(svgsData);
+			const filename = this.getFileName({ entryName, output: sprite });
+			this.compilation.emitAsset(filename, new RawSource(sprite, false));
+			this.cache.set(entryName, {
+				hash: hashMerged,
+				sprite
+			});
 		}
-		this.compilation.emitAsset(filename, source);
 
 		// Update sprites manifest
-		this.spritesManifest[entryName] = svgsDependencies.map((normalModule: NormalModule) =>
-			path.relative(this.compilation.options.context, normalModule.userRequest)
-		);
-
+		this.spritesManifest[entryName] = listSvgPath;
 		this.spritesList.push({
 			name: entryName,
-			content: sprite,
-			svgs: svgsDependencies.map((normalModule: NormalModule) =>
-				path.basename(normalModule.userRequest, '.svg')
-			)
+			content: this.cache.get(entryName).sprite,
+			svgs: listSvgName
 		});
-	}
-
-	/**
-	 * Get SVG data
-	 * @param {NormalModule} normalModule Normal module from Webpack compilation
-	 * @returns {Svgs} Svg name and optimized content with Svgo
-	 */
-	getSvgData(normalModule: NormalModule): Svgs {
-		try {
-			return {
-				name: path.basename(normalModule.userRequest, '.svg'),
-				content: JSON.parse(
-					this.compilation.codeGenerationResults
-						.get(normalModule)
-						.sources.get('javascript')
-						.source()
-				)
-			};
-		} catch (error) {
-			this.compilation.errors.push(error);
-		}
 	}
 
 	/**

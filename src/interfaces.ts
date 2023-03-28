@@ -18,6 +18,9 @@ export interface NormalModuleSource {
 }
 
 export interface NormalModule {
+	buildInfo: {
+		hash: string;
+	};
 	userRequest: string;
 	originalSource: () => NormalModuleSource;
 }
