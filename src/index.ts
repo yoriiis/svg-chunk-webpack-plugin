@@ -24,7 +24,7 @@ const REGEXP_HASH = /\[hash\]/i;
 const REGEXP_CHUNKHASH = /\[chunkhash\]/i;
 const REGEXP_CONTENTHASH = /\[contenthash\]/i;
 
-class SvgSprite {
+class SvgChunkWebpackPlugin {
 	options: {
 		filename: string;
 		svgstoreConfig: any;
@@ -69,7 +69,7 @@ class SvgSprite {
 	 * @param {Object} compiler The Webpack compiler variable
 	 */
 	apply(compiler: Compiler): void {
-		compiler.hooks.thisCompilation.tap('SvgSprite', this.hookCallback);
+		compiler.hooks.thisCompilation.tap('SvgChunkWebpackPlugin', this.hookCallback);
 	}
 
 	/**
@@ -78,7 +78,7 @@ class SvgSprite {
 	 */
 	async hookCallback(compilation: any): Promise<void> {
 		this.compilation = compilation;
-		this.cache = compilation.getCache('SvgChunkWebpackPlugin');
+		this.cache = compilation.options.cache && compilation.getCache('SvgChunkWebpackPlugin');
 
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
 		this.compilation.hooks.processAssets.tapPromise(
@@ -132,15 +132,17 @@ class SvgSprite {
 		);
 		const sprite = this.generateSprite(svgsData);
 		const filename = this.getFileName({ entryName, output: sprite });
-
 		const source = new RawSource(sprite, false);
-		const eTag = this.cache.getLazyHashedEtag(source);
-		const cacheItem = this.cache.getItemCache(filename, eTag);
-		const output = await cacheItem.getPromise();
-		if (!output) {
-			await cacheItem.storePromise({
-				source
-			});
+
+		if (this.cache) {
+			const eTag = this.cache.getLazyHashedEtag(source);
+			const cacheItem = this.cache.getItemCache(filename, eTag);
+			const output = await cacheItem.getPromise();
+			if (!output) {
+				await cacheItem.storePromise({
+					source
+				});
+			}
 		}
 		this.compilation.emitAsset(filename, source);
 
@@ -300,6 +302,6 @@ class SvgSprite {
 }
 
 // @ts-ignore
-SvgSprite.loader = require.resolve('./loader');
+SvgChunkWebpackPlugin.loader = require.resolve('./loader');
 
-export = SvgSprite;
+export = SvgChunkWebpackPlugin;
