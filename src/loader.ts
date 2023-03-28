@@ -1,12 +1,9 @@
 const { optimize, loadConfig } = require('svgo');
 const PACKAGE_NAME = require('../package.json').name;
 
-/**
- * Loader for SVG files
- * Content are not edited, just stringified
- * The plugin create sprites
- */
-async function loader(content: string) {
+import { LoaderThis } from './interfaces';
+
+async function loader(this: LoaderThis, content: string) {
 	const { configFile } = this.getOptions();
 	let config;
 	if (typeof configFile === 'string') {
@@ -15,11 +12,16 @@ async function loader(content: string) {
 		config = await loadConfig(null, this.context);
 	}
 
-	const result = optimize(content, { path: this.resourcePath, ...config });
+	const result = optimize(content, { ...config });
 	return JSON.stringify(result.data);
 }
 
-export = function spriteLoader(this: any, content: string): Promise<string> {
+/**
+ * Loader for SVG files
+ * Content are not edited, just stringified
+ * The plugin create sprites
+ */
+export = async function spriteLoader(this: LoaderThis, content: string): Promise<string> {
 	const compiler = this._compiler;
 	const callback = this.async();
 
@@ -44,8 +46,10 @@ export = function spriteLoader(this: any, content: string): Promise<string> {
 		throw new Error(`${PACKAGE_NAME} requires the corresponding plugin`);
 	}
 
-	return loader
-		.call(this, content)
-		.then((result) => callback(null, result))
-		.catch((error) => callback(error));
+	try {
+		const result = await loader.call(this, content);
+		return callback(null, result);
+	} catch (error) {
+		return callback(error);
+	}
 };
