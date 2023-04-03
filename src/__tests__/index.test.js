@@ -77,28 +77,19 @@ const svgsDependencies = [
 		buildInfo: {
 			SVG_CHUNK_WEBPACK_PLUGIN: true
 		},
-		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/gradient.svg',
-		originalSource: () => ({
-			_value: JSON.stringify(svgsFixture.gradient)
-		})
+		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/gradient.svg'
 	},
 	{
 		buildInfo: {
 			SVG_CHUNK_WEBPACK_PLUGIN: true
 		},
-		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/video.svg',
-		originalSource: () => ({
-			_value: JSON.stringify(svgsFixture.video)
-		})
+		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/video.svg'
 	},
 	{
 		buildInfo: {
 			SVG_CHUNK_WEBPACK_PLUGIN: true
 		},
-		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/smiley-love.svg',
-		originalSource: () => ({
-			_value: JSON.stringify(svgsFixture['smiley-love'])
-		})
+		userRequest: '/svg-chunk-webpack-plugin/example/src/svgs/smiley-love.svg'
 	}
 ];
 const svgsSprite = [
@@ -180,6 +171,15 @@ beforeEach(() => {
 		},
 		chunkGraph: {
 			getChunkModulesIterable: () => svgsDependencies
+		},
+		codeGenerationResults: {
+			get: jest.fn().mockImplementation(() => ({
+				sources: {
+					get: jest.fn().mockImplementation(() => ({
+						source: jest.fn()
+					}))
+				}
+			}))
 		}
 	};
 
@@ -351,6 +351,15 @@ describe('SvgChunkWebpackPlugin processEntry', () => {
 
 describe('SvgChunkWebpackPlugin optimizeSvg', () => {
 	it('Should call the optimizeSvg function', async () => {
+		svgChunkWebpackPlugin.compilation = compilationWebpack;
+		svgChunkWebpackPlugin.compilation.codeGenerationResults.get.mockImplementation(() => ({
+			sources: {
+				get: jest.fn().mockImplementation(() => ({
+					source: jest.fn().mockImplementation(() => JSON.stringify(svgsFixture.gradient))
+				}))
+			}
+		}));
+
 		const result = await svgChunkWebpackPlugin.optimizeSvg(svgsDependencies[0]);
 
 		expect(optimize).toHaveBeenCalledWith(svgsFixture.gradient, {
