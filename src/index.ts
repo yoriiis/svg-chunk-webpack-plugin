@@ -37,6 +37,7 @@ class SvgSprite {
 	spritesManifest: SpriteManifest;
 	spritesList: Array<Sprites>;
 	compilation: any;
+	cache: any;
 
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
@@ -79,6 +80,7 @@ class SvgSprite {
 	 */
 	async hookCallback(compilation: any): Promise<void> {
 		this.compilation = compilation;
+		this.cache = this.compilation.getCache('SvgChunkWebpackPlugin');
 
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
 		this.compilation.hooks.processAssets.tapPromise(
@@ -126,27 +128,79 @@ class SvgSprite {
 	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
 	async processEntry(entryName: string): Promise<void> {
-		const svgsDependencies = this.getSvgsDependenciesByEntrypoint(entryName);
-		const svgsOptimized = await Promise.all(
-			svgsDependencies.map((moduleDependency: NormalModule) =>
-				this.optimizeSvg(moduleDependency)
-			)
-		);
-		const sprite = this.generateSprite(svgsOptimized);
+		const cachePreviousBuild = this.cache.getItemCache('previousBuild', null);
+		let outputPreviousBuild = await cachePreviousBuild.getPromise();
+		let output = null;
 
-		this.createSpriteAsset({ entryName, sprite });
+		if (outputPreviousBuild) {
+			console.log('previousBuild ', outputPreviousBuild);
+			const cacheItem = this.cache.getItemCache(entryName, outputPreviousBuild.eTag);
+			output = await cacheItem.getPromise();
+			console.log('output from cache', output.filename, output.source.source());
+		}
 
-		// Update sprites manifest
-		this.spritesManifest[entryName] = svgsDependencies.map((moduleDependency: NormalModule) =>
-			path.relative(this.compilation.options.context, moduleDependency.userRequest)
-		);
+		if (output) {
+		} else {
+			console.log('no cache');
+			const svgsDependencies = this.getSvgsDependenciesByEntrypoint(entryName);
+			console.log('svgsDependencies.length ', svgsDependencies.length);
 
+			if (svgsDependencies.length) {
+				const listSvgPath: string[] = [];
+				const listSvgName: string[] = [];
+				const svgsData = await Promise.all(
+					svgsDependencies.map((moduleDependency: NormalModule) => {
+						listSvgPath.push(
+							path.relative(
+								this.compilation.options.context,
+								moduleDependency.userRequest
+							)
+						);
+						listSvgName.push(path.basename(moduleDependency.userRequest, '.svg'));
+						return this.optimizeSvg(moduleDependency);
+					})
+				);
+
+				// Generate eTag
+				const eTags = svgsData.map((svg) =>
+					this.cache.getLazyHashedEtag(new RawSource(svg.content))
+				);
+				const eTag = eTags
+					.reduce((acc, etag) => this.cache.mergeEtags(acc, etag))
+					.toString();
+
+				if (!outputPreviousBuild) {
+					// Store eTag as hash string to get sprite item in cache with the hash identifier
+					await cachePreviousBuild.storePromise({
+						// compilationHash: this.compilation.hash,
+						entryName,
+						eTag
+					});
+				}
+
+				const cacheItem = this.cache.getItemCache(entryName, eTag);
+				output = await cacheItem.getPromise();
+				if (!output) {
+					const sprite = this.generateSprite(svgsData);
+					const filename = this.getFileName({ entryName, output: sprite });
+					output = {
+						source: new RawSource(sprite),
+						filename,
+						listSvgPath,
+						listSvgName
+					};
+					await cacheItem.storePromise(output);
+				}
+			}
+		}
+
+		this.compilation.emitAsset(output.filename, output.source);
+
+		this.spritesManifest[entryName] = output.listSvgPath;
 		this.spritesList.push({
 			name: entryName,
-			content: sprite,
-			svgs: svgsDependencies.map((moduleDependency: NormalModule) =>
-				path.basename(moduleDependency.userRequest, '.svg')
-			)
+			content: output.source.source(),
+			svgs: output.listSvgName
 		});
 	}
 
@@ -200,19 +254,6 @@ class SvgSprite {
 			sprites.add(svg.name, svg.content);
 		});
 		return sprites.toString();
-	}
-
-	/**
-	 * Create sprite asset with Webpack compilation
-	 * Expose the manifest file into the assets compilation
-	 * The file is automatically created by the compiler
-	 * @param {String} entryName Entrypoint name
-	 * @param {String} sprite Sprite string
-	 */
-	createSpriteAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
-		const output = sprite;
-		const filename = this.getFileName({ entryName, output });
-		this.compilation.emitAsset(filename, new RawSource(output, false));
 	}
 
 	/**
