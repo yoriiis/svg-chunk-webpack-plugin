@@ -128,7 +128,7 @@ class SvgSprite {
 	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
 	async processEntry(entryName: string): Promise<void> {
-		const cachePreviousBuild = this.cache.getItemCache('previousBuild', null);
+		const cachePreviousBuild = this.cache.getItemCache(`${entryName}-previousBuild`, null);
 		let outputPreviousBuild = await cachePreviousBuild.getPromise();
 		let output = null;
 
@@ -136,7 +136,7 @@ class SvgSprite {
 			console.log('previousBuild ', outputPreviousBuild);
 			const cacheItem = this.cache.getItemCache(entryName, outputPreviousBuild.eTag);
 			output = await cacheItem.getPromise();
-			console.log('output from cache', output.filename, output.source.source());
+			console.log('output from cache', output.filename);
 		}
 
 		if (output) {
@@ -172,8 +172,6 @@ class SvgSprite {
 				if (!outputPreviousBuild) {
 					// Store eTag as hash string to get sprite item in cache with the hash identifier
 					await cachePreviousBuild.storePromise({
-						// compilationHash: this.compilation.hash,
-						entryName,
 						eTag
 					});
 				}
