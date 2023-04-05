@@ -112,6 +112,12 @@ class SvgSprite {
 		if (this.options.generateSpritesPreview) {
 			this.createSpritesPreview();
 		}
+
+		console.log('this.compilation.hash', this.compilation.hash);
+		// Store compilation hash after process
+		await this.cache.getItemCache('compilation', null).storePromise({
+			compilationHash: this.compilation.hash
+		});
 	}
 
 	/**
@@ -128,7 +134,10 @@ class SvgSprite {
 	 * @returns {Promise<void>} Resolve the promise when all actions are done
 	 */
 	async processEntry(entryName: string): Promise<void> {
-		const cachePreviousBuild = this.cache.getItemCache(`${entryName}-previousBuild`, null);
+		const cacheCompilation = await this.cache.getItemCache('compilation', null).getPromise();
+		console.log('compilation cache', cacheCompilation);
+
+		const cachePreviousBuild = this.cache.getItemCache(`previousBuild-${entryName}`, null);
 		let outputPreviousBuild = await cachePreviousBuild.getPromise();
 		let output = null;
 
@@ -139,8 +148,7 @@ class SvgSprite {
 			console.log('output from cache', output.filename);
 		}
 
-		if (output) {
-		} else {
+		if (!output) {
 			console.log('no cache');
 			const svgsDependencies = this.getSvgsDependenciesByEntrypoint(entryName);
 			console.log('svgsDependencies.length ', svgsDependencies.length);
@@ -178,9 +186,11 @@ class SvgSprite {
 
 				const cacheItem = this.cache.getItemCache(entryName, eTag);
 				output = await cacheItem.getPromise();
+
 				if (!output) {
 					const sprite = this.generateSprite(svgsData);
 					const filename = this.getFileName({ entryName, output: sprite });
+
 					output = {
 						source: new RawSource(sprite),
 						filename,
