@@ -138,7 +138,7 @@ class SvgSprite {
 		console.log('compilation cache', cacheCompilation);
 
 		const cachePreviousBuild = this.cache.getItemCache(`previousBuild-${entryName}`, null);
-		let outputPreviousBuild = await cachePreviousBuild.getPromise();
+		const outputPreviousBuild = await cachePreviousBuild.getPromise();
 		let output = null;
 
 		if (outputPreviousBuild) {
