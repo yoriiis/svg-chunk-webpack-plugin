@@ -8,7 +8,7 @@ const PACKAGE_NAME = require('../package.json').name;
  * Content are not edited, just stringified
  * The plugin create sprites
  */
-export = async function spriteLoader(this: LoaderThis, content: string) {
+export = async function spriteLoader(this: LoaderThis, content: string): Promise<string> {
 	const compiler = this._compiler;
 	const callback = this.async();
 
