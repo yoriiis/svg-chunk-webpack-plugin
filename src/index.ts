@@ -91,22 +91,26 @@ class SvgChunkWebpackPlugin {
 	 * Add assets
 	 * The hook is triggered by webpack
 	 */
-	addAssets(): void {
-		// Reset value on every new process
-		this.spritesManifest = {};
-		this.spritesList = [];
+	addAssets(): Promise<void> {
+		return new Promise((resolve) => {
+			// Reset value on every new process
+			this.spritesManifest = {};
+			this.spritesList = [];
 
-		const entryNames = this.getEntryNames();
+			const entryNames = this.getEntryNames();
 
-		Promise.all(entryNames.map((entryName) => this.processEntry(entryName)));
+			entryNames.map((entryName) => this.processEntry(entryName));
 
-		if (this.options.generateSpritesManifest) {
-			this.createSpritesManifest();
-		}
+			if (this.options.generateSpritesManifest) {
+				this.createSpritesManifest();
+			}
 
-		if (this.options.generateSpritesPreview) {
-			this.createSpritesPreview();
-		}
+			if (this.options.generateSpritesPreview) {
+				this.createSpritesPreview();
+			}
+
+			resolve();
+		});
 	}
 
 	/**

@@ -193,13 +193,13 @@ describe('SvgChunkWebpackPlugin', () => {
 	});
 
 	describe('SvgChunkWebpackPlugin addAssets', () => {
-		it('Should call the addAssets function', () => {
+		it('Should call the addAssets function', async () => {
 			svgChunkWebpackPlugin.getEntryNames = jest.fn().mockReturnValue(entryNames);
 			svgChunkWebpackPlugin.processEntry = jest.fn();
 			svgChunkWebpackPlugin.createSpritesManifest = jest.fn();
 			svgChunkWebpackPlugin.createSpritesPreview = jest.fn();
 
-			svgChunkWebpackPlugin.addAssets();
+			await svgChunkWebpackPlugin.addAssets();
 
 			expect(svgChunkWebpackPlugin.spritesManifest).toStrictEqual({});
 			expect(svgChunkWebpackPlugin.spritesList).toStrictEqual([]);
@@ -211,7 +211,7 @@ describe('SvgChunkWebpackPlugin', () => {
 			expect(svgChunkWebpackPlugin.createSpritesPreview).toHaveBeenCalled();
 		});
 
-		it('Should call the addAssets function without manifest and preview', () => {
+		it('Should call the addAssets function without manifest and preview', async () => {
 			svgChunkWebpackPlugin.getEntryNames = jest.fn().mockReturnValue(entryNames);
 			svgChunkWebpackPlugin.processEntry = jest.fn();
 			svgChunkWebpackPlugin.createSpritesManifest = jest.fn();
@@ -219,7 +219,7 @@ describe('SvgChunkWebpackPlugin', () => {
 
 			svgChunkWebpackPlugin.options.generateSpritesManifest = false;
 			svgChunkWebpackPlugin.options.generateSpritesPreview = false;
-			svgChunkWebpackPlugin.addAssets();
+			await svgChunkWebpackPlugin.addAssets();
 
 			expect(svgChunkWebpackPlugin.createSpritesManifest).not.toHaveBeenCalled();
 			expect(svgChunkWebpackPlugin.createSpritesPreview).not.toHaveBeenCalled();

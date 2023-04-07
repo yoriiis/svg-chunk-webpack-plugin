@@ -1,27 +1,14 @@
-const { optimize, loadConfig } = require('svgo');
-const PACKAGE_NAME = require('../package.json').name;
-
 import { LoaderThis } from './interfaces';
 
-async function loader(this: LoaderThis, content: string) {
-	const { configFile } = this.getOptions();
-	let config;
-	if (typeof configFile === 'string') {
-		config = await loadConfig(configFile, this.context);
-	} else if (configFile !== false) {
-		config = await loadConfig(null, this.context);
-	}
-
-	const result = optimize(content, { ...config });
-	return JSON.stringify(result.data);
-}
+const { optimize, loadConfig } = require('svgo');
+const PACKAGE_NAME = require('../package.json').name;
 
 /**
  * Loader for SVG files
  * Content are not edited, just stringified
  * The plugin create sprites
  */
-export = async function spriteLoader(this: LoaderThis, content: string): Promise<string> {
+export = async function spriteLoader(this: LoaderThis, content: string) {
 	const compiler = this._compiler;
 	const callback = this.async();
 
@@ -35,7 +22,7 @@ export = async function spriteLoader(this: LoaderThis, content: string): Promise
 
 	// Check if content is a SVG file
 	if (!content.includes('<svg')) {
-		throw new Error(`${PACKAGE_NAME} exception. ${content}`);
+		callback(new Error(`${PACKAGE_NAME} exception. ${content}`));
 	}
 
 	// Check if the plugin is also imported
@@ -43,12 +30,20 @@ export = async function spriteLoader(this: LoaderThis, content: string): Promise
 		(plugin: any) => plugin.PLUGIN_NAME && plugin.PLUGIN_NAME === PACKAGE_NAME
 	);
 	if (typeof plugin === 'undefined') {
-		throw new Error(`${PACKAGE_NAME} requires the corresponding plugin`);
+		callback(new Error(`${PACKAGE_NAME} requires the corresponding plugin`));
 	}
 
 	try {
-		const result = await loader.call(this, content);
-		return callback(null, result);
+		const { configFile } = this.getOptions() || {};
+		let config;
+		if (typeof configFile === 'string') {
+			config = await loadConfig(configFile, this.context);
+		} else if (configFile !== false) {
+			config = await loadConfig(null, this.context);
+		}
+
+		const result = await optimize(content, { ...config });
+		return callback(null, JSON.stringify(result.data));
 	} catch (error) {
 		return callback(error);
 	}
