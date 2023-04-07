@@ -8,7 +8,7 @@ const PACKAGE_NAME = require('../package.json').name;
  * Content are not edited, just stringified
  * The plugin create sprites
  */
-export = async function spriteLoader(this: LoaderThis, content: string): Promise<string> {
+export = async function SvgChunkWebpackLoader(this: LoaderThis, content: string): Promise<string> {
 	const compiler = this._compiler;
 	const callback = this.async();
 
@@ -37,7 +37,11 @@ export = async function spriteLoader(this: LoaderThis, content: string): Promise
 		const { configFile } = this.getOptions() || {};
 		let config;
 		if (typeof configFile === 'string') {
-			config = await loadConfig(configFile, this.context);
+			try {
+				config = await loadConfig(configFile, this.context);
+			} catch (error) {
+				this.emitError(new Error(`Cannot find module ${configFile}`));
+			}
 		} else if (configFile !== false) {
 			config = await loadConfig(null, this.context);
 		}

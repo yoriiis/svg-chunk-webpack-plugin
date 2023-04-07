@@ -35,7 +35,8 @@ beforeEach(() => {
 		},
 		async: jest.fn().mockReturnValue(callback),
 		getOptions: jest.fn(),
-		context: './'
+		context: './',
+		emitError: jest.fn()
 	};
 });
 
@@ -76,6 +77,16 @@ describe('Loader', () => {
 });
 
 describe('Loader with errors', () => {
+	it('Should call the loader function with a wrong svgo config path', async () => {
+		_this.getOptions.mockReturnValue({ configFile: 'svgo.confi.js' });
+		loadConfig.mockRejectedValue('error');
+
+		await loader.call(_this, '<svg></svg>');
+
+		expect.assertions(1);
+		expect(_this.emitError).toHaveBeenCalledWith(new Error('Cannot find module svgo.confi.js'));
+	});
+
 	it('Should call the loader function with a wrong SVG', async () => {
 		await loader.call(_this, 'wrong svg');
 
@@ -88,6 +99,7 @@ describe('Loader with errors', () => {
 
 		await loader.call(_this, '<svg></svg>');
 
+		expect.assertions(1);
 		expect(callback).toHaveBeenCalledWith(
 			new Error(`${PACKAGE_NAME} requires the corresponding plugin`)
 		);

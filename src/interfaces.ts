@@ -50,4 +50,5 @@ export interface LoaderThis {
 			SVG_CHUNK_WEBPACK_PLUGIN: true;
 		};
 	};
+	emitError: (error: Error) => {};
 }
