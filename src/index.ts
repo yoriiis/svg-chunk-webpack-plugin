@@ -91,14 +91,14 @@ class SvgChunkWebpackPlugin {
 	 * Add assets
 	 * The hook is triggered by webpack
 	 */
-	async addAssets(): Promise<void> {
+	addAssets(): void {
 		// Reset value on every new process
 		this.spritesManifest = {};
 		this.spritesList = [];
 
 		const entryNames = this.getEntryNames();
 
-		await Promise.all(entryNames.map(async (entryName) => await this.processEntry(entryName)));
+		Promise.all(entryNames.map((entryName) => this.processEntry(entryName)));
 
 		if (this.options.generateSpritesManifest) {
 			this.createSpritesManifest();
@@ -123,41 +123,46 @@ class SvgChunkWebpackPlugin {
 	 * @returns {void} Resolve the promise when all actions are done
 	 */
 	processEntry(entryName: string): void {
-		const hash: string[] = [];
-		const listSvgPath: string[] = [];
-		const listSvgName: string[] = [];
+		const svgsData = this.getSvgsData(entryName);
+		const sprite = this.generateSprite(svgsData.svgs);
 
-		const svgsData = this.getSvgsDependenciesByEntrypoint(entryName).map(
-			(normalModule: NormalModule) => {
-				hash.push(normalModule.buildInfo.hash);
-				listSvgPath.push(
-					path.relative(this.compilation.options.context, normalModule.userRequest)
-				);
-				listSvgName.push(path.basename(normalModule.userRequest, '.svg'));
-
-				return {
-					name: path.basename(normalModule.userRequest, '.svg'),
-					content: JSON.parse(
-						this.compilation.codeGenerationResults
-							.get(normalModule)
-							.sources.get('javascript')
-							.source()
-					)
-				};
-			}
-		);
-
-		const sprite = this.generateSprite(svgsData);
-		const filename = this.getFileName({ entryName, output: sprite });
-		this.compilation.emitAsset(filename, new RawSource(sprite, false));
+		this.createSpriteAsset({ entryName, sprite });
 
 		// Update sprites manifest
-		this.spritesManifest[entryName] = listSvgPath;
+		this.spritesManifest[entryName] = svgsData.svgPaths;
 		this.spritesList.push({
 			name: entryName,
 			content: sprite,
-			svgs: listSvgName
+			svgs: svgsData.svgNames
 		});
+	}
+
+	/**
+	 * Get SVG data
+	 * @param {String} entryName Entrypoint name
+	 * @returns {SvgsData} SVG data (paths, names and content)
+	 */
+	getSvgsData(entryName: string) {
+		const svgPaths: string[] = [];
+		const svgNames: string[] = [];
+		const svgs: Svgs[] = [];
+
+		this.getSvgsDependenciesByEntrypoint(entryName).forEach((normalModule: NormalModule) => {
+			svgPaths.push(
+				path.relative(this.compilation.options.context, normalModule.userRequest)
+			);
+			svgNames.push(path.basename(normalModule.userRequest, '.svg'));
+			svgs.push({
+				name: path.basename(normalModule.userRequest, '.svg'),
+				content: JSON.parse(normalModule.originalSource()._value)
+			});
+		});
+
+		return {
+			svgPaths,
+			svgNames,
+			svgs
+		};
 	}
 
 	/**
@@ -181,15 +186,28 @@ class SvgChunkWebpackPlugin {
 
 	/**
 	 * Generate the SVG sprite with Svgstore
-	 * @param {Array<Svgs>} svgsData SVGs list
+	 * @param {Array<Svgs>} svgs SVGs list
 	 * @returns {String} Sprite string
 	 */
-	generateSprite(svgsData: Array<Svgs>): string {
+	generateSprite(svgs: Array<Svgs>): string {
 		const sprites = svgstore(this.options.svgstoreConfig);
-		svgsData.forEach((svg: Svgs) => {
+		svgs.forEach((svg: Svgs) => {
 			sprites.add(svg.name, svg.content);
 		});
 		return sprites.toString();
+	}
+
+	/**
+	 * Create sprite asset with Webpack compilation
+	 * Expose the manifest file into the assets compilation
+	 * The file is automatically created by the compiler
+	 * @param {String} entryName Entrypoint name
+	 * @param {String} sprite Sprite string
+	 */
+	createSpriteAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
+		const output = sprite;
+		const filename = this.getFileName({ entryName, output });
+		this.compilation.emitAsset(filename, new RawSource(output, false));
 	}
 
 	/**
@@ -252,6 +270,7 @@ class SvgChunkWebpackPlugin {
 	 */
 	getContentHash(output: string): string {
 		const { hashFunction, hashDigest, hashDigestLength } = this.compilation.outputOptions;
+
 		return util
 			.createHash(hashFunction)
 			.update(output)

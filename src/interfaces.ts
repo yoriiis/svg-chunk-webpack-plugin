@@ -3,6 +3,12 @@ export interface Svgs {
 	content: string;
 }
 
+export interface SvgsData {
+	svgPaths: Array<string>;
+	svgNames: Array<string>;
+	svgs: Array<Svgs>;
+}
+
 export interface SpriteManifest {
 	[key: string]: Array<string>;
 }

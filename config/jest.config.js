@@ -7,5 +7,6 @@ module.exports = {
 	transform: {
 		'\\.(js|jsx|ts|tsx)$': ['ts-jest', { configFile: './config/babel.config.js' }]
 	},
-	verbose: true
+	verbose: true,
+	resetMocks: true
 };

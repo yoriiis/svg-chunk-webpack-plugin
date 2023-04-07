@@ -22,9 +22,6 @@ module.exports = (env, argv) => {
 			publicPath: '/dist/',
 			filename: 'js/[name].js'
 		},
-		cache: {
-			type: 'filesystem'
-		},
 		module: {
 			rules: [
 				{
