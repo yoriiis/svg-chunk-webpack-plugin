@@ -35,7 +35,6 @@ class SvgChunkWebpackPlugin {
 	spritesManifest: SpriteManifest;
 	spritesList: Array<Sprites>;
 	compilation: any;
-	cache: any;
 
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
@@ -59,7 +58,6 @@ class SvgChunkWebpackPlugin {
 		this.options = extend(true, DEFAULTS, options);
 		this.spritesManifest = {};
 		this.spritesList = [];
-		this.cache = new Map();
 		this.hookCallback = this.hookCallback.bind(this);
 		this.addAssets = this.addAssets.bind(this);
 	}
@@ -149,23 +147,15 @@ class SvgChunkWebpackPlugin {
 			}
 		);
 
-		const cache = this.cache.get(entryName);
-		const hashMerged = hash.join('|');
-		if (!cache || cache.hash !== hashMerged) {
-			const sprite = this.generateSprite(svgsData);
-			const filename = this.getFileName({ entryName, output: sprite });
-			this.compilation.emitAsset(filename, new RawSource(sprite, false));
-			this.cache.set(entryName, {
-				hash: hashMerged,
-				sprite
-			});
-		}
+		const sprite = this.generateSprite(svgsData);
+		const filename = this.getFileName({ entryName, output: sprite });
+		this.compilation.emitAsset(filename, new RawSource(sprite, false));
 
 		// Update sprites manifest
 		this.spritesManifest[entryName] = listSvgPath;
 		this.spritesList.push({
 			name: entryName,
-			content: this.cache.get(entryName).sprite,
+			content: sprite,
 			svgs: listSvgName
 		});
 	}
