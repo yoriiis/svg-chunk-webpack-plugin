@@ -91,7 +91,7 @@ class SvgChunkWebpackPlugin {
 	 * Add assets
 	 * The hook is triggered by webpack
 	 */
-	addAssets(): Promise<void> {
+	async addAssets(): Promise<void> {
 		return new Promise((resolve) => {
 			// Reset value on every new process
 			this.spritesManifest = {};
