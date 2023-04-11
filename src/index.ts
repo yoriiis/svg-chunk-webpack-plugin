@@ -6,8 +6,8 @@
  * @copyright 2021 Joris DANIEL
  **/
 
-import { Compiler } from 'webpack';
-import { Svgs, SpriteManifest, Sprite, NormalModule, Chunk } from './interfaces';
+import { Compiler, type NormalModule, type Module, type Compilation, type Chunk } from 'webpack';
+import { Svgs, SpriteManifest, Sprite } from './interfaces';
 import path = require('path');
 const webpack = require('webpack');
 
@@ -20,6 +20,17 @@ const REGEXP_NAME = /\[name\]/i;
 const REGEXP_HASH = /\[hash\]/i;
 const REGEXP_CHUNKHASH = /\[chunkhash\]/i;
 const REGEXP_CONTENTHASH = /\[contenthash\]/i;
+
+const compareIds = (a: any, b: any) => {
+	if (typeof a !== typeof b) {
+		return typeof a < typeof b ? -1 : 1;
+	}
+
+	if (a < b) return -1;
+	if (a > b) return 1;
+
+	return 0;
+};
 
 class SvgChunkWebpackPlugin {
 	options: {
@@ -97,6 +108,7 @@ class SvgChunkWebpackPlugin {
 				});
 
 				const eTag = svgsDependencies
+					// @ts-ignore
 					.map((item) => cache.getLazyHashedEtag(item._source))
 					.reduce((result, item) => cache.mergeEtags(result, item));
 				const cacheItem = cache.getItemCache(entryName, eTag);
@@ -221,30 +233,38 @@ class SvgChunkWebpackPlugin {
 		compilation,
 		entryName
 	}: {
-		compilation: any;
+		compilation: Compilation;
 		entryName: string;
 	}): Array<NormalModule> {
 		const listSvgsDependencies: Array<NormalModule> = [];
 
-		compilation.entrypoints.get(entryName).chunks.forEach((chunk: Chunk) => {
-			for (const module of compilation.chunkGraph.getChunkModulesIterable(chunk)) {
+		// When you use module federation you can don't have entries
+		const entries = compilation.entrypoints;
+
+		if (!entries || entries.size === 0) {
+			return [];
+		}
+
+		const entry = entries.get(entryName);
+
+		if (!entry) {
+			return [];
+		}
+
+		entry.chunks.forEach((chunk: Chunk) => {
+			for (const module of compilation.chunkGraph.getOrderedChunkModulesIterable(
+				chunk,
+				(a: Module, b: Module) => {
+					return compareIds(
+						a.readableIdentifier(compilation.requestShortener),
+						b.readableIdentifier(compilation.requestShortener)
+					);
+				}
+			)) {
 				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
-					listSvgsDependencies.push(module);
+					listSvgsDependencies.push(module as NormalModule);
 				}
 			}
-		});
-
-		// Need to sort (**always**), to have deterministic build
-		listSvgsDependencies.sort((a: NormalModule, b: NormalModule) => {
-			if (a.name < b.name) {
-				return -1;
-			}
-
-			if (a.name > b.name) {
-				return 1;
-			}
-
-			return 0;
 		});
 
 		return listSvgsDependencies;
