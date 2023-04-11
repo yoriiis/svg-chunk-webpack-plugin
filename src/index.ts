@@ -127,18 +127,13 @@ class SvgChunkWebpackPlugin {
 					const svgsData = this.getSvgsData({ compilation, svgsDependencies });
 					const sprite = this.generateSprite(svgsData.svgs);
 					const source = new RawSource(sprite, false);
-					const spriteItem = {
-						name: entryName,
-						content: source,
-						svgs: svgsData.svgNames
-					};
 
 					output = {
 						entryName,
 						source,
 						filename: this.getFilename({ compilation, entryName, sprite }),
-						manifestItem: svgsData.svgPaths,
-						spriteItem
+						svgPaths: svgsData.svgPaths,
+						svgNames: svgsData.svgNames
 					};
 
 					await cacheItem.storePromise(output);
@@ -147,14 +142,11 @@ class SvgChunkWebpackPlugin {
 				compilation.emitAsset(output.filename, output.source);
 
 				sprites.push({ entryName, source: output.source });
-				spritesManifest[output.entryName] = output.manifestItem;
-				spritesList.push(output.spriteItem);
+				spritesManifest[output.entryName] = output.svgPaths;
 				spritesList.push({
-					name: entryName,
-					content: output.spriteItem,
-					svgs: svgsDependencies.map((moduleDependency: NormalModule) =>
-						path.basename(moduleDependency.userRequest, '.svg')
-					)
+					name: output.entryName,
+					content: output.source.source(),
+					svgs: output.svgNames
 				});
 			})
 		);
@@ -223,11 +215,17 @@ class SvgChunkWebpackPlugin {
 		const svgs: Svgs[] = [];
 
 		svgsDependencies.forEach((normalModule: NormalModule) => {
-			svgPaths.push(path.relative(compilation.options.context, normalModule.userRequest));
-			svgNames.push(path.basename(normalModule.userRequest, '.svg'));
+			const { userRequest } = normalModule;
+			svgPaths.push(path.relative(compilation.options.context, userRequest));
+			svgNames.push(path.basename(userRequest, '.svg'));
 			svgs.push({
-				name: path.basename(normalModule.userRequest, '.svg'),
-				content: JSON.parse(normalModule.originalSource()._value)
+				name: path.basename(userRequest, '.svg'),
+				content: JSON.parse(
+					compilation.codeGenerationResults
+						.get(normalModule)
+						.sources.get('javascript')
+						.source()
+				)
 			});
 		});
 
