@@ -7,7 +7,7 @@
  **/
 
 import { Compiler } from 'webpack';
-import { Svgs, SpriteManifest, Sprites, Sprite, NormalModule, Chunk } from './interfaces';
+import { Svgs, SpriteManifest, Sprite, NormalModule, Chunk } from './interfaces';
 import path = require('path');
 const webpack = require('webpack');
 
@@ -51,7 +51,6 @@ class SvgChunkWebpackPlugin {
 		this.options = extend(true, DEFAULTS, options);
 
 		this.hookCallback = this.hookCallback.bind(this);
-		this.addAssets = this.addAssets.bind(this);
 	}
 
 	/**
@@ -84,36 +83,17 @@ class SvgChunkWebpackPlugin {
 	async addAssets(compilation: any): Promise<void> {
 		// For better compatibility with future webpack versions
 		const RawSource = compilation.compiler.webpack.sources.RawSource;
-		const sprites: Array<Sprite> = [];
-		const spritesManifest: SpriteManifest = {};
-		const spritesList: Array<Sprites> = [];
 
 		const cache = compilation.getCache('SvgChunkWebpackPlugin');
 		const entryNames: Array<string> = compilation.entrypoints.keys();
+		const sprites: Array<Sprite> = [];
+		const spritesManifest: SpriteManifest = {};
 
 		await Promise.all(
 			Array.from(entryNames).map(async (entryName: string) => {
-				let svgsDependencies: Array<NormalModule> = [];
-
-				compilation.entrypoints.get(entryName).chunks.forEach((chunk: Chunk) => {
-					for (const module of compilation.chunkGraph.getChunkModulesIterable(chunk)) {
-						if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
-							svgsDependencies.push(module);
-						}
-					}
-				});
-
-				// Need to sort (**always**), to have deterministic build
-				svgsDependencies = svgsDependencies.sort((a: NormalModule, b: NormalModule) => {
-					if (a.name < b.name) {
-						return -1;
-					}
-
-					if (a.name > b.name) {
-						return 1;
-					}
-
-					return 0;
+				const svgsDependencies = this.getSvgsDependenciesByEntrypoint({
+					entryName,
+					compilation
 				});
 
 				const eTag = svgsDependencies
@@ -129,7 +109,6 @@ class SvgChunkWebpackPlugin {
 					const source = new RawSource(sprite, false);
 
 					output = {
-						entryName,
 						source,
 						filename: this.getFilename({ compilation, entryName, sprite }),
 						svgPaths: svgsData.svgPaths,
@@ -141,13 +120,12 @@ class SvgChunkWebpackPlugin {
 
 				compilation.emitAsset(output.filename, output.source);
 
-				sprites.push({ entryName, source: output.source });
-				spritesManifest[output.entryName] = output.svgPaths;
-				spritesList.push({
-					name: output.entryName,
-					content: output.source.source(),
+				sprites.push({
+					entryName,
+					source: output.source,
 					svgs: output.svgNames
 				});
+				spritesManifest[entryName] = output.svgPaths;
 			})
 		);
 
@@ -170,12 +148,10 @@ class SvgChunkWebpackPlugin {
 
 			if (this.options.generateSpritesManifest) {
 				const cacheItem = cache.getItemCache('sprites-manifest.json', eTag);
-
 				let output = await cacheItem.getPromise();
 
 				if (!output) {
 					output = new RawSource(JSON.stringify(spritesManifest, null, 2), false);
-
 					await cacheItem.storePromise(output);
 				}
 
@@ -184,12 +160,10 @@ class SvgChunkWebpackPlugin {
 
 			if (this.options.generateSpritesPreview) {
 				const cacheItem = cache.getItemCache('sprites-preview.html', eTag);
-
 				let output = await cacheItem.getPromise();
 
 				if (!output) {
-					output = new RawSource(templatePreview(spritesList), false);
-
+					output = new RawSource(templatePreview(sprites), false);
 					await cacheItem.storePromise(output);
 				}
 
@@ -234,6 +208,44 @@ class SvgChunkWebpackPlugin {
 			svgNames,
 			svgs
 		};
+	}
+
+	/**
+	 * Get SVGs filtered by entrypoints
+	 * @param {String} entryName Entrypoint name
+	 * @returns {Array<Object>} Svgs list
+	 */
+	getSvgsDependenciesByEntrypoint({
+		compilation,
+		entryName
+	}: {
+		compilation: any;
+		entryName: string;
+	}): Array<NormalModule> {
+		const listSvgsDependencies: Array<NormalModule> = [];
+
+		compilation.entrypoints.get(entryName).chunks.forEach((chunk: Chunk) => {
+			for (const module of compilation.chunkGraph.getChunkModulesIterable(chunk)) {
+				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
+					listSvgsDependencies.push(module);
+				}
+			}
+		});
+
+		// Need to sort (**always**), to have deterministic build
+		listSvgsDependencies.sort((a: NormalModule, b: NormalModule) => {
+			if (a.name < b.name) {
+				return -1;
+			}
+
+			if (a.name > b.name) {
+				return 1;
+			}
+
+			return 0;
+		});
+
+		return listSvgsDependencies;
 	}
 
 	/**

@@ -13,15 +13,14 @@ export interface SpriteManifest {
 	[key: string]: Array<string>;
 }
 
-export interface Sprite {
-	entryName: string;
-	source: string;
+export interface RawSource {
+	source: () => string;
 }
 
-export interface Sprites {
-	name: string;
-	content: string;
-	svgs: Array<string>;
+export interface Sprite {
+	entryName: string;
+	source: RawSource;
+	svgs: Array<Svgs>;
 }
 
 export interface NormalModuleSource {
