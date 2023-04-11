@@ -1,3 +1,6 @@
+import { LoaderThis } from './interfaces';
+
+const { optimize, loadConfig } = require('svgo');
 const PACKAGE_NAME = require('../package.json').name;
 
 /**
@@ -5,8 +8,9 @@ const PACKAGE_NAME = require('../package.json').name;
  * Content are not edited, just stringified
  * The plugin create sprites
  */
-export = function spriteLoader(this: any, content: string): string {
+export = async function SvgChunkWebpackLoader(this: LoaderThis, content: string): Promise<string> {
 	const compiler = this._compiler;
+	const callback = this.async();
 
 	// Declare all SVG files as side effect
 	// https://github.com/webpack/webpack/issues/12202#issuecomment-745537821
@@ -18,7 +22,7 @@ export = function spriteLoader(this: any, content: string): string {
 
 	// Check if content is a SVG file
 	if (!content.includes('<svg')) {
-		throw new Error(`${PACKAGE_NAME} exception. ${content}`);
+		callback(new Error(`${PACKAGE_NAME} exception. ${content}`));
 	}
 
 	// Check if the plugin is also imported
@@ -26,8 +30,25 @@ export = function spriteLoader(this: any, content: string): string {
 		(plugin: any) => plugin.PLUGIN_NAME && plugin.PLUGIN_NAME === PACKAGE_NAME
 	);
 	if (typeof plugin === 'undefined') {
-		throw new Error(`${PACKAGE_NAME} requires the corresponding plugin`);
+		callback(new Error(`${PACKAGE_NAME} requires the corresponding plugin`));
 	}
 
-	return JSON.stringify(content);
+	try {
+		const { configFile } = this.getOptions() || {};
+		let config;
+		if (typeof configFile === 'string') {
+			try {
+				config = await loadConfig(configFile, this.context);
+			} catch (error) {
+				this.emitError(new Error(`Cannot find module ${configFile}`));
+			}
+		} else if (configFile !== false) {
+			config = await loadConfig(null, this.context);
+		}
+
+		const result = await optimize(content, { ...config });
+		return callback(null, JSON.stringify(result.data));
+	} catch (error) {
+		return callback(error);
+	}
 };

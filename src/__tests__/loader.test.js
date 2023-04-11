@@ -1,13 +1,24 @@
 'use strict';
 
 import loader from '../loader';
+import svgoConfig from '../../example/svgo.config';
+import { optimize, loadConfig } from 'svgo';
 const PACKAGE_NAME = require('../../package.json').name;
 
+jest.mock('svgo', () => {
+	const originalModule = jest.requireActual('svgo');
+	return {
+		...originalModule,
+		optimize: jest.fn(),
+		loadConfig: jest.fn()
+	};
+});
+
 let _this;
-const svgGradient =
-	'<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a"><stop offset="5%" stop-color="green"/><stop offset="95%" stop-color="gold"/></linearGradient></defs><rect fill="url(#a)" width="100%" height="100%"/></svg>';
+let callback;
 
 beforeEach(() => {
+	callback = jest.fn();
 	_this = {
 		_compiler: {
 			options: {
@@ -21,36 +32,76 @@ beforeEach(() => {
 		_module: {
 			buildInfo: {},
 			factoryMeta: {}
-		}
+		},
+		async: jest.fn().mockReturnValue(callback),
+		getOptions: jest.fn(),
+		context: './',
+		emitError: jest.fn()
 	};
 });
 
 describe('Loader', () => {
-	it('Should call the loader function with a valid SVG', () => {
-		const result = loader.call(_this, svgGradient);
+	beforeEach(() => {
+		optimize.mockReturnValue({ data: 'svg minified' });
+	});
 
+	afterEach(() => {
 		expect(_this._module.factoryMeta.sideEffectFree).toBe(false);
 		expect(_this._module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN).toBe(true);
-		expect(result).toBe(JSON.stringify(svgGradient));
+		expect(_this.getOptions).toHaveBeenCalled();
 	});
 
-	it('Should call the loader function without factoryMeta object data', () => {
+	it('Should call the loader function with the config file as string', async () => {
+		_this.getOptions.mockReturnValue({ configFile: 'svgo.config.js' });
+		loadConfig.mockReturnValue(svgoConfig);
+		callback.mockReturnValue('svg stringify');
+
+		const result = await loader.call(_this, '<svg></svg>');
+
+		expect(loadConfig).toHaveBeenCalledWith('svgo.config.js', './');
+		expect(optimize).toHaveBeenCalledWith('<svg></svg>', svgoConfig);
+		expect(callback).toHaveBeenCalledWith(null, JSON.stringify('svg minified'));
+		expect(result).toStrictEqual('svg stringify');
+	});
+
+	it('Should call the loader function without the config file to load', async () => {
+		await loader.call(_this, '<svg></svg>');
+
+		expect(loadConfig).toHaveBeenCalledWith(null, './');
+	});
+
+	it('Should call the loader function without factoryMeta object data', async () => {
 		delete _this._module.factoryMeta;
-		const result = loader.call(_this, svgGradient);
+		await loader.call(_this, '<svg></svg>');
+	});
+});
 
-		expect(result).toBe(JSON.stringify(svgGradient));
+describe('Loader with errors', () => {
+	it('Should call the loader function with a wrong svgo config path', async () => {
+		_this.getOptions.mockReturnValue({ configFile: 'svgo.confi.js' });
+		loadConfig.mockRejectedValue('error');
+
+		await loader.call(_this, '<svg></svg>');
+
+		expect.assertions(1);
+		expect(_this.emitError).toHaveBeenCalledWith(new Error('Cannot find module svgo.confi.js'));
 	});
 
-	it('Should call the loader function with a wrong SVG', () => {
-		expect(() => {
-			loader.call(_this, 'wrong svg');
-		}).toThrow(new Error(`${PACKAGE_NAME} exception. wrong svg`));
+	it('Should call the loader function with a wrong SVG', async () => {
+		await loader.call(_this, 'wrong svg');
+
+		expect.assertions(1);
+		expect(callback).toHaveBeenCalledWith(new Error(`${PACKAGE_NAME} exception. wrong svg`));
 	});
 
-	it('Should call the loader function without the plugin imported', () => {
-		_this._compiler.options.plugins[0] = 'another-plugin';
-		expect(() => {
-			loader.call(_this, svgGradient);
-		}).toThrow(new Error(`${PACKAGE_NAME} requires the corresponding plugin`));
+	it('Should call the loader function without the plugin imported', async () => {
+		_this._compiler.options.plugins = [];
+
+		await loader.call(_this, '<svg></svg>');
+
+		expect.assertions(1);
+		expect(callback).toHaveBeenCalledWith(
+			new Error(`${PACKAGE_NAME} requires the corresponding plugin`)
+		);
 	});
 });

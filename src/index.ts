@@ -12,7 +12,6 @@ import path = require('path');
 const webpack = require('webpack');
 
 const svgstore = require('svgstore');
-const { optimize } = require('svgo');
 const extend = require('extend');
 const templatePreview = require('./preview');
 
@@ -22,11 +21,10 @@ const REGEXP_HASH = /\[hash\]/i;
 const REGEXP_CHUNKHASH = /\[chunkhash\]/i;
 const REGEXP_CONTENTHASH = /\[contenthash\]/i;
 
-class SvgSprite {
+class SvgChunkWebpackPlugin {
 	options: {
 		filename: string;
 		svgstoreConfig: any;
-		svgoConfig: any;
 		generateSpritesManifest: boolean;
 		generateSpritesPreview: boolean;
 	};
@@ -46,7 +44,6 @@ class SvgSprite {
 				cleanSymbols: false,
 				inline: true
 			},
-			svgoConfig: {},
 			generateSpritesManifest: false,
 			generateSpritesPreview: false
 		};
@@ -62,7 +59,7 @@ class SvgSprite {
 	 * @param {Object} compiler The Webpack compiler variable
 	 */
 	apply(compiler: Compiler): void {
-		compiler.hooks.thisCompilation.tap('SvgSprite', this.hookCallback);
+		compiler.hooks.thisCompilation.tap('SvgChunkWebpackPlugin', this.hookCallback);
 	}
 
 	/**
@@ -127,30 +124,20 @@ class SvgSprite {
 				let output = await cacheItem.getPromise();
 
 				if (!output) {
-					const svgsOptimized = await Promise.all(
-						svgsDependencies.map((moduleDependency) =>
-							this.optimizeSvg(compilation, moduleDependency)
-						)
-					);
-
-					const sprite = this.generateSprite(svgsOptimized);
+					const svgsData = this.getSvgsData({ compilation, svgsDependencies });
+					const sprite = this.generateSprite(svgsData.svgs);
 					const source = new RawSource(sprite, false);
-					const manifestItem = svgsDependencies.map((moduleDependency) =>
-						path.relative(compilation.options.context, moduleDependency.userRequest)
-					);
 					const spriteItem = {
 						name: entryName,
 						content: source,
-						svgs: svgsDependencies.map((moduleDependency) =>
-							path.basename(moduleDependency.userRequest, '.svg')
-						)
+						svgs: svgsData.svgNames
 					};
 
 					output = {
 						entryName,
 						source,
 						filename: this.getFilename({ compilation, entryName, sprite }),
-						manifestItem,
+						manifestItem: svgsData.svgPaths,
 						spriteItem
 					};
 
@@ -220,33 +207,45 @@ class SvgSprite {
 	}
 
 	/**
-	 * Optimize SVG with Svgo
-	 * @param {String} filepath SVG filepath from Webpack compilation
-	 * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
+	 * Get SVG data
+	 * @param {String} entryName Entrypoint name
+	 * @returns {SvgsData} SVG data (paths, names and content)
 	 */
-	optimizeSvg = async (compilation: any, moduleDependency: NormalModule): Promise<Svgs> => {
-		const source = JSON.parse(
-			compilation.codeGenerationResults
-				.get(moduleDependency)
-				.sources.get('javascript')
-				.source()
-		);
-		const svgOptimized = await optimize(source, { ...this.options.svgoConfig });
+	getSvgsData({
+		compilation,
+		svgsDependencies
+	}: {
+		compilation: any;
+		svgsDependencies: Array<NormalModule>;
+	}) {
+		const svgPaths: string[] = [];
+		const svgNames: string[] = [];
+		const svgs: Svgs[] = [];
+
+		svgsDependencies.forEach((normalModule: NormalModule) => {
+			svgPaths.push(path.relative(compilation.options.context, normalModule.userRequest));
+			svgNames.push(path.basename(normalModule.userRequest, '.svg'));
+			svgs.push({
+				name: path.basename(normalModule.userRequest, '.svg'),
+				content: JSON.parse(normalModule.originalSource()._value)
+			});
+		});
 
 		return {
-			name: path.basename(moduleDependency.userRequest, '.svg'),
-			content: svgOptimized.data
+			svgPaths,
+			svgNames,
+			svgs
 		};
-	};
+	}
 
 	/**
 	 * Generate the SVG sprite with Svgstore
-	 * @param {Array<Svgs>} svgsOptimized SVGs list
+	 * @param {Array<Svgs>} svgs SVGs list
 	 * @returns {String} Sprite string
 	 */
-	generateSprite(svgsOptimized: Array<Svgs>): string {
+	generateSprite(svgs: Array<Svgs>): string {
 		const sprites = svgstore(this.options.svgstoreConfig);
-		svgsOptimized.forEach((svg: Svgs) => {
+		svgs.forEach((svg: Svgs) => {
 			sprites.add(svg.name, svg.content);
 		});
 		return sprites.toString();
@@ -293,8 +292,12 @@ class SvgSprite {
 		// [contenthash] corresponds to the sprite content hash
 		if (REGEXP_CONTENTHASH.test(filename)) {
 			const { util } = compilation.compiler.webpack;
-			const { hashFunction, hashDigest } = compilation.outputOptions;
-			const hash = util.createHash(hashFunction).update(sprite).digest(hashDigest);
+			const { hashFunction, hashDigest, hashDigestLength } = compilation.outputOptions;
+			const hash = util
+				.createHash(hashFunction)
+				.update(sprite)
+				.digest(hashDigest)
+				.substring(0, hashDigestLength);
 			filename = filename.replace('[contenthash]', hash);
 		}
 
@@ -303,6 +306,6 @@ class SvgSprite {
 }
 
 // @ts-ignore
-SvgSprite.loader = require.resolve('./loader');
+SvgChunkWebpackPlugin.loader = require.resolve('./loader');
 
-export = SvgSprite;
+export = SvgChunkWebpackPlugin;

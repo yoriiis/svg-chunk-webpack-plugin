@@ -22,16 +22,16 @@ module.exports = (env, argv) => {
 			publicPath: '/dist/',
 			filename: 'js/[name].js'
 		},
-		cache: {
-			type: 'filesystem'
-		},
 		module: {
 			rules: [
 				{
 					test: /\.svg$/,
 					use: [
 						{
-							loader: SvgChunkWebpackPlugin.loader
+							loader: SvgChunkWebpackPlugin.loader,
+							options: {
+								configFile: path.resolve(__dirname, './svgo.config.js')
+							}
 						}
 					]
 				}
@@ -47,25 +47,6 @@ module.exports = (env, argv) => {
 						'aria-hidden': true,
 						style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
 					}
-				},
-				svgoConfig: {
-					multipass: true,
-					plugins: [
-						{
-							name: 'preset-default',
-							params: {
-								overrides: {
-									inlineStyles: {
-										onlyMatchedOnce: false
-									},
-									removeViewBox: false
-								}
-							}
-						},
-						{
-							name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
-						}
-					]
 				}
 			})
 		],
