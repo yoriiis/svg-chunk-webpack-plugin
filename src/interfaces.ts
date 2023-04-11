@@ -20,6 +20,7 @@ export interface RawSource {
 export interface Sprite {
 	entryName: string;
 	source: RawSource;
+	sprite: string;
 	svgs: Array<Svgs>;
 }
 

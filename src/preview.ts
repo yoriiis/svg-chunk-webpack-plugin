@@ -65,7 +65,7 @@ export = function templatePreview(sprites: Array<Sprite>): string {
 											<span class="svgItem-name">${svg}</span>
 										</div>
 									`).join('')}
-									${sprite.source.source()}
+									${sprite.sprite}
 								</div>
 							</div>
 						`).join('')}

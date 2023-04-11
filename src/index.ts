@@ -110,6 +110,7 @@ class SvgChunkWebpackPlugin {
 
 					output = {
 						source,
+						sprite,
 						filename: this.getFilename({ compilation, entryName, sprite }),
 						svgPaths: svgsData.svgPaths,
 						svgNames: svgsData.svgNames
@@ -123,6 +124,7 @@ class SvgChunkWebpackPlugin {
 				sprites.push({
 					entryName,
 					source: output.source,
+					sprite: output.sprite,
 					svgs: output.svgNames
 				});
 				spritesManifest[entryName] = output.svgPaths;
