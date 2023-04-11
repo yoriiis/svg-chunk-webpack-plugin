@@ -7,6 +7,11 @@ export interface SpriteManifest {
 	[key: string]: Array<string>;
 }
 
+export interface Sprite {
+	entryName: string;
+	source: string;
+}
+
 export interface Sprites {
 	name: string;
 	content: string;
@@ -18,6 +23,8 @@ export interface NormalModuleSource {
 }
 
 export interface NormalModule {
+	name: string;
+	_source: string;
 	userRequest: string;
 	originalSource: () => NormalModuleSource;
 }

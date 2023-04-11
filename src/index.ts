@@ -7,13 +7,10 @@
  **/
 
 import { Compiler } from 'webpack';
-import { Svgs, SpriteManifest, Sprites, NormalModule, Chunk } from './interfaces';
+import { Svgs, SpriteManifest, Sprites, Sprite, NormalModule, Chunk } from './interfaces';
 import path = require('path');
 const webpack = require('webpack');
 
-// https://github.com/webpack/webpack/issues/11425#issuecomment-686607633
-const { RawSource } = webpack.sources;
-const { util } = require('webpack');
 const svgstore = require('svgstore');
 const { optimize } = require('svgo');
 const extend = require('extend');
@@ -33,11 +30,6 @@ class SvgSprite {
 		generateSpritesManifest: boolean;
 		generateSpritesPreview: boolean;
 	};
-
-	spritesManifest: SpriteManifest;
-	spritesList: Array<Sprites>;
-	compilation: any;
-	cache: any;
 
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
@@ -60,8 +52,7 @@ class SvgSprite {
 		};
 
 		this.options = extend(true, DEFAULTS, options);
-		this.spritesManifest = {};
-		this.spritesList = [];
+
 		this.hookCallback = this.hookCallback.bind(this);
 		this.addAssets = this.addAssets.bind(this);
 	}
@@ -79,16 +70,13 @@ class SvgSprite {
 	 * @param {Object} compilation The Webpack compilation variable
 	 */
 	async hookCallback(compilation: any): Promise<void> {
-		this.compilation = compilation;
-		this.cache = this.compilation.getCache('SvgChunkWebpackPlugin');
-
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
-		this.compilation.hooks.processAssets.tapPromise(
+		compilation.hooks.processAssets.tapPromise(
 			{
 				name: 'SvgChunkWebpackPlugin',
 				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
 			},
-			this.addAssets
+			this.addAssets.bind(this, compilation)
 		);
 	}
 
@@ -96,120 +84,139 @@ class SvgSprite {
 	 * Add assets
 	 * The hook is triggered by webpack
 	 */
-	async addAssets(): Promise<void> {
-		// Reset value on every new process
-		this.spritesManifest = {};
-		this.spritesList = [];
+	async addAssets(compilation: any): Promise<void> {
+		// For better compatibility with future webpack versions
+		const RawSource = compilation.compiler.webpack.sources.RawSource;
+		const sprites: Array<Sprite> = [];
+		const spritesManifest: SpriteManifest = {};
+		const spritesList: Array<Sprites> = [];
 
-		const entryNames = this.getEntryNames();
+		const cache = compilation.getCache('SvgChunkWebpackPlugin');
+		const entryNames: Array<string> = compilation.entrypoints.keys();
 
-		await Promise.all(entryNames.map(async (entryName) => await this.processEntry(entryName)));
+		await Promise.all(
+			Array.from(entryNames).map(async (entryName: string) => {
+				let svgsDependencies: Array<NormalModule> = [];
 
-		if (this.options.generateSpritesManifest) {
-			this.createSpritesManifest();
-		}
+				compilation.entrypoints.get(entryName).chunks.forEach((chunk: Chunk) => {
+					for (const module of compilation.chunkGraph.getChunkModulesIterable(chunk)) {
+						if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
+							svgsDependencies.push(module);
+						}
+					}
+				});
 
-		if (this.options.generateSpritesPreview) {
-			this.createSpritesPreview();
-		}
+				// Need to sort (**always**), to have deterministic build
+				svgsDependencies = svgsDependencies.sort((a: NormalModule, b: NormalModule) => {
+					if (a.name < b.name) {
+						return -1;
+					}
 
-		console.log('this.compilation.hash', this.compilation.hash);
-		// Store compilation hash after process
-		await this.cache.getItemCache('compilation', null).storePromise({
-			compilationHash: this.compilation.hash
-		});
-	}
+					if (a.name > b.name) {
+						return 1;
+					}
 
-	/**
-	 * Get entrypoint names from the compilation
-	 * @return {Array} List of entrypoint names
-	 */
-	getEntryNames(): Array<string> {
-		return Array.from(this.compilation.entrypoints.keys());
-	}
+					return 0;
+				});
 
-	/**
-	 * Process for each entry
-	 * @param {String} entryName Entrypoint name
-	 * @returns {Promise<void>} Resolve the promise when all actions are done
-	 */
-	async processEntry(entryName: string): Promise<void> {
-		const cacheCompilation = await this.cache.getItemCache('compilation', null).getPromise();
-		console.log('compilation cache', cacheCompilation);
+				const eTag = svgsDependencies
+					.map((item) => cache.getLazyHashedEtag(item._source))
+					.reduce((result, item) => cache.mergeEtags(result, item));
+				const cacheItem = cache.getItemCache(entryName, eTag);
 
-		const cachePreviousBuild = this.cache.getItemCache(`previousBuild-${entryName}`, null);
-		const outputPreviousBuild = await cachePreviousBuild.getPromise();
-		let output = null;
-
-		if (outputPreviousBuild) {
-			console.log('previousBuild ', outputPreviousBuild);
-			const cacheItem = this.cache.getItemCache(entryName, outputPreviousBuild.eTag);
-			output = await cacheItem.getPromise();
-			console.log('output from cache', output.filename);
-		}
-
-		if (!output) {
-			console.log('no cache');
-			const svgsDependencies = this.getSvgsDependenciesByEntrypoint(entryName);
-			console.log('svgsDependencies.length ', svgsDependencies.length);
-
-			if (svgsDependencies.length) {
-				const listSvgPath: string[] = [];
-				const listSvgName: string[] = [];
-				const svgsData = await Promise.all(
-					svgsDependencies.map((moduleDependency: NormalModule) => {
-						listSvgPath.push(
-							path.relative(
-								this.compilation.options.context,
-								moduleDependency.userRequest
-							)
-						);
-						listSvgName.push(path.basename(moduleDependency.userRequest, '.svg'));
-						return this.optimizeSvg(moduleDependency);
-					})
-				);
-
-				// Generate eTag
-				const eTags = svgsData.map((svg) =>
-					this.cache.getLazyHashedEtag(new RawSource(svg.content))
-				);
-				const eTag = eTags
-					.reduce((acc, etag) => this.cache.mergeEtags(acc, etag))
-					.toString();
-
-				if (!outputPreviousBuild) {
-					// Store eTag as hash string to get sprite item in cache with the hash identifier
-					await cachePreviousBuild.storePromise({
-						eTag
-					});
-				}
-
-				const cacheItem = this.cache.getItemCache(entryName, eTag);
-				output = await cacheItem.getPromise();
+				let output = await cacheItem.getPromise();
 
 				if (!output) {
-					const sprite = this.generateSprite(svgsData);
-					const filename = this.getFileName({ entryName, output: sprite });
+					const svgsOptimized = await Promise.all(
+						svgsDependencies.map((moduleDependency) =>
+							this.optimizeSvg(compilation, moduleDependency)
+						)
+					);
+
+					const sprite = this.generateSprite(svgsOptimized);
+					const source = new RawSource(sprite, false);
+					const manifestItem = svgsDependencies.map((moduleDependency) =>
+						path.relative(compilation.options.context, moduleDependency.userRequest)
+					);
+					const spriteItem = {
+						name: entryName,
+						content: source,
+						svgs: svgsDependencies.map((moduleDependency) =>
+							path.basename(moduleDependency.userRequest, '.svg')
+						)
+					};
 
 					output = {
-						source: new RawSource(sprite),
-						filename,
-						listSvgPath,
-						listSvgName
+						entryName,
+						source,
+						filename: this.getFilename({ compilation, entryName, sprite }),
+						manifestItem,
+						spriteItem
 					};
+
 					await cacheItem.storePromise(output);
 				}
+
+				compilation.emitAsset(output.filename, output.source);
+
+				sprites.push({ entryName, source: output.source });
+				spritesManifest[output.entryName] = output.manifestItem;
+				spritesList.push(output.spriteItem);
+				spritesList.push({
+					name: entryName,
+					content: output.spriteItem,
+					svgs: svgsDependencies.map((moduleDependency: NormalModule) =>
+						path.basename(moduleDependency.userRequest, '.svg')
+					)
+				});
+			})
+		);
+
+		if (this.options.generateSpritesManifest || this.options.generateSpritesPreview) {
+			// Need to sort (**always**), to have deterministic build
+			const eTag = sprites
+				.sort((a, b) => {
+					if (a.entryName < b.entryName) {
+						return -1;
+					}
+
+					if (a.entryName > b.entryName) {
+						return 1;
+					}
+
+					return 0;
+				})
+				.map((item) => cache.getLazyHashedEtag(item.source))
+				.reduce((result, item) => cache.mergeEtags(result, item));
+
+			if (this.options.generateSpritesManifest) {
+				const cacheItem = cache.getItemCache('sprites-manifest.json', eTag);
+
+				let output = await cacheItem.getPromise();
+
+				if (!output) {
+					output = new RawSource(JSON.stringify(spritesManifest, null, 2), false);
+
+					await cacheItem.storePromise(output);
+				}
+
+				compilation.emitAsset('sprites-manifest.json', output);
+			}
+
+			if (this.options.generateSpritesPreview) {
+				const cacheItem = cache.getItemCache('sprites-preview.html', eTag);
+
+				let output = await cacheItem.getPromise();
+
+				if (!output) {
+					output = new RawSource(templatePreview(spritesList), false);
+
+					await cacheItem.storePromise(output);
+				}
+
+				compilation.emitAsset('sprites-preview.html', output);
 			}
 		}
-
-		this.compilation.emitAsset(output.filename, output.source);
-
-		this.spritesManifest[entryName] = output.listSvgPath;
-		this.spritesList.push({
-			name: entryName,
-			content: output.source.source(),
-			svgs: output.listSvgName
-		});
 	}
 
 	/**
@@ -217,9 +224,9 @@ class SvgSprite {
 	 * @param {String} filepath SVG filepath from Webpack compilation
 	 * @returns {Promise<Svgs>} Svg name and optimized content with Svgo
 	 */
-	optimizeSvg = async (moduleDependency: NormalModule): Promise<Svgs> => {
+	optimizeSvg = async (compilation: any, moduleDependency: NormalModule): Promise<Svgs> => {
 		const source = JSON.parse(
-			this.compilation.codeGenerationResults
+			compilation.codeGenerationResults
 				.get(moduleDependency)
 				.sources.get('javascript')
 				.source()
@@ -231,25 +238,6 @@ class SvgSprite {
 			content: svgOptimized.data
 		};
 	};
-
-	/**
-	 * Get SVGs filtered by entrypoints
-	 * @param {String} entryName Entrypoint name
-	 * @returns {Array<Object>} Svgs list
-	 */
-	getSvgsDependenciesByEntrypoint(entryName: string): Array<NormalModule> {
-		const listSvgsDependencies: Array<NormalModule> = [];
-
-		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: Chunk) => {
-			for (const module of this.compilation.chunkGraph.getChunkModulesIterable(chunk)) {
-				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
-					listSvgsDependencies.push(module);
-				}
-			}
-		});
-
-		return listSvgsDependencies;
-	}
 
 	/**
 	 * Generate the SVG sprite with Svgstore
@@ -268,10 +256,18 @@ class SvgSprite {
 	 * Get the filename for the asset compilation
 	 * Placeholder [name], [hash], [chunkhash], [content] are automatically replaced
 	 * @param {String} entryName Entrypoint name
-	 * @param {String} output Sprite content
+	 * @param {String} sprite Sprite content
 	 * @returns {String} Sprite filename
 	 */
-	getFileName({ entryName, output }: { entryName: string; output: string }): string {
+	getFilename({
+		compilation,
+		entryName,
+		sprite
+	}: {
+		compilation: any;
+		entryName: string;
+		sprite: string;
+	}): string {
 		let filename = this.options.filename;
 
 		// Check if the filename option contains the placeholder [name]
@@ -283,68 +279,26 @@ class SvgSprite {
 		// Check if the filename option contains the placeholder [hash]
 		// [hash] corresponds to the Webpack compilation hash
 		if (REGEXP_HASH.test(filename)) {
-			filename = filename.replace('[hash]', this.getBuildHash());
+			filename = filename.replace('[hash]', compilation.hash);
 		}
 
 		// Check if the filename option contains the placeholder [chunkhash]
 		// [chunkhash] corresponds to the hash of the chunk content
 		if (REGEXP_CHUNKHASH.test(filename)) {
-			filename = filename.replace('[chunkhash]', this.getChunkHash(entryName));
+			const hash = compilation.entrypoints.get(entryName).chunks?.[0].hash || '';
+			filename = filename.replace('[chunkhash]', hash);
 		}
 
 		// Check if the filename option contains the placeholder [contenthash]
 		// [contenthash] corresponds to the sprite content hash
 		if (REGEXP_CONTENTHASH.test(filename)) {
-			filename = filename.replace('[contenthash]', this.getContentHash(output));
+			const { util } = compilation.compiler.webpack;
+			const { hashFunction, hashDigest } = compilation.outputOptions;
+			const hash = util.createHash(hashFunction).update(sprite).digest(hashDigest);
+			filename = filename.replace('[contenthash]', hash);
 		}
 
 		return filename;
-	}
-
-	/**
-	 * Get the compilation hash
-	 * @returns {String} Compilation hash
-	 */
-	getBuildHash(): string {
-		return this.compilation.hash;
-	}
-
-	/**
-	 * Get the chunk hash according to the entrypoint content
-	 * @returns {String} Chunk hash
-	 */
-	getChunkHash(entryName: string): string {
-		const chunks = this.compilation.entrypoints.get(entryName).chunks;
-		return chunks.length ? chunks[0].hash : '';
-	}
-
-	/**
-	 * Get the contenthash according to the sprite content
-	 * @returns {String} Sprite content hash
-	 */
-	getContentHash(output: string): string {
-		const { hashFunction, hashDigest } = this.compilation.outputOptions;
-		return util.createHash(hashFunction).update(output).digest(hashDigest);
-	}
-
-	/**
-	 * Create sprite manifest with Webpack compilation
-	 * Expose the manifest file into the assets compilation
-	 * The file is automatically created by the compiler
-	 */
-	createSpritesManifest(): void {
-		const output = JSON.stringify(this.spritesManifest, null, 2);
-		this.compilation.emitAsset('sprites-manifest.json', new RawSource(output, false));
-	}
-
-	/**
-	 * Create sprites preview
-	 */
-	createSpritesPreview(): void {
-		this.compilation.emitAsset(
-			'sprites-preview.html',
-			new RawSource(templatePreview(this.spritesList), false)
-		);
 	}
 }
 
