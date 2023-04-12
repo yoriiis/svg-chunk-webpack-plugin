@@ -312,6 +312,7 @@ class SvgChunkWebpackPlugin {
 		// Check if the filename option contains the placeholder [chunkhash]
 		// [chunkhash] corresponds to the hash of the chunk content
 		if (REGEXP_CHUNKHASH.test(filename)) {
+			// @TODO: conflict with module federation when don't have entrie?
 			const hash = compilation.entrypoints.get(entryName).chunks?.[0].hash || '';
 			filename = filename.replace('[chunkhash]', hash);
 		}
