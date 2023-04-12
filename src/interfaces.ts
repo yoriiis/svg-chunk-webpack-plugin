@@ -1,5 +1,13 @@
 import { type sources } from 'webpack';
 
+export interface CacheItem {
+	source: sources.RawSource;
+	sprite: string;
+	filename: string;
+	svgPaths: Array<string>;
+	svgNames: Array<string>;
+}
+
 export interface Svgs {
 	name: string;
 	content: string;

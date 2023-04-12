@@ -14,7 +14,7 @@ import {
 	type Module,
 	type sources
 } from 'webpack';
-import { Svgs, SpriteManifest, Sprite } from './interfaces';
+import { Svgs, SpriteManifest, Sprite, CacheItem, SvgsData } from './interfaces';
 import path = require('path');
 const webpack = require('webpack');
 
@@ -28,6 +28,11 @@ const REGEXP_HASH = /\[hash\]/i;
 const REGEXP_CHUNKHASH = /\[chunkhash\]/i;
 const REGEXP_CONTENTHASH = /\[contenthash\]/i;
 
+/**
+ * @param {string|number} a First id
+ * @param {string|number} b Second id
+ * @returns {-1|0|1} Compare result
+ */
 const compareIds = (a: any, b: any) => {
 	if (typeof a !== typeof b) {
 		return typeof a < typeof b ? -1 : 1;
@@ -110,8 +115,8 @@ class SvgChunkWebpackPlugin {
 		await Promise.all(
 			Array.from(entryNames).map(async (entryName: string) => {
 				const svgsDependencies = this.getSvgsDependenciesByEntrypoint({
-					entryName,
-					compilation
+					compilation,
+					entryName
 				});
 
 				// For empty chunks
@@ -124,14 +129,7 @@ class SvgChunkWebpackPlugin {
 					.reduce((result, item) => cache.mergeEtags(result, item));
 				const cacheItem = cache.getItemCache(entryName, eTag);
 
-				let output = await cacheItem.getPromise<{
-					source: sources.RawSource;
-					sprite: string;
-					filename: string;
-					svgPaths: Array<string>;
-					svgNames: Array<string>;
-				}>();
-
+				let output: CacheItem = await cacheItem.getPromise();
 				if (!output) {
 					const svgsData = this.getSvgsData({ compilation, svgsDependencies });
 					const sprite = this.generateSprite(svgsData.svgs);
@@ -169,47 +167,70 @@ class SvgChunkWebpackPlugin {
 
 		// Need to sort (**always**), to have deterministic build
 		const eTag = sprites
-			.sort((a, b) => {
-				if (a.entryName < b.entryName) {
-					return -1;
-				}
-
-				if (a.entryName > b.entryName) {
-					return 1;
-				}
-
-				return 0;
-			})
+			.sort((a, b) => a.entryName.localeCompare(b.entryName))
 			.map((item) => cache.getLazyHashedEtag(item.source))
 			.reduce((result, item) => cache.mergeEtags(result, item));
 
 		if (this.options.generateSpritesManifest) {
-			const cacheItem = cache.getItemCache('sprites-manifest.json', eTag);
-			let output = await cacheItem.getPromise<sources.RawSource>();
-
-			if (!output) {
-				output = new RawSource(JSON.stringify(spritesManifest, null, 2), false);
-				await cacheItem.storePromise(output);
-			}
-
-			compilation.emitAsset('sprites-manifest.json', output);
+			await this.createSpritesManifest({ compilation, cache, eTag, spritesManifest });
 		}
 
 		if (this.options.generateSpritesPreview) {
-			const cacheItem = cache.getItemCache('sprites-preview.html', eTag);
-			let output = await cacheItem.getPromise<sources.RawSource>();
-
-			if (!output) {
-				output = new RawSource(templatePreview(sprites), false);
-				await cacheItem.storePromise(output);
-			}
-
-			compilation.emitAsset('sprites-preview.html', output);
+			await this.createSpritesPreview({ compilation, cache, eTag, sprites });
 		}
 	}
 
 	/**
+	 * Get SVGs filtered by entrypoints
+	 * @param {Compilation} compilation Webpack compilation
+	 * @param {String} entryName Entrypoint name
+	 * @returns {Array<NormalModule>} Svgs list
+	 */
+	getSvgsDependenciesByEntrypoint({
+		compilation,
+		entryName
+	}: {
+		compilation: Compilation;
+		entryName: string;
+	}): Array<NormalModule> {
+		const listSvgsDependencies: Array<NormalModule> = [];
+
+		// When you use module federation you can don't have entries
+		const entries = compilation.entrypoints;
+		if (!entries || entries.size === 0) {
+			return [];
+		}
+
+		const entry = entries.get(entryName);
+		if (!entry) {
+			return [];
+		}
+
+		entry.chunks.forEach((chunk: Chunk) => {
+			const modules = compilation.chunkGraph.getOrderedChunkModulesIterable(
+				chunk,
+				(a: Module, b: Module) =>
+					compareIds(
+						a.readableIdentifier(compilation.requestShortener),
+						b.readableIdentifier(compilation.requestShortener)
+					)
+			);
+			for (const module of modules) {
+				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
+					listSvgsDependencies.push(module as NormalModule);
+
+					// Mark module as not side effect free after processing in graph
+					module.buildMeta.sideEffectFree = false;
+				}
+			}
+		});
+
+		return listSvgsDependencies;
+	}
+
+	/**
 	 * Get SVG data
+	 * @param {Compilation} compilation Webpack compilation
 	 * @param {String} entryName Entrypoint name
 	 * @returns {SvgsData} SVG data (paths, names and content)
 	 */
@@ -219,10 +240,10 @@ class SvgChunkWebpackPlugin {
 	}: {
 		compilation: Compilation;
 		svgsDependencies: Array<NormalModule>;
-	}) {
-		const svgPaths: string[] = [];
-		const svgNames: string[] = [];
-		const svgs: Svgs[] = [];
+	}): SvgsData {
+		const svgPaths: SvgsData['svgPaths'] = [];
+		const svgNames: SvgsData['svgNames'] = [];
+		const svgs: SvgsData['svgs'] = [];
 
 		svgsDependencies.forEach((normalModule: NormalModule) => {
 			const { userRequest } = normalModule;
@@ -243,55 +264,6 @@ class SvgChunkWebpackPlugin {
 			svgNames,
 			svgs
 		};
-	}
-
-	/**
-	 * Get SVGs filtered by entrypoints
-	 * @param {String} entryName Entrypoint name
-	 * @returns {Array<Object>} Svgs list
-	 */
-	getSvgsDependenciesByEntrypoint({
-		compilation,
-		entryName
-	}: {
-		compilation: Compilation;
-		entryName: string;
-	}): Array<NormalModule> {
-		const listSvgsDependencies: Array<NormalModule> = [];
-
-		// When you use module federation you can don't have entries
-		const entries = compilation.entrypoints;
-
-		if (!entries || entries.size === 0) {
-			return [];
-		}
-
-		const entry = entries.get(entryName);
-
-		if (!entry) {
-			return [];
-		}
-
-		entry.chunks.forEach((chunk: Chunk) => {
-			for (const module of compilation.chunkGraph.getOrderedChunkModulesIterable(
-				chunk,
-				(a: Module, b: Module) => {
-					return compareIds(
-						a.readableIdentifier(compilation.requestShortener),
-						b.readableIdentifier(compilation.requestShortener)
-					);
-				}
-			)) {
-				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
-					listSvgsDependencies.push(module as NormalModule);
-
-					// Mark module as not side effect free after processing in graph
-					module.buildMeta.sideEffectFree = false;
-				}
-			}
-		});
-
-		return listSvgsDependencies;
 	}
 
 	/**
@@ -358,6 +330,62 @@ class SvgChunkWebpackPlugin {
 		}
 
 		return filename;
+	}
+
+	/**
+	 * Create sprite manifest with Webpack compilation
+	 * Expose the manifest file into the assets compilation
+	 * The file is automatically created by the compiler
+	 */
+	async createSpritesManifest({
+		compilation,
+		cache,
+		eTag,
+		spritesManifest
+	}: {
+		compilation: Compilation;
+		cache: any;
+		eTag: any;
+		spritesManifest: SpriteManifest;
+	}): Promise<void> {
+		const RawSource = compilation.compiler.webpack.sources.RawSource;
+
+		const cacheItem = cache.getItemCache('sprites-manifest.json', eTag);
+		let output: sources.RawSource = await cacheItem.getPromise();
+
+		if (!output) {
+			output = new RawSource(JSON.stringify(spritesManifest, null, 2), false);
+			await cacheItem.storePromise(output);
+		}
+
+		compilation.emitAsset('sprites-manifest.json', output);
+	}
+
+	/**
+	 * Create sprites preview
+	 */
+	async createSpritesPreview({
+		compilation,
+		cache,
+		eTag,
+		sprites
+	}: {
+		compilation: Compilation;
+		cache: any;
+		eTag: any;
+		sprites: any;
+	}): Promise<void> {
+		const RawSource = compilation.compiler.webpack.sources.RawSource;
+
+		const cacheItem = cache.getItemCache('sprites-preview.html', eTag);
+		let output: sources.RawSource = await cacheItem.getPromise();
+
+		if (!output) {
+			output = new RawSource(templatePreview(sprites), false);
+			await cacheItem.storePromise(output);
+		}
+
+		compilation.emitAsset('sprites-preview.html', output);
 	}
 }
 
