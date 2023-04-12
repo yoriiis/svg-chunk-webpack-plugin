@@ -16,6 +16,9 @@ module.exports = (env, argv) => {
 		watchOptions: {
 			ignored: /node_modules/
 		},
+		cache: {
+			type: 'filesystem',
+		},
 		devtool: isProduction ? false : 'nosources-source-map',
 		output: {
 			path: path.resolve(__dirname, './dist'),

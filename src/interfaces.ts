@@ -1,3 +1,5 @@
+import { type sources } from "webpack"
+
 export interface Svgs {
 	name: string;
 	content: string;
@@ -13,37 +15,21 @@ export interface SpriteManifest {
 	[key: string]: Array<string>;
 }
 
-export interface RawSource {
-	source: () => string;
-}
-
 export interface Sprite {
 	entryName: string;
-	source: RawSource;
+	source: sources.RawSource;
 	sprite: string;
-	svgs: Array<Svgs>;
+	svgs: Array<string>;
 }
 
 export interface NormalModuleSource {
 	_value: string;
 }
 
-export interface NormalModule {
-	name: string;
-	_source: string;
-	userRequest: string;
-	originalSource: () => NormalModuleSource;
-}
-
-export interface Chunk {
-	buildInfo: any;
-	userRequest: string;
-	originalSource: () => NormalModuleSource;
-}
-
 export interface LoaderOptions {
 	configFile: string;
 }
+
 export interface LoaderThis {
 	getOptions: () => LoaderOptions;
 	context: string;

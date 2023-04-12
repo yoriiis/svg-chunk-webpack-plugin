@@ -6,7 +6,7 @@
  * @copyright 2021 Joris DANIEL
  **/
 
-import { Compiler, type NormalModule, type Module, type Compilation, type Chunk } from 'webpack';
+import { type Compiler, type Compilation, type NormalModule, type Chunk, type Module, type sources } from 'webpack';
 import { Svgs, SpriteManifest, Sprite } from './interfaces';
 import path = require('path');
 const webpack = require('webpack');
@@ -76,7 +76,7 @@ class SvgChunkWebpackPlugin {
 	 * Hook expose by the Webpack compiler
 	 * @param {Object} compilation The Webpack compilation variable
 	 */
-	async hookCallback(compilation: any): Promise<void> {
+	async hookCallback(compilation: Compilation): Promise<void> {
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
 		compilation.hooks.processAssets.tapPromise(
 			{
@@ -91,12 +91,12 @@ class SvgChunkWebpackPlugin {
 	 * Add assets
 	 * The hook is triggered by webpack
 	 */
-	async addAssets(compilation: any): Promise<void> {
+	async addAssets(compilation: Compilation): Promise<void> {
 		// For better compatibility with future webpack versions
 		const RawSource = compilation.compiler.webpack.sources.RawSource;
 
 		const cache = compilation.getCache('SvgChunkWebpackPlugin');
-		const entryNames: Array<string> = compilation.entrypoints.keys();
+		const entryNames = compilation.entrypoints.keys();
 		const sprites: Array<Sprite> = [];
 		const spritesManifest: SpriteManifest = {};
 
@@ -107,13 +107,23 @@ class SvgChunkWebpackPlugin {
 					compilation
 				});
 
+				// For empty chunks
+				if (svgsDependencies.length === 0) {
+					return;
+				}
+
 				const eTag = svgsDependencies
-					// @ts-ignore
-					.map((item) => cache.getLazyHashedEtag(item._source))
+					.map((item) => cache.getLazyHashedEtag(item.originalSource() as sources.Source))
 					.reduce((result, item) => cache.mergeEtags(result, item));
 				const cacheItem = cache.getItemCache(entryName, eTag);
 
-				let output = await cacheItem.getPromise();
+				let output = await cacheItem.getPromise<{
+					source: sources.RawSource;
+					sprite: string;
+					filename: string;
+					svgPaths: Array<string>;
+					svgNames: Array<string>;
+				}>();
 
 				if (!output) {
 					const svgsData = this.getSvgsData({ compilation, svgsDependencies });
@@ -143,46 +153,51 @@ class SvgChunkWebpackPlugin {
 			})
 		);
 
-		if (this.options.generateSpritesManifest || this.options.generateSpritesPreview) {
-			// Need to sort (**always**), to have deterministic build
-			const eTag = sprites
-				.sort((a, b) => {
-					if (a.entryName < b.entryName) {
-						return -1;
-					}
+		if (
+			sprites.length === 0 &&
+			(this.options.generateSpritesManifest || this.options.generateSpritesPreview)
+		) {
+			return;
+		}
 
-					if (a.entryName > b.entryName) {
-						return 1;
-					}
-
-					return 0;
-				})
-				.map((item) => cache.getLazyHashedEtag(item.source))
-				.reduce((result, item) => cache.mergeEtags(result, item));
-
-			if (this.options.generateSpritesManifest) {
-				const cacheItem = cache.getItemCache('sprites-manifest.json', eTag);
-				let output = await cacheItem.getPromise();
-
-				if (!output) {
-					output = new RawSource(JSON.stringify(spritesManifest, null, 2), false);
-					await cacheItem.storePromise(output);
+		// Need to sort (**always**), to have deterministic build
+		const eTag = sprites
+			.sort((a, b) => {
+				if (a.entryName < b.entryName) {
+					return -1;
 				}
 
-				compilation.emitAsset('sprites-manifest.json', output);
-			}
-
-			if (this.options.generateSpritesPreview) {
-				const cacheItem = cache.getItemCache('sprites-preview.html', eTag);
-				let output = await cacheItem.getPromise();
-
-				if (!output) {
-					output = new RawSource(templatePreview(sprites), false);
-					await cacheItem.storePromise(output);
+				if (a.entryName > b.entryName) {
+					return 1;
 				}
 
-				compilation.emitAsset('sprites-preview.html', output);
+				return 0;
+			})
+			.map((item) => cache.getLazyHashedEtag(item.source))
+			.reduce((result, item) => cache.mergeEtags(result, item));
+
+		if (this.options.generateSpritesManifest) {
+			const cacheItem = cache.getItemCache('sprites-manifest.json', eTag);
+			let output = await cacheItem.getPromise<sources.RawSource>();
+
+			if (!output) {
+				output = new RawSource(JSON.stringify(spritesManifest, null, 2), false);
+				await cacheItem.storePromise(output);
 			}
+
+			compilation.emitAsset('sprites-manifest.json', output);
+		}
+
+		if (this.options.generateSpritesPreview) {
+			const cacheItem = cache.getItemCache('sprites-preview.html', eTag);
+			let output = await cacheItem.getPromise<sources.RawSource>();
+
+			if (!output) {
+				output = new RawSource(templatePreview(sprites), false);
+				await cacheItem.storePromise(output);
+			}
+
+			compilation.emitAsset('sprites-preview.html', output);
 		}
 	}
 
@@ -195,7 +210,7 @@ class SvgChunkWebpackPlugin {
 		compilation,
 		svgsDependencies
 	}: {
-		compilation: any;
+		compilation: Compilation;
 		svgsDependencies: Array<NormalModule>;
 	}) {
 		const svgPaths: string[] = [];
@@ -204,17 +219,16 @@ class SvgChunkWebpackPlugin {
 
 		svgsDependencies.forEach((normalModule: NormalModule) => {
 			const { userRequest } = normalModule;
-			svgPaths.push(path.relative(compilation.options.context, userRequest));
-			svgNames.push(path.basename(userRequest, '.svg'));
-			svgs.push({
-				name: path.basename(userRequest, '.svg'),
-				content: JSON.parse(
-					compilation.codeGenerationResults
-						.get(normalModule)
-						.sources.get('javascript')
-						.source()
-				)
-			});
+			const source = normalModule.originalSource();
+
+			if (source) {
+				svgPaths.push(path.relative(compilation.options.context || '', userRequest));
+				svgNames.push(path.basename(userRequest, '.svg'));
+				svgs.push({
+					name: path.basename(userRequest, '.svg'),
+					content: JSON.parse(source.source().toString())
+				});
+			}
 		});
 
 		return {
@@ -263,6 +277,9 @@ class SvgChunkWebpackPlugin {
 			)) {
 				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
 					listSvgsDependencies.push(module as NormalModule);
+
+					// Mark module as not side effect free after processing in graph
+					module.buildMeta.sideEffectFree = false;
 				}
 			}
 		});
