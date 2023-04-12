@@ -1,4 +1,4 @@
-import { type sources } from "webpack"
+import { type sources } from 'webpack';
 
 export interface Svgs {
 	name: string;

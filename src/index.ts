@@ -6,7 +6,14 @@
  * @copyright 2021 Joris DANIEL
  **/
 
-import { type Compiler, type Compilation, type NormalModule, type Chunk, type Module, type sources } from 'webpack';
+import {
+	type Compiler,
+	type Compilation,
+	type NormalModule,
+	type Chunk,
+	type Module,
+	type sources
+} from 'webpack';
 import { Svgs, SpriteManifest, Sprite } from './interfaces';
 import path = require('path');
 const webpack = require('webpack');

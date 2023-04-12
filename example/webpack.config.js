@@ -17,7 +17,7 @@ module.exports = (env, argv) => {
 			ignored: /node_modules/
 		},
 		cache: {
-			type: 'filesystem',
+			type: 'filesystem'
 		},
 		devtool: isProduction ? false : 'nosources-source-map',
 		output: {
