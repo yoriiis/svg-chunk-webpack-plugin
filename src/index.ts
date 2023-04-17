@@ -23,10 +23,6 @@ const extend = require('extend');
 const templatePreview = require('./preview');
 
 const PACKAGE_NAME = require('../package.json').name;
-const REGEXP_NAME = /\[name\]/i;
-const REGEXP_HASH = /\[hash\]/i;
-const REGEXP_CHUNKHASH = /\[chunkhash\]/i;
-const REGEXP_CONTENTHASH = /\[contenthash\]/i;
 
 /**
  * @param {string|number} a First id
@@ -297,29 +293,13 @@ class SvgChunkWebpackPlugin {
 	}): string {
 		let filename = this.options.filename;
 
-		// Check if the filename option contains the placeholder [name]
-		// [name] corresponds to the entrypoint name
-		if (REGEXP_NAME.test(filename)) {
-			filename = filename.replace('[name]', entryName);
-		}
-
-		// Check if the filename option contains the placeholder [hash]
-		// [hash] corresponds to the Webpack compilation hash
-		if (REGEXP_HASH.test(filename)) {
-			filename = filename.replace('[hash]', compilation.hash);
-		}
-
-		// Check if the filename option contains the placeholder [chunkhash]
-		// [chunkhash] corresponds to the hash of the chunk content
-		if (REGEXP_CHUNKHASH.test(filename)) {
-			// @TODO: conflict with module federation when don't have entrie?
-			const hash = compilation.entrypoints.get(entryName).chunks?.[0].hash || '';
-			filename = filename.replace('[chunkhash]', hash);
-		}
+		filename = compilation.getPath(this.options.filename, {
+			filename: entryName
+		});
 
 		// Check if the filename option contains the placeholder [contenthash]
 		// [contenthash] corresponds to the sprite content hash
-		if (REGEXP_CONTENTHASH.test(filename)) {
+		if (/\[contenthash\]/i.test(filename)) {
 			const { util } = compilation.compiler.webpack;
 			const { hashFunction, hashDigest, hashDigestLength } = compilation.outputOptions;
 			const hash = util
