@@ -116,13 +116,14 @@ class SvgChunkWebpackPlugin {
 				});
 
 				// For empty chunks
-				if (svgsDependencies.length === 0) {
+				if (!svgsDependencies.length) {
 					return;
 				}
 
 				const eTag = svgsDependencies
 					.map((item) => cache.getLazyHashedEtag(item.originalSource() as sources.Source))
 					.reduce((result, item) => cache.mergeEtags(result, item));
+
 				const cacheItem = cache.getItemCache(entryName, eTag);
 
 				let output: EntryCache = await cacheItem.getPromise();
@@ -154,10 +155,7 @@ class SvgChunkWebpackPlugin {
 			})
 		);
 
-		if (
-			sprites.length === 0 &&
-			(this.options.generateSpritesManifest || this.options.generateSpritesPreview)
-		) {
+		if (!sprites.length) {
 			return;
 		}
 
@@ -291,9 +289,7 @@ class SvgChunkWebpackPlugin {
 		entryName: string;
 		sprite: string;
 	}): string {
-		let filename = this.options.filename;
-
-		filename = compilation.getPath(this.options.filename, {
+		let filename = compilation.getPath(this.options.filename, {
 			filename: entryName
 		});
 
