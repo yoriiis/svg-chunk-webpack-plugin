@@ -1,6 +1,6 @@
 import { type sources } from 'webpack';
 
-export interface CacheItem {
+export interface EntryCache {
 	source: sources.RawSource;
 	sprite: string;
 	filename: string;
@@ -28,10 +28,6 @@ export interface Sprite {
 	source: sources.RawSource;
 	sprite: string;
 	svgs: Array<string>;
-}
-
-export interface NormalModuleSource {
-	_value: string;
 }
 
 export interface LoaderOptions {

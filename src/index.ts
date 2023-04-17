@@ -14,7 +14,7 @@ import {
 	type Module,
 	type sources
 } from 'webpack';
-import { Svgs, SpriteManifest, Sprite, CacheItem, SvgsData } from './interfaces';
+import { Svgs, SpriteManifest, Sprite, EntryCache, SvgsData } from './interfaces';
 import path = require('path');
 const webpack = require('webpack');
 
@@ -125,7 +125,7 @@ class SvgChunkWebpackPlugin {
 					.reduce((result, item) => cache.mergeEtags(result, item));
 				const cacheItem = cache.getItemCache(entryName, eTag);
 
-				let output: CacheItem = await cacheItem.getPromise();
+				let output: EntryCache = await cacheItem.getPromise();
 				if (!output) {
 					const svgsData = this.getSvgsData({ compilation, svgsDependencies });
 					const sprite = this.generateSprite(svgsData.svgs);
