@@ -53,17 +53,9 @@ First, let's add the loader and the plugin to the Webpack configuration.
 **webpack.config.js**
 
 ```javascript
-var SvgChunkWebpackPlugin = require('svg-chunk-webpack-plugin');
-var path = require('path');
+const SvgChunkWebpackPlugin = require('svg-chunk-webpack-plugin');
 
 module.exports = {
-  entry: {
-    home: 'home.js'
-  },
-  output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, './dist')
-  },
   module: {
     rules: [
       {
