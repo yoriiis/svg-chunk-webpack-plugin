@@ -1,3 +1,13 @@
+import { type sources } from 'webpack';
+
+export interface EntryCache {
+	source: sources.RawSource;
+	sprite: string;
+	filename: string;
+	svgPaths: Array<string>;
+	svgNames: Array<string>;
+}
+
 export interface Svgs {
 	name: string;
 	content: string;
@@ -13,30 +23,17 @@ export interface SpriteManifest {
 	[key: string]: Array<string>;
 }
 
-export interface Sprites {
-	name: string;
-	content: string;
+export interface Sprite {
+	entryName: string;
+	source: sources.RawSource;
+	sprite: string;
 	svgs: Array<string>;
-}
-
-export interface NormalModuleSource {
-	_value: string;
-}
-
-export interface NormalModule {
-	userRequest: string;
-	originalSource: () => NormalModuleSource;
-}
-
-export interface Chunk {
-	buildInfo: any;
-	userRequest: string;
-	originalSource: () => NormalModuleSource;
 }
 
 export interface LoaderOptions {
 	configFile: string;
 }
+
 export interface LoaderThis {
 	getOptions: () => LoaderOptions;
 	context: string;

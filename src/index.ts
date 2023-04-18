@@ -6,23 +6,39 @@
  * @copyright 2021 Joris DANIEL
  **/
 
-import { Compiler } from 'webpack';
-import { Svgs, SpriteManifest, Sprites, NormalModule, Chunk } from './interfaces';
+import {
+	type Compiler,
+	type Compilation,
+	type NormalModule,
+	type Chunk,
+	type Module,
+	type sources
+} from 'webpack';
+import { Svgs, SpriteManifest, Sprite, EntryCache, SvgsData } from './interfaces';
 import path = require('path');
 const webpack = require('webpack');
 
-// https://github.com/webpack/webpack/issues/11425#issuecomment-686607633
-const { RawSource } = webpack.sources;
-const { util } = require('webpack');
 const svgstore = require('svgstore');
 const extend = require('extend');
 const templatePreview = require('./preview');
 
 const PACKAGE_NAME = require('../package.json').name;
-const REGEXP_NAME = /\[name\]/i;
-const REGEXP_HASH = /\[hash\]/i;
-const REGEXP_CHUNKHASH = /\[chunkhash\]/i;
-const REGEXP_CONTENTHASH = /\[contenthash\]/i;
+
+/**
+ * @param {string|number} a First id
+ * @param {string|number} b Second id
+ * @returns {-1|0|1} Compare result
+ */
+const compareIds = (a: any, b: any) => {
+	if (typeof a !== typeof b) {
+		return typeof a < typeof b ? -1 : 1;
+	}
+
+	if (a < b) return -1;
+	if (a > b) return 1;
+
+	return 0;
+};
 
 class SvgChunkWebpackPlugin {
 	options: {
@@ -31,10 +47,6 @@ class SvgChunkWebpackPlugin {
 		generateSpritesManifest: boolean;
 		generateSpritesPreview: boolean;
 	};
-
-	spritesManifest: SpriteManifest;
-	spritesList: Array<Sprites>;
-	compilation: any;
 
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
@@ -56,10 +68,8 @@ class SvgChunkWebpackPlugin {
 		};
 
 		this.options = extend(true, DEFAULTS, options);
-		this.spritesManifest = {};
-		this.spritesList = [];
+
 		this.hookCallback = this.hookCallback.bind(this);
-		this.addAssets = this.addAssets.bind(this);
 	}
 
 	/**
@@ -74,16 +84,14 @@ class SvgChunkWebpackPlugin {
 	 * Hook expose by the Webpack compiler
 	 * @param {Object} compilation The Webpack compilation variable
 	 */
-	async hookCallback(compilation: any): Promise<void> {
-		this.compilation = compilation;
-
+	async hookCallback(compilation: Compilation): Promise<void> {
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
-		this.compilation.hooks.processAssets.tapPromise(
+		compilation.hooks.processAssets.tapPromise(
 			{
 				name: 'SvgChunkWebpackPlugin',
 				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
 			},
-			this.addAssets
+			this.addAssets.bind(this, compilation)
 		);
 	}
 
@@ -91,75 +99,158 @@ class SvgChunkWebpackPlugin {
 	 * Add assets
 	 * The hook is triggered by webpack
 	 */
-	async addAssets(): Promise<void> {
-		return new Promise((resolve) => {
-			// Reset value on every new process
-			this.spritesManifest = {};
-			this.spritesList = [];
+	async addAssets(compilation: Compilation): Promise<void> {
+		// For better compatibility with future webpack versions
+		const RawSource = compilation.compiler.webpack.sources.RawSource;
 
-			const entryNames = this.getEntryNames();
+		const cache = compilation.getCache('SvgChunkWebpackPlugin');
+		const entryNames = compilation.entrypoints.keys();
+		const sprites: Array<Sprite> = [];
+		const spritesManifest: SpriteManifest = {};
 
-			entryNames.map((entryName) => this.processEntry(entryName));
+		await Promise.all(
+			Array.from(entryNames).map(async (entryName: string) => {
+				const svgsDependencies = this.getSvgsDependenciesByEntrypoint({
+					compilation,
+					entryName
+				});
 
-			if (this.options.generateSpritesManifest) {
-				this.createSpritesManifest();
-			}
+				// For empty chunks
+				if (!svgsDependencies.length) {
+					return;
+				}
 
-			if (this.options.generateSpritesPreview) {
-				this.createSpritesPreview();
-			}
+				const eTag = svgsDependencies
+					.map((item) => cache.getLazyHashedEtag(item.originalSource() as sources.Source))
+					.reduce((result, item) => cache.mergeEtags(result, item));
 
-			resolve();
-		});
+				const cacheItem = cache.getItemCache(entryName, eTag);
+
+				let output: EntryCache = await cacheItem.getPromise();
+				if (!output) {
+					const svgsData = this.getSvgsData({ compilation, svgsDependencies });
+					const sprite = this.generateSprite(svgsData.svgs);
+					const source = new RawSource(sprite, false);
+
+					output = {
+						source,
+						sprite,
+						filename: this.getFilename({ compilation, entryName, sprite }),
+						svgPaths: svgsData.svgPaths,
+						svgNames: svgsData.svgNames
+					};
+
+					await cacheItem.storePromise(output);
+				}
+
+				compilation.emitAsset(output.filename, output.source);
+
+				sprites.push({
+					entryName,
+					source: output.source,
+					sprite: output.sprite,
+					svgs: output.svgNames
+				});
+				spritesManifest[entryName] = output.svgPaths;
+			})
+		);
+
+		if (!sprites.length) {
+			return;
+		}
+
+		// Need to sort (**always**), to have deterministic build
+		const eTag = sprites
+			.sort((a, b) => a.entryName.localeCompare(b.entryName))
+			.map((item) => cache.getLazyHashedEtag(item.source))
+			.reduce((result, item) => cache.mergeEtags(result, item));
+
+		if (this.options.generateSpritesManifest) {
+			await this.createSpritesManifest({ compilation, cache, eTag, spritesManifest });
+		}
+
+		if (this.options.generateSpritesPreview) {
+			await this.createSpritesPreview({ compilation, cache, eTag, sprites });
+		}
 	}
 
 	/**
-	 * Get entrypoint names from the compilation
-	 * @return {Array} List of entrypoint names
-	 */
-	getEntryNames(): Array<string> {
-		return Array.from(this.compilation.entrypoints.keys());
-	}
-
-	/**
-	 * Process for each entry
+	 * Get SVGs filtered by entrypoints
+	 * @param {Compilation} compilation Webpack compilation
 	 * @param {String} entryName Entrypoint name
-	 * @returns {void} Resolve the promise when all actions are done
+	 * @returns {Array<NormalModule>} Svgs list
 	 */
-	processEntry(entryName: string): void {
-		const svgsData = this.getSvgsData(entryName);
-		const sprite = this.generateSprite(svgsData.svgs);
+	getSvgsDependenciesByEntrypoint({
+		compilation,
+		entryName
+	}: {
+		compilation: Compilation;
+		entryName: string;
+	}): Array<NormalModule> {
+		const listSvgsDependencies: Array<NormalModule> = [];
 
-		this.createSpriteAsset({ entryName, sprite });
+		// When you use module federation you can don't have entries
+		const entries = compilation.entrypoints;
+		if (!entries || entries.size === 0) {
+			return [];
+		}
 
-		// Update sprites manifest
-		this.spritesManifest[entryName] = svgsData.svgPaths;
-		this.spritesList.push({
-			name: entryName,
-			content: sprite,
-			svgs: svgsData.svgNames
+		const entry = entries.get(entryName);
+		if (!entry) {
+			return [];
+		}
+
+		entry.chunks.forEach((chunk: Chunk) => {
+			const modules = compilation.chunkGraph.getOrderedChunkModulesIterable(
+				chunk,
+				(a: Module, b: Module) =>
+					compareIds(
+						a.readableIdentifier(compilation.requestShortener),
+						b.readableIdentifier(compilation.requestShortener)
+					)
+			);
+			for (const module of modules) {
+				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
+					listSvgsDependencies.push(module as NormalModule);
+
+					// Mark module as not side effect free after processing in graph
+					module.buildMeta.sideEffectFree = false;
+				}
+			}
 		});
+
+		return listSvgsDependencies;
 	}
 
 	/**
 	 * Get SVG data
+	 * @param {Compilation} compilation Webpack compilation
 	 * @param {String} entryName Entrypoint name
 	 * @returns {SvgsData} SVG data (paths, names and content)
 	 */
-	getSvgsData(entryName: string) {
-		const svgPaths: string[] = [];
-		const svgNames: string[] = [];
-		const svgs: Svgs[] = [];
+	getSvgsData({
+		compilation,
+		svgsDependencies
+	}: {
+		compilation: Compilation;
+		svgsDependencies: Array<NormalModule>;
+	}): SvgsData {
+		const svgPaths: SvgsData['svgPaths'] = [];
+		const svgNames: SvgsData['svgNames'] = [];
+		const svgs: SvgsData['svgs'] = [];
 
-		this.getSvgsDependenciesByEntrypoint(entryName).forEach((normalModule: NormalModule) => {
-			svgPaths.push(
-				path.relative(this.compilation.options.context, normalModule.userRequest)
-			);
-			svgNames.push(path.basename(normalModule.userRequest, '.svg'));
-			svgs.push({
-				name: path.basename(normalModule.userRequest, '.svg'),
-				content: JSON.parse(normalModule.originalSource()._value)
-			});
+		svgsDependencies.forEach((normalModule: NormalModule) => {
+			const { userRequest } = normalModule;
+			const source = normalModule.originalSource();
+
+			if (source) {
+				svgPaths.push(path.relative(compilation.options.context || '', userRequest));
+				svgNames.push(path.basename(userRequest, '.svg'));
+				svgs.push({
+					name: path.basename(userRequest, '.svg'),
+					content: JSON.parse(source.source().toString())
+				});
+			}
 		});
 
 		return {
@@ -167,25 +258,6 @@ class SvgChunkWebpackPlugin {
 			svgNames,
 			svgs
 		};
-	}
-
-	/**
-	 * Get SVGs filtered by entrypoints
-	 * @param {String} entryName Entrypoint name
-	 * @returns {Array<Object>} Svgs list
-	 */
-	getSvgsDependenciesByEntrypoint(entryName: string): Array<NormalModule> {
-		const listSvgsDependencies: Array<NormalModule> = [];
-
-		this.compilation.entrypoints.get(entryName).chunks.forEach((chunk: Chunk) => {
-			for (const module of this.compilation.chunkGraph.getChunkModulesIterable(chunk)) {
-				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
-					listSvgsDependencies.push(module);
-				}
-			}
-		});
-
-		return listSvgsDependencies;
 	}
 
 	/**
@@ -202,84 +274,39 @@ class SvgChunkWebpackPlugin {
 	}
 
 	/**
-	 * Create sprite asset with Webpack compilation
-	 * Expose the manifest file into the assets compilation
-	 * The file is automatically created by the compiler
-	 * @param {String} entryName Entrypoint name
-	 * @param {String} sprite Sprite string
-	 */
-	createSpriteAsset({ entryName, sprite }: { entryName: string; sprite: string }): void {
-		const output = sprite;
-		const filename = this.getFileName({ entryName, output });
-		this.compilation.emitAsset(filename, new RawSource(output, false));
-	}
-
-	/**
 	 * Get the filename for the asset compilation
 	 * Placeholder [name], [hash], [chunkhash], [content] are automatically replaced
 	 * @param {String} entryName Entrypoint name
-	 * @param {String} output Sprite content
+	 * @param {String} sprite Sprite content
 	 * @returns {String} Sprite filename
 	 */
-	getFileName({ entryName, output }: { entryName: string; output: string }): string {
-		let filename = this.options.filename;
-
-		// Check if the filename option contains the placeholder [name]
-		// [name] corresponds to the entrypoint name
-		if (REGEXP_NAME.test(filename)) {
-			filename = filename.replace('[name]', entryName);
-		}
-
-		// Check if the filename option contains the placeholder [hash]
-		// [hash] corresponds to the Webpack compilation hash
-		if (REGEXP_HASH.test(filename)) {
-			filename = filename.replace('[hash]', this.getBuildHash());
-		}
-
-		// Check if the filename option contains the placeholder [chunkhash]
-		// [chunkhash] corresponds to the hash of the chunk content
-		if (REGEXP_CHUNKHASH.test(filename)) {
-			filename = filename.replace('[chunkhash]', this.getChunkHash(entryName));
-		}
+	getFilename({
+		compilation,
+		entryName,
+		sprite
+	}: {
+		compilation: any;
+		entryName: string;
+		sprite: string;
+	}): string {
+		let filename = compilation.getPath(this.options.filename, {
+			filename: entryName
+		});
 
 		// Check if the filename option contains the placeholder [contenthash]
 		// [contenthash] corresponds to the sprite content hash
-		if (REGEXP_CONTENTHASH.test(filename)) {
-			filename = filename.replace('[contenthash]', this.getContentHash(output));
+		if (/\[contenthash\]/i.test(filename)) {
+			const { util } = compilation.compiler.webpack;
+			const { hashFunction, hashDigest, hashDigestLength } = compilation.outputOptions;
+			const hash = util
+				.createHash(hashFunction)
+				.update(sprite)
+				.digest(hashDigest)
+				.substring(0, hashDigestLength);
+			filename = filename.replace('[contenthash]', hash);
 		}
 
 		return filename;
-	}
-
-	/**
-	 * Get the compilation hash
-	 * @returns {String} Compilation hash
-	 */
-	getBuildHash(): string {
-		return this.compilation.hash;
-	}
-
-	/**
-	 * Get the chunk hash according to the entrypoint content
-	 * @returns {String} Chunk hash
-	 */
-	getChunkHash(entryName: string): string {
-		const chunks = this.compilation.entrypoints.get(entryName).chunks;
-		return chunks.length ? chunks[0].hash : '';
-	}
-
-	/**
-	 * Get the contenthash according to the sprite content
-	 * @returns {String} Sprite content hash
-	 */
-	getContentHash(output: string): string {
-		const { hashFunction, hashDigest, hashDigestLength } = this.compilation.outputOptions;
-
-		return util
-			.createHash(hashFunction)
-			.update(output)
-			.digest(hashDigest)
-			.substring(0, hashDigestLength);
 	}
 
 	/**
@@ -287,19 +314,55 @@ class SvgChunkWebpackPlugin {
 	 * Expose the manifest file into the assets compilation
 	 * The file is automatically created by the compiler
 	 */
-	createSpritesManifest(): void {
-		const output = JSON.stringify(this.spritesManifest, null, 2);
-		this.compilation.emitAsset('sprites-manifest.json', new RawSource(output, false));
+	async createSpritesManifest({
+		compilation,
+		cache,
+		eTag,
+		spritesManifest
+	}: {
+		compilation: Compilation;
+		cache: any;
+		eTag: any;
+		spritesManifest: SpriteManifest;
+	}): Promise<void> {
+		const RawSource = compilation.compiler.webpack.sources.RawSource;
+
+		const cacheItem = cache.getItemCache('sprites-manifest.json', eTag);
+		let output: sources.RawSource = await cacheItem.getPromise();
+
+		if (!output) {
+			output = new RawSource(JSON.stringify(spritesManifest, null, 2), false);
+			await cacheItem.storePromise(output);
+		}
+
+		compilation.emitAsset('sprites-manifest.json', output);
 	}
 
 	/**
 	 * Create sprites preview
 	 */
-	createSpritesPreview(): void {
-		this.compilation.emitAsset(
-			'sprites-preview.html',
-			new RawSource(templatePreview(this.spritesList), false)
-		);
+	async createSpritesPreview({
+		compilation,
+		cache,
+		eTag,
+		sprites
+	}: {
+		compilation: Compilation;
+		cache: any;
+		eTag: any;
+		sprites: any;
+	}): Promise<void> {
+		const RawSource = compilation.compiler.webpack.sources.RawSource;
+
+		const cacheItem = cache.getItemCache('sprites-preview.html', eTag);
+		let output: sources.RawSource = await cacheItem.getPromise();
+
+		if (!output) {
+			output = new RawSource(templatePreview(sprites), false);
+			await cacheItem.storePromise(output);
+		}
+
+		compilation.emitAsset('sprites-preview.html', output);
 	}
 }
 

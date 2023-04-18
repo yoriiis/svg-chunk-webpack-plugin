@@ -5,7 +5,7 @@
     "src/svgs/video.svg"
   ],
   "news": [
-    "src/svgs/smiley-surprised.svg",
-    "src/svgs/popcorn.svg"
+    "src/svgs/popcorn.svg",
+    "src/svgs/smiley-surprised.svg"
   ]
 }

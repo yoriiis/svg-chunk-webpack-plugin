@@ -1,6 +1,6 @@
-import { Sprites } from './interfaces';
+import { Sprite } from './interfaces';
 
-export = function templatePreview(sprites: Array<Sprites>): string {
+export = function templatePreview(sprites: Array<Sprite>): string {
 	/* prettier-ignore */
 	return `<!DOCTYPE html>
 				<html lang="en">
@@ -55,7 +55,7 @@ export = function templatePreview(sprites: Array<Sprites>): string {
 					<body>
 						${sprites.map(sprite => `
 							<div class="spriteItem">
-								<h2 class="spriteItemName">${sprite.name}.svg</h2>
+								<h2 class="spriteItemName">${sprite.entryName}.svg</h2>
 								<div class="svgList">
 									${sprite.svgs.map(svg => `
 										<div class="svgListItem">
@@ -65,7 +65,7 @@ export = function templatePreview(sprites: Array<Sprites>): string {
 											<span class="svgItem-name">${svg}</span>
 										</div>
 									`).join('')}
-									${sprite.content}
+									${sprite.sprite}
 								</div>
 							</div>
 						`).join('')}
