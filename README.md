@@ -2,11 +2,11 @@
 
 ![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/yoriiis/svg-chunk-webpack-plugin/build.yml?branch=master&style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=master) ![Node.js](https://img.shields.io/node/v/svg-chunk-webpack-plugin?style=for-the-badge)
 
-> Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped as a sprite and optimized by svgo.
+Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped as a sprite and optimized by SVGO.
 
-The SvgChunkWebpackPlugin creates optimized SVG sprites, according to Webpack's entrypoints. Each sprite contains only the SVG dependencies listed on its entrypoints to improved code splitting, even on SVG files.
+The `svg-chunk-webpack-plugin` creates optimized SVG sprites, according to Webpack's entrypoints. Each sprite contains only the SVG dependencies listed on its entrypoints to improved code splitting, even on SVG files.
 
-The plugin includes the popular [svgo](https://github.com/svg/svgo) package to generates clean and optimized SVG sprites.
+The plugin includes the popular [SVGO](https://github.com/svg/svgo) package to generates clean and optimized SVG sprites.
 
 Code splitting is the key to deliver files without any content that is unused by the pages. It already exists for CSS, Javascript and now for SVG files with this plugin.
 
@@ -36,11 +36,11 @@ yarn add svg-chunk-webpack-plugin --dev
 
 ## Environment
 
-SvgChunkWebpackPlugin was built for Node.js `>=10.13.0` and Webpack `>=5.10.3`.
+`svg-chunk-webpack-plugin` was built for Node.js `>=10.13.0` and Webpack `>=5.10.3`.
 
 ## Example
 
-The project includes a minimalist example in the `./example` directory. Run the `npm run build:example` command to execute the Webpack example and see SvgChunkWebpackPlugin's implementation in action.
+The project includes a minimalist example in the `./example` directory. Run the `npm run build:example` command to execute the Webpack example and see the plugin's implementation in action.
 
 ## Basic usage
 
@@ -48,7 +48,7 @@ The plugin will generate one SVG sprite for each entrypoints. Sprites are built 
 
 First, let's add the loader and the plugin to the Webpack configuration.
 
-> The loader and the plugin need to works together.
+> **Warning** The loader and the plugin need to works together.
 
 **webpack.config.js**
 
@@ -80,7 +80,9 @@ module.exports = {
 };
 ```
 
-> 💡 For more flexibility and better performance, inline SVG files are better. Fewer HTTP requests, CSS properties to change the style, no flickering during the page load.
+> **Note**
+>
+> For more flexibility and better performance, inline SVG files are better. Fewer HTTP requests, CSS properties to change the style, no flickering during the page load.
 
 Then, include the sprite in the wanted pages (_we use Twig in the following example_).
 
@@ -90,13 +92,13 @@ Then, include the sprite in the wanted pages (_we use Twig in the following exam
 {{ include 'home.svg' }}
 ```
 
-Finally, use the SVG with the `<use>` tag, like the following example. Replace `<SVG_FILENAME>` by the SVG filename, without the extension.
+Finally, use the SVG with the `<use>` tag, like the following example. Replace `<svg_name>` by the SVG name (without the extension).
 
 **home.html.twig**
 
 ```html
 <svg>
-  <use xlink:href="#<SVG_FILENAME>"></use>
+  <use href="#<svg_name>"></use>
 </svg>
 ```
 
@@ -104,139 +106,223 @@ Finally, use the SVG with the `<use>` tag, like the following example. Replace `
 
 ## Using a configuration
 
-You can pass configuration options to SvgChunkWebpackPlugin to overrides default settings. The transmitted parameters will be merged with the default parameters listed above. Allowed values are as follows:
+The loader and the plugin accepts configuration to override the default behavior.
 
-### `filename`
+### Loader
 
-`String = '[name].svg'`
+The loader configuration allow to personalize the SVGO configuration. SVGO optimization is executed during the loader process to optimize build performance.
 
-Tells the plugin whether to personalize the default sprite filename. The placeholder `[name]` is automatically replaced by entrypoints names.
+#### `configFile`
 
-```javascript
-new SvgChunkWebpackPlugin({
-  filename: '[name].svg';
-});
+Type:
+
+```ts
+type configFile = string | boolean;
 ```
 
-The `filename` parameter is compatible with Webpack caching placeholders, see the section [caching](#caching).
+Default: `path.resolve(opts.root, 'svgo.config.js')`
 
-### `svgoConfig`
+Tells the loader whether to load the custom [SVGO configuration](https://github.com/svg/svgo#configuration). Custom configuration can be disabled with `configFile: false`.
 
-`Object = {}`
+**webpack.config.js**
 
-Tells the plugin whether to personalize the [svgo configuration](https://github.com/svg/svgo#configuration).
-
-```javascript
-new SvgChunkWebpackPlugin({
-  svgoConfig: {
-    multipass: true, // Recommended
-    plugins: [
+```js
+module.exports = {
+  module: {
+    rules: [
       {
-        name: 'preset-default',
-        params: {
-          overrides: {
-            inlineStyles: {
-              onlyMatchedOnce: false
-            },
-            removeViewBox: false
-          }
+        test: /\.svg$/,
+        loader: SvgChunkWebpackPlugin.loader,
+        options: {
+          configFile: './path/svgo.config.js'
         }
-      },
-      {
-        name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
       }
     ]
   }
-});
+};
 ```
+
+#### SVGO custom configuration
+
+SVGO have a default preset to optimize SVG files. See [how to configure svgo](https://github.com/svg/svgo#configuration) for details.
+
+**svgo.config.js**
+
+```js
+module.exports = {
+  multipass: true,
+  plugins: [
+    {
+      name: 'preset-default',
+      params: {
+        overrides: {
+          inlineStyles: {
+            onlyMatchedOnce: false
+          },
+          removeViewBox: false
+        }
+      }
+    },
+    {
+      name: 'convertStyleToAttrs'
+    }
+  ]
+};
+```
+
+### Plugin
+
+The plugin configuration allow to personalize sprite settings.
+
+### `filename`
+
+Type:
+
+```ts
+type filename = string;
+```
+
+Default: `'[name].svg'`
+
+Tells the plugin whether to personalize the default sprite filename. The placeholder `[name]` is automatically replaced by entrypoints names.
+
+**webpack.config.js**
+
+```javascript
+module.exports = {
+  plugins: [
+    new SvgChunkWebpackPlugin({
+      filename: '[name].svg'
+    })
+  ]
+};
+```
+
+> **Note** The `filename` parameter is compatible with Webpack caching placeholders, see the section [caching](#caching).
 
 ### `svgstoreConfig`
 
-`Object = { cleanDefs: false, cleanSymbols: false, inline: true }`
+Type:
 
-SVG sprites are built using the svgstore package. Update the parameters according to your needs from the options list available on the [svgstore](https://github.com/svgstore/svgstore#options) documentation.
+```ts
+type svgstoreConfig = object;
+```
 
-> 💡 To avoid LinearGradient conflicts, avoid the `display: none` property which breaks SVG definitions.
+Default: `{ cleanDefs: false, cleanSymbols: false, inline: true }`
+
+SVG sprites are built using the `svgstore` package. Update the parameters according to your needs from the options list available on the [svgstore](https://github.com/svgstore/svgstore#options) documentation.
+
+**webpack.config.js**
 
 ```javascript
-new SvgChunkWebpackPlugin({
-  svgstoreConfig: {
-    svgAttrs: {
-      'aria-hidden': true,
-      style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
-    }
-  }
-});
+module.exports = {
+  plugins: [
+    new SvgChunkWebpackPlugin({
+      svgstoreConfig: {
+        svgAttrs: {
+          'aria-hidden': true,
+          style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
+        }
+      }
+    })
+  ]
+};
 ```
+
+> **Note** To avoid LinearGradient conflicts, avoid the `display: none` property which breaks SVG definitions.
 
 ### `generateSpritesManifest`
 
-`Boolean = false`
+Type:
 
-Tells the plugin whether to generate the `sprites-manifest.json`. The JSON file contains the list of all SVG included by entrypoints. It becomes very easy to known which SVG are included in which sprite.
+```ts
+type generateSpritesManifest = boolean;
+```
+
+Default: `false`
+
+Tells the plugin whether to generate the `sprites-manifest.json`. The JSON file contains the list of all SVG included by entrypoints.
+
+**webpack.config.js**
 
 ```javascript
-new SvgChunkWebpackPlugin({
-  generateSpritesManifest: true
-});
+module.exports = {
+  plugins: [
+    new SvgChunkWebpackPlugin({
+      generateSpritesManifest: true
+    })
+  ]
+};
 ```
 
 ### `generateSpritesPreview`
 
-`Boolean = false`
+Type:
 
-Tells the plugin whether to generate the `sprites-preview.html`. The HTML preview contains a display list of all SVG included by entrypoints with the SVG overviews and the names.
-
-```javascript
-new SvgChunkWebpackPlugin({
-  generateSpritesManifest: true
-});
+```ts
+type generateSpritesPreview = boolean;
 ```
 
-![Sprites preview](./example/sprites-preview.png)
+Default: `false`
+
+Tells the plugin whether to generate the `sprites-preview.html`. The HTML preview contains a display list of all SVG included by entrypoints with the SVG overviews and the names. See the [sprites preview](./example/sprites-preview.png) of the example.
+
+**webpack.config.js**
+
+```javascript
+module.exports = {
+  plugins: [
+    new SvgChunkWebpackPlugin({
+      generateSpritesPreview: true
+    })
+  ]
+};
+```
 
 ---
 
 ## Caching
 
-With [Webpack caching](https://webpack.js.org/guides/caching), several placeholders are available depending on your needs. With SVG inlined in the page, this option is not useful.
+With [webpack caching](https://webpack.js.org/guides/caching), several placeholders are available depending on your needs. With SVG inlined in the page, this option is not useful.
 
-> 💡 The `[contenthash]` placeholder is the best option because it depends on the sprite content.
+> **Note**
 >
-> Cache placeholders are expensive in build performance, use it only in production mode.
-
-### `[hash]`
-
-The `[hash]` placeholder will add a unique hash generated for every build. When the compilation build is updated, `[hash]` will change as well. See the [`stats.hash`](https://webpack.js.org/configuration/stats/#statshash) on the webpack documentation.
-
-```javascript
-new SvgChunkWebpackPlugin({
-  filename: '[name].[hash].svg';
-});
-```
-
-### `[chunkhash]`
-
-The `[chunkhash]` placeholder will add a unique hash based on the content of the entrypoint. When the entrypoint's content changes, `[chunkhash]` will change as well. All the entrypoint dependencies will have the same hash.
-
-```javascript
-new SvgChunkWebpackPlugin({
-  filename: '[name].[chunkhash].svg';
-});
-```
+> The `[contenthash]` placeholder is the best option because it depends on the sprite content. Cache placeholders are expensive in build performance, use it only in production mode.
 
 ### `[contenthash]`
 
-The `[contenthash]` placeholder will add a unique hash based on the content of the sprite. When the sprite's content changes, `[contenthash]` will change as well.
+The `[contenthash]` placeholder will add a unique hash based on the content of the sprite. When the sprite's content changes, the hash will change as well.
+
+**webpack.config.js**
 
 ```javascript
-new SvgChunkWebpackPlugin({
-  filename: '[name].[contenthash].svg';
-});
+module.exports = {
+  plugins: [
+    new SvgChunkWebpackPlugin({
+      filename: '[name].[contenthash].svg'
+    })
+  ]
+};
+```
+
+### `[fullhash]`
+
+The `[fullhash]` placeholder will add a unique hash generated for every build. When the compilation build is updated, the hash will change as well.
+
+**webpack.config.js**
+
+```javascript
+module.exports = {
+  plugins: [
+    new SvgChunkWebpackPlugin({
+      filename: '[name].[fullhash].svg'
+    })
+  ]
+};
 ```
 
 ## Licence
 
-SvgChunkWebpackPlugin is licensed under the [MIT License](http://opensource.org/licenses/MIT).
+`svg-chunk-webpack-plugin` is licensed under the [MIT License](http://opensource.org/licenses/MIT).
 
 Created with ♥ by [@yoriiis](http://github.com/yoriiis).
