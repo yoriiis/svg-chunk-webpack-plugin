@@ -16,11 +16,11 @@ import {
 	SvgstoreConfig
 } from './interfaces';
 import path = require('path');
-const webpack = require('webpack');
 import { validate } from 'schema-utils';
 import { Schema } from 'schema-utils/declarations/validate';
 import unTypedSchemaOptions from './schemas/plugin-options.json';
 
+const webpack = require('webpack');
 const schemaOptions = unTypedSchemaOptions as Schema;
 const svgstore = require('svgstore');
 const extend = require('extend');
