@@ -4,7 +4,7 @@ import loader from '../loader';
 import svgoConfig from '../../example/svgo.config';
 import { optimize, loadConfig } from 'svgo';
 import { validate } from 'schema-utils';
-import loaderOptions from '../schemas/loader-options.json';
+import schemaOptions from '../schemas/loader-options.json';
 const PACKAGE_NAME = require('../../package.json').name;
 
 jest.mock('schema-utils');
@@ -62,7 +62,7 @@ describe('Loader', () => {
 		const result = await loader.call(_this, '<svg></svg>');
 
 		expect(validate).toHaveBeenCalledWith(
-			loaderOptions,
+			schemaOptions,
 			{ configFile: 'svgo.config.js' },
 			{
 				name: 'SvgChunkWebpackPlugin Loader',
