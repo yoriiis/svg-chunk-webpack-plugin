@@ -43,7 +43,7 @@ jobs:
 
       - name: Build
         run: |
-          npm run build:tsc
+          npm run build
           npm run build:example
 
   deploy-coverage:
