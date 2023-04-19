@@ -2,10 +2,14 @@
 	"type": "object",
 	"properties": {
 		"filename": {
-			"type": "string"
+			"type": "string",
+			"description": "Personalize the default sprite filename",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#filename"
 		},
 		"svgstoreConfig": {
 			"type": "object",
+			"description": "Options for SVGStore",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#svgstoreconfig",
 			"properties": {
 				"cleanDefs": {
 					"oneOf": [
@@ -78,10 +82,14 @@
 			"additionalProperties": false
 		},
 		"generateSpritesManifest": {
-			"type": "boolean"
+			"type": "boolean",
+			"description": "Generate the sprite manifest json file",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#generatespritesmanifest"
 		},
 		"generateSpritesPreview": {
-			"type": "boolean"
+			"type": "boolean",
+			"description": "Generate the sprite preview",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#generatespritespreview"
 		}
 	},
 	"additionalProperties": false
