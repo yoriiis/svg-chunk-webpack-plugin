@@ -31,7 +31,7 @@ export interface Sprite {
 }
 
 export interface LoaderOptions {
-	configFile: string;
+	configFile: string | boolean;
 }
 
 export interface LoaderThis {
@@ -48,4 +48,21 @@ export interface LoaderThis {
 		};
 	};
 	emitError: (error: Error) => void;
+}
+
+export interface SvgstoreConfig {
+	cleanDefs?: boolean | string[];
+	cleanSymbols?: boolean | string[];
+	svgAttrs?: boolean | Record<string, string | null | ((value: string) => string)>;
+	symbolAttrs?: boolean | Record<string, string | null | ((value: string) => string)>;
+	copyAttrs?: boolean | string[];
+	renameDefs?: boolean;
+	inline?: boolean;
+}
+
+export interface PluginOptions {
+	filename: string;
+	svgstoreConfig: SvgstoreConfig;
+	generateSpritesManifest: boolean;
+	generateSpritesPreview: boolean;
 }

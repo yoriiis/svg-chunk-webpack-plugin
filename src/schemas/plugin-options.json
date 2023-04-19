@@ -1,0 +1,88 @@
+{
+	"type": "object",
+	"properties": {
+		"filename": {
+			"type": "string"
+		},
+		"svgstoreConfig": {
+			"type": "object",
+			"properties": {
+				"cleanDefs": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					]
+				},
+				"cleanSymbols": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					]
+				},
+				"inline": {
+					"type": "boolean"
+				},
+				"svgAttrs": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "object",
+							"additionalProperties": true
+						}
+					]
+				},
+				"symbolAttrs": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "object",
+							"additionalProperties": true
+						}
+					]
+				},
+				"copyAttrs": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					]
+				},
+				"renameDefs": {
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		},
+		"generateSpritesManifest": {
+			"type": "boolean"
+		},
+		"generateSpritesPreview": {
+			"type": "boolean"
+		}
+	},
+	"additionalProperties": false
+}
