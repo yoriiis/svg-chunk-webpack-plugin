@@ -2,8 +2,6 @@
 
 ![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/yoriiis/svg-chunk-webpack-plugin/build.yml?branch=master&style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=master)
 
-Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped as a sprite and optimized by SVGO.
-
 The `svg-chunk-webpack-plugin` creates optimized SVG sprites, according to Webpack's entrypoints. Each sprite contains only the SVG dependencies listed on its entrypoints to improved code splitting, even on SVG files.
 
 The plugin includes the popular [SVGO](https://github.com/svg/svgo) package to generates clean and optimized SVG sprites.
@@ -313,7 +311,7 @@ module.exports = {
 };
 ```
 
-## Licence
+## License
 
 `svg-chunk-webpack-plugin` is licensed under the [MIT License](http://opensource.org/licenses/MIT).
 
