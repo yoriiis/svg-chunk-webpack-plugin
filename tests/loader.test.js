@@ -1,11 +1,11 @@
 'use strict';
 
-import loader from '../loader';
-import svgoConfig from '../../example/svgo.config';
+import loader from '@src/loader';
+import svgoConfig from '../example/svgo.config';
 import { optimize, loadConfig } from 'svgo';
 import { validate } from 'schema-utils';
-import schemaOptions from '../schemas/loader-options.json';
-const PACKAGE_NAME = require('../../package.json').name;
+import schemaOptions from '@src/schemas/loader-options.json';
+const PACKAGE_NAME = require('../package.json').name;
 
 jest.mock('schema-utils');
 jest.mock('svgo', () => {

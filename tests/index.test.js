@@ -1,10 +1,10 @@
 import path from 'path';
-import SvgChunkWebpackPlugin from '../index';
-import templatePreview from '../preview';
+import SvgChunkWebpackPlugin from '@src/index';
+import templatePreview from '@src/preview';
 import { validate } from 'schema-utils';
-import schemaOptions from '../schemas/plugin-options.json';
+import schemaOptions from '@src/schemas/plugin-options.json';
 
-jest.mock('../preview');
+jest.mock('@src/preview');
 jest.mock('schema-utils');
 jest.mock('webpack', () => {
 	return {

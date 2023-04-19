@@ -1,6 +1,6 @@
 'use strict';
 
-import preview from '../preview';
+import preview from '@src/preview';
 
 let previewSprite;
 beforeEach(() => {
