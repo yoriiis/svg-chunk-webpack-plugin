@@ -6,10 +6,22 @@ import {
 	type Module,
 	type sources
 } from 'webpack';
-import { Svgs, SpriteManifest, Sprite, EntryCache, SvgsData } from './interfaces';
+import {
+	Svgs,
+	SpriteManifest,
+	Sprite,
+	EntryCache,
+	SvgsData,
+	PluginOptions,
+	SvgstoreConfig
+} from './interfaces';
 import path = require('path');
-const webpack = require('webpack');
+import { validate } from 'schema-utils';
+import { Schema } from 'schema-utils/declarations/validate';
+import unTypedSchemaOptions from './schemas/plugin-options.json';
 
+const webpack = require('webpack');
+const schemaOptions = unTypedSchemaOptions as Schema;
 const svgstore = require('svgstore');
 const extend = require('extend');
 const templatePreview = require('./preview');
@@ -35,7 +47,7 @@ const compareIds = (a: any, b: any) => {
 class SvgChunkWebpackPlugin {
 	options: {
 		filename: string;
-		svgstoreConfig: any;
+		svgstoreConfig: SvgstoreConfig;
 		generateSpritesManifest: boolean;
 		generateSpritesPreview: boolean;
 	};
@@ -48,7 +60,7 @@ class SvgChunkWebpackPlugin {
 	 * @param {options}
 	 */
 	constructor(options = {}) {
-		const DEFAULTS = {
+		const DEFAULTS: PluginOptions = {
 			filename: '[name].svg',
 			svgstoreConfig: {
 				cleanDefs: false,
@@ -60,6 +72,11 @@ class SvgChunkWebpackPlugin {
 		};
 
 		this.options = extend(true, DEFAULTS, options);
+
+		validate(schemaOptions, this.options, {
+			name: 'SvgChunkWebpackPlugin',
+			baseDataPath: 'options'
+		});
 
 		this.hookCallback = this.hookCallback.bind(this);
 	}

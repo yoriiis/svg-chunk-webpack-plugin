@@ -1,0 +1,96 @@
+{
+	"type": "object",
+	"properties": {
+		"filename": {
+			"type": "string",
+			"description": "Personalize the default sprite filename",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#filename"
+		},
+		"svgstoreConfig": {
+			"type": "object",
+			"description": "Options for SVGStore",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#svgstoreconfig",
+			"properties": {
+				"cleanDefs": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					]
+				},
+				"cleanSymbols": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					]
+				},
+				"inline": {
+					"type": "boolean"
+				},
+				"svgAttrs": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "object",
+							"additionalProperties": true
+						}
+					]
+				},
+				"symbolAttrs": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "object",
+							"additionalProperties": true
+						}
+					]
+				},
+				"copyAttrs": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					]
+				},
+				"renameDefs": {
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		},
+		"generateSpritesManifest": {
+			"type": "boolean",
+			"description": "Generate the sprite manifest json file",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#generatespritesmanifest"
+		},
+		"generateSpritesPreview": {
+			"type": "boolean",
+			"description": "Generate the sprite preview",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#generatespritespreview"
+		}
+	},
+	"additionalProperties": false
+}

@@ -1,0 +1,18 @@
+{
+	"type": "object",
+	"properties": {
+		"configFile": {
+			"description": "Load the custom SVGO configuration file",
+			"link": "https://github.com/yoriiis/svg-chunk-webpack-plugin#configfile",
+			"oneOf": [
+				{
+					"type": "string"
+				},
+				{
+					"type": "boolean"
+				}
+			]
+		}
+	},
+	"additionalProperties": false
+}

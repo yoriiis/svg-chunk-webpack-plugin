@@ -3,8 +3,11 @@
 import loader from '../loader';
 import svgoConfig from '../../example/svgo.config';
 import { optimize, loadConfig } from 'svgo';
+import { validate } from 'schema-utils';
+import schemaOptions from '../schemas/loader-options.json';
 const PACKAGE_NAME = require('../../package.json').name;
 
+jest.mock('schema-utils');
 jest.mock('svgo', () => {
 	const originalModule = jest.requireActual('svgo');
 	return {
@@ -58,6 +61,14 @@ describe('Loader', () => {
 
 		const result = await loader.call(_this, '<svg></svg>');
 
+		expect(validate).toHaveBeenCalledWith(
+			schemaOptions,
+			{ configFile: 'svgo.config.js' },
+			{
+				name: 'SvgChunkWebpackPlugin Loader',
+				baseDataPath: 'options'
+			}
+		);
 		expect(loadConfig).toHaveBeenCalledWith('svgo.config.js', './');
 		expect(optimize).toHaveBeenCalledWith('<svg></svg>', svgoConfig);
 		expect(callback).toHaveBeenCalledWith(null, JSON.stringify('svg minified'));

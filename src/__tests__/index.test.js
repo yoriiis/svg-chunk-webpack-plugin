@@ -1,8 +1,11 @@
 import path from 'path';
 import SvgChunkWebpackPlugin from '../index';
 import templatePreview from '../preview';
+import { validate } from 'schema-utils';
+import schemaOptions from '../schemas/plugin-options.json';
 
 jest.mock('../preview');
+jest.mock('schema-utils');
 jest.mock('webpack', () => {
 	return {
 		Compilation: {
@@ -112,6 +115,10 @@ describe('SvgChunkWebpackPlugin', () => {
 				generateSpritesPreview: true
 			});
 			expect(svgChunkWebpackPlugin.PLUGIN_NAME).toBe('svg-chunk-webpack-plugin');
+			expect(validate).toHaveBeenCalledWith(schemaOptions, svgChunkWebpackPlugin.options, {
+				name: 'SvgChunkWebpackPlugin',
+				baseDataPath: 'options'
+			});
 		});
 
 		it('Should initialize the constructor with default options', () => {

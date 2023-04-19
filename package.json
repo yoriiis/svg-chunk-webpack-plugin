@@ -44,6 +44,7 @@
 	"prettier": "./config/prettier.config.js",
 	"dependencies": {
 		"extend": "^3.0.2",
+		"schema-utils": "^4.0.1",
 		"svgo": "^2.8.0",
 		"svgstore": "^3.0.1"
 	},
