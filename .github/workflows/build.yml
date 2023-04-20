@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node: [12, 14, 16, 18, 20]
+        node: [14, 16, 18, 20]
     steps:
       - uses: actions/checkout@v2
 
@@ -66,10 +66,6 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: coverage
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 10.13.0
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
