@@ -19,7 +19,7 @@ module.exports = (env, argv) => {
 		cache: {
 			type: 'filesystem'
 		},
-		devtool: isProduction ? false : 'nosources-source-map',
+		devtool: false,
 		output: {
 			path: path.resolve(__dirname, './dist'),
 			publicPath: '/dist/',

@@ -91,6 +91,7 @@ class SvgChunkWebpackPlugin {
 
 	/**
 	 * Hook expose by the Webpack compiler
+	 * @async
 	 * @param {Object} compilation The Webpack compilation variable
 	 */
 	async hookCallback(compilation: Compilation): Promise<void> {
@@ -107,6 +108,9 @@ class SvgChunkWebpackPlugin {
 	/**
 	 * Add assets
 	 * The hook is triggered by webpack
+	 * @async
+	 * @param {Compilation} compilation Webpack compilation
+	 * @returns {Promise<void>}
 	 */
 	async addAssets(compilation: Compilation): Promise<void> {
 		// For better compatibility with future webpack versions
@@ -185,8 +189,9 @@ class SvgChunkWebpackPlugin {
 
 	/**
 	 * Get SVGs filtered by entrypoints
-	 * @param {Compilation} compilation Webpack compilation
-	 * @param {String} entryName Entrypoint name
+	 * @param {Object} options
+	 * @param {Compilation} options.compilation Webpack compilation
+	 * @param {String} options.entryName Entrypoint name
 	 * @returns {Array<NormalModule>} Svgs list
 	 */
 	getSvgsDependenciesByEntrypoint({
@@ -233,8 +238,9 @@ class SvgChunkWebpackPlugin {
 
 	/**
 	 * Get SVG data
-	 * @param {Compilation} compilation Webpack compilation
-	 * @param {String} entryName Entrypoint name
+	 * @param {Compilation} options
+	 * @param {Compilation} options.compilation Webpack compilation
+	 * @param {String} options.entryName Entrypoint name
 	 * @returns {SvgsData} SVG data (paths, names and content)
 	 */
 	getSvgsData({
@@ -285,8 +291,10 @@ class SvgChunkWebpackPlugin {
 	/**
 	 * Get the filename for the asset compilation
 	 * Placeholder [name], [hash], [chunkhash], [content] are automatically replaced
-	 * @param {String} entryName Entrypoint name
-	 * @param {String} sprite Sprite content
+	 * @param {Object} options
+	 * @param {Compilation} options.compilation Webpack compilation
+	 * @param {String} options.entryName Entrypoint name
+	 * @param {String} options.sprite Sprite content
 	 * @returns {String} Sprite filename
 	 */
 	getFilename({
@@ -322,6 +330,13 @@ class SvgChunkWebpackPlugin {
 	 * Create sprite manifest with Webpack compilation
 	 * Expose the manifest file into the assets compilation
 	 * The file is automatically created by the compiler
+	 * @async
+	 * @param {Object} options
+	 * @param {Compilation} options.compilation Webpack compilation
+	 * @param {any} options.cache Webpack cache
+	 * @param {any} options.eTag Webpack eTag
+	 * @param {SpriteManifest} options.spritesManifest ETag
+	 * @returns {String} Sprite filename
 	 */
 	async createSpritesManifest({
 		compilation,
@@ -349,6 +364,13 @@ class SvgChunkWebpackPlugin {
 
 	/**
 	 * Create sprites preview
+	 * @async
+	 * @param {Object} options
+	 * @param {Compilation} options.compilation Webpack compilation
+	 * @param {any} options.cache Webpack cache
+	 * @param {any} options.eTag Webpack eTag
+	 * @param {Array<Sprite>} options.sprites Sprites
+	 * @returns {String} Sprite filename
 	 */
 	async createSpritesPreview({
 		compilation,
@@ -359,7 +381,7 @@ class SvgChunkWebpackPlugin {
 		compilation: Compilation;
 		cache: any;
 		eTag: any;
-		sprites: any;
+		sprites: Array<Sprite>;
 	}): Promise<void> {
 		const RawSource = compilation.compiler.webpack.sources.RawSource;
 
