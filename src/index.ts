@@ -83,7 +83,7 @@ class SvgChunkWebpackPlugin {
 
 	/**
 	 * Apply function is automatically called by the Webpack main compiler
-	 * @param {Object} compiler The Webpack compiler variable
+	 * @param {Compiler} compiler The Webpack compiler variable
 	 */
 	apply(compiler: Compiler): void {
 		compiler.hooks.thisCompilation.tap('SvgChunkWebpackPlugin', this.hookCallback);
@@ -92,7 +92,7 @@ class SvgChunkWebpackPlugin {
 	/**
 	 * Hook expose by the Webpack compiler
 	 * @async
-	 * @param {Object} compilation The Webpack compilation variable
+	 * @param {Compilation} compilation The Webpack compilation variable
 	 */
 	async hookCallback(compilation: Compilation): Promise<void> {
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation

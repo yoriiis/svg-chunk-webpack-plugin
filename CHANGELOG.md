@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 4.0.0
+
+### ⚠️ Breaking changes
+
+- Minimum supported `Node.js` version is `16.20.0` ([#12](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/12), [#87](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/87))
+- Move SVGO optimization from plugin to loader ([#9](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/9)). The `svgoConfig` parameter on the plugin has been deleted and replaced by the official SVGO config file declared in the loader options. See [SVGO configuration](https://github.com/yoriiis/svg-chunk-webpack-plugin#loader).
+
+### New features
+
+- Add schema validation on plugin and loader options ([#11](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/11))
+
+### Fixes
+
+- Fix compatibility with webpack cache([#8](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/8))
+
 ## 3.0.0
 
 ### ⚠️ Breaking changes

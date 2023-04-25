@@ -275,8 +275,13 @@ describe('SvgChunkWebpackPlugin', () => {
 				svgsFixture['smiley-love']
 			);
 			expect(compilationWebpack.getCache().mergeEtags).toHaveBeenCalledTimes(2);
-			expect(compilationWebpack.getCache().getItemCache).toHaveBeenCalled();
-			expect(compilationWebpack.getCache().getItemCache().getPromise).toHaveBeenCalled();
+			expect(compilationWebpack.getCache().getItemCache).toHaveBeenCalledWith(
+				'home',
+				'123456789123'
+			);
+			expect(compilationWebpack.getCache().getItemCache().getPromise).toHaveBeenCalledTimes(
+				1
+			);
 			expect(svgChunkWebpackPlugin.getSvgsData).toHaveBeenCalledWith({
 				compilation: compilationWebpack,
 				svgsDependencies: [normalModule1, normalModule2, normalModule3]
