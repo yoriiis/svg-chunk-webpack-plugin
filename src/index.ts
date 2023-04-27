@@ -306,9 +306,21 @@ class SvgChunkWebpackPlugin {
 		entryName: string;
 		sprite: string;
 	}): string {
-		let filename = compilation.getPath(this.options.filename, {
-			filename: entryName
-		});
+		let filename = this.options.filename;
+
+		// Check if the filename option contains the placeholder [name]
+		// [name] corresponds to the entrypoint name
+		if (/\[name\]/i.test(filename)) {
+			filename = filename.replace('[name]', entryName);
+		}
+
+		// Check if the filename option contains the placeholder [fullhash]
+		// [fullhash] corresponds to the Webpack compilation hash
+		if (/\[fullhash\]/i.test(filename)) {
+			const { hashDigestLength } = compilation.outputOptions;
+			const hash = compilation.fullHash.substring(0, hashDigestLength);
+			filename = filename.replace('[fullhash]', hash);
+		}
 
 		// Check if the filename option contains the placeholder [contenthash]
 		// [contenthash] corresponds to the sprite content hash

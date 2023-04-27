@@ -472,8 +472,7 @@ describe('SvgChunkWebpackPlugin', () => {
 
 	describe('SvgChunkWebpackPlugin getFilename', () => {
 		it('Should call the getFilename function with default name', () => {
-			svgChunkWebpackPlugin.options.filename = 'sprite/[name].svg';
-			compilationWebpack.getPath.mockReturnValue('sprite/home.svg');
+			svgChunkWebpackPlugin.options.filename = 'sprites/[name].svg';
 
 			const result = svgChunkWebpackPlugin.getFilename({
 				compilation: compilationWebpack,
@@ -481,11 +480,37 @@ describe('SvgChunkWebpackPlugin', () => {
 				output: spritesFixture.home
 			});
 
-			expect(compilationWebpack.getPath).toHaveBeenCalledWith('sprite/[name].svg', {
-				filename: 'home'
-			});
 			expect(compilationWebpack.compiler.webpack.util.createHash).not.toHaveBeenCalled();
-			expect(result).toBe('sprite/home.svg');
+			expect(result).toBe('sprites/home.svg');
+		});
+
+		it('Should call the getFilename function with default name with slashes', () => {
+			svgChunkWebpackPlugin.options.filename = 'sprites/[name].svg';
+
+			const result = svgChunkWebpackPlugin.getFilename({
+				compilation: compilationWebpack,
+				entryName: 'home/components/footer',
+				output: spritesFixture.home
+			});
+
+			expect(compilationWebpack.compiler.webpack.util.createHash).not.toHaveBeenCalled();
+			expect(result).toBe('sprites/home/components/footer.svg');
+		});
+
+		it('Should call the getFilename function with [fullhash]', () => {
+			svgChunkWebpackPlugin.options.filename = 'sprites/[name].[fullhash].svg';
+			compilationWebpack.outputOptions = {
+				hashDigestLength: 20
+			};
+			compilationWebpack.fullHash = '117b8f68975f36a8c463a1b2c3d4e5f6';
+
+			const result = svgChunkWebpackPlugin.getFilename({
+				compilation: compilationWebpack,
+				entryName: 'home',
+				sprite: spritesFixture.home
+			});
+
+			expect(result).toStrictEqual('sprites/home.117b8f68975f36a8c463.svg');
 		});
 
 		it('Should call the getFilename function with [contenthash]', () => {
@@ -495,7 +520,6 @@ describe('SvgChunkWebpackPlugin', () => {
 				hashDigest: 'hex',
 				hashDigestLength: 20
 			};
-			compilationWebpack.getPath.mockReturnValue('sprites/home.[contenthash].svg');
 			compilationWebpack.compiler.webpack.util.createHash.mockReturnValue({
 				update: jest.fn().mockReturnValue({
 					digest: jest.fn().mockReturnValue({
@@ -503,11 +527,13 @@ describe('SvgChunkWebpackPlugin', () => {
 					})
 				})
 			});
+
 			const result = svgChunkWebpackPlugin.getFilename({
 				compilation: compilationWebpack,
 				entryName: 'home',
 				sprite: spritesFixture.home
 			});
+
 			expect(compilationWebpack.compiler.webpack.util.createHash).toHaveBeenCalledWith('md4');
 			expect(
 				compilationWebpack.compiler.webpack.util.createHash().update
