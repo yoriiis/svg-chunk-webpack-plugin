@@ -41,7 +41,8 @@ jobs:
         uses: actions/upload-artifact@v1
         if: github.ref == 'refs/heads/master' &&
             github.repository == 'yoriiis/svg-chunk-webpack-plugin' &&
-            github.event_name != 'pull_request'
+            github.event_name != 'pull_request' &&
+            matrix.node == '16'
         with:
           name: coverage
           path: coverage
