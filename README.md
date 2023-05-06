@@ -1,6 +1,6 @@
 # SvgChunkWebpackPlugin
 
-![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/yoriiis/svg-chunk-webpack-plugin/build.yml?branch=master&style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=master)
+![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/yoriiis/svg-chunk-webpack-plugin/build.yml?branch=master&style=for-the-badge) [![Coverage Status](https://img.shields.io/coveralls/github/yoriiis/svg-chunk-webpack-plugin?style=for-the-badge)](https://coveralls.io/github/yoriiis/svg-chunk-webpack-plugin?branch=main)
 
 The `svg-chunk-webpack-plugin` creates optimized SVG sprites, according to Webpack's entrypoints. Each sprite contains only the SVG dependencies listed on its entrypoints to improved code splitting, even on SVG files.
 
