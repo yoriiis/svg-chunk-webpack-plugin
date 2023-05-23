@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 4.0.1
+
+### Updates
+
+- Add funding key in `package.json` ([228155c](https://github.com/yoriiis/svg-chunk-webpack-plugin/commit/228155cd1dadd1592fb63b1e7e6085f63798c53b))
+
 ## 4.0.0
 
 ### ⚠️ Breaking changes
