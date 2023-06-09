@@ -513,6 +513,22 @@ describe('SvgChunkWebpackPlugin', () => {
 			expect(result).toStrictEqual('sprites/home.117b8f68975f36a8c463.svg');
 		});
 
+		it('Should call the getFilename function with [fullhash] undefined', () => {
+			svgChunkWebpackPlugin.options.filename = 'sprites/[name].[fullhash].svg';
+			compilationWebpack.outputOptions = {
+				hashDigestLength: 20
+			};
+			compilationWebpack.fullHash = undefined;
+
+			const result = svgChunkWebpackPlugin.getFilename({
+				compilation: compilationWebpack,
+				entryName: 'home',
+				sprite: spritesFixture.home
+			});
+
+			expect(result).toStrictEqual('sprites/home..svg');
+		});
+
 		it('Should call the getFilename function with [contenthash]', () => {
 			svgChunkWebpackPlugin.options.filename = 'sprites/[name].[contenthash].svg';
 			compilationWebpack.outputOptions = {
@@ -545,6 +561,22 @@ describe('SvgChunkWebpackPlugin', () => {
 				compilationWebpack.compiler.webpack.util.createHash().update().digest().substring
 			).toHaveBeenCalledWith(0, 20);
 			expect(result).toStrictEqual('sprites/home.a1b2c3d4e5f6.svg');
+		});
+
+		it('Should call the getFilename function with [contenthash] and hashFUnction undefined', () => {
+			svgChunkWebpackPlugin.options.filename = 'sprites/[name].[contenthash].svg';
+			compilationWebpack.outputOptions = {
+				hashFunction: undefined
+			};
+
+			const result = svgChunkWebpackPlugin.getFilename({
+				compilation: compilationWebpack,
+				entryName: 'home',
+				sprite: spritesFixture.home
+			});
+
+			expect(compilationWebpack.compiler.webpack.util.createHash).not.toHaveBeenCalled();
+			expect(result).toStrictEqual('sprites/home..svg');
 		});
 	});
 

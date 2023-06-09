@@ -1,11 +1,11 @@
-import { LoaderThis, LoaderOptions } from './interfaces';
+import { optimize, loadConfig } from 'svgo';
 import { validate } from 'schema-utils';
-import { Schema } from 'schema-utils/declarations/validate';
 import unTypedSchemaOptions from './schemas/loader-options.json';
+import { Schema } from 'schema-utils/declarations/validate';
+import { LoaderThis, LoaderOptions } from './types';
 
-const schemaOptions = unTypedSchemaOptions as Schema;
-const { optimize, loadConfig } = require('svgo');
 const PACKAGE_NAME = require('../package.json').name;
+const schemaOptions = unTypedSchemaOptions as Schema;
 
 /**
  * Loader for SVG files

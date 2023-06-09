@@ -1,43 +1,41 @@
-import { type sources } from 'webpack';
+import type { Compiler, sources } from 'webpack';
 
-export interface EntryCache {
+export type EntryCache = {
 	source: sources.RawSource;
 	sprite: string;
 	filename: string;
-	svgPaths: Array<string>;
-	svgNames: Array<string>;
-}
+	svgPaths: string[];
+	svgNames: string[];
+};
 
-export interface Svgs {
+export type Svgs = {
 	name: string;
 	content: string;
-}
+};
 
-export interface SvgsData {
-	svgPaths: Array<string>;
-	svgNames: Array<string>;
-	svgs: Array<Svgs>;
-}
+export type SvgsData = {
+	svgPaths: string[];
+	svgNames: string[];
+	svgs: Svgs[];
+};
 
-export interface SpriteManifest {
-	[key: string]: Array<string>;
-}
+export type SpriteManifest = Record<string, string[]>;
 
-export interface Sprite {
+export type Sprite = {
 	entryName: string;
 	source: sources.RawSource;
 	sprite: string;
-	svgs: Array<string>;
-}
+	svgs: string[];
+};
 
-export interface LoaderOptions {
+export type LoaderOptions = {
 	configFile: string | boolean;
-}
+};
 
-export interface LoaderThis {
+export type LoaderThis = {
 	getOptions: () => LoaderOptions;
 	context: string;
-	_compiler: any;
+	_compiler: Compiler;
 	async: () => (error: any, result?: string) => string;
 	_module: {
 		factoryMeta: {
@@ -48,9 +46,9 @@ export interface LoaderThis {
 		};
 	};
 	emitError: (error: Error) => void;
-}
+};
 
-export interface SvgstoreConfig {
+export type SvgstoreConfig = {
 	cleanDefs?: boolean | string[];
 	cleanSymbols?: boolean | string[];
 	svgAttrs?: boolean | Record<string, string | null | ((value: string) => string)>;
@@ -58,11 +56,11 @@ export interface SvgstoreConfig {
 	copyAttrs?: boolean | string[];
 	renameDefs?: boolean;
 	inline?: boolean;
-}
+};
 
-export interface PluginOptions {
+export type PluginOptions = {
 	filename: string;
 	svgstoreConfig: SvgstoreConfig;
 	generateSpritesManifest: boolean;
 	generateSpritesPreview: boolean;
-}
+};

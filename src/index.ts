@@ -1,11 +1,12 @@
-import {
-	type Compiler,
-	type Compilation,
-	type NormalModule,
-	type Chunk,
-	type Module,
-	type sources
-} from 'webpack';
+import webpack from 'webpack';
+import path from 'path';
+import { validate } from 'schema-utils';
+import svgstore from 'svgstore';
+import extend from 'extend';
+import templatePreview from './preview';
+import unTypedSchemaOptions from './schemas/plugin-options.json';
+import type { Compiler, Compilation, NormalModule, Chunk, Module, sources } from 'webpack';
+import { Schema } from 'schema-utils/declarations/validate';
 import {
 	Svgs,
 	SpriteManifest,
@@ -14,26 +15,17 @@ import {
 	SvgsData,
 	PluginOptions,
 	SvgstoreConfig
-} from './interfaces';
-import path = require('path');
-import { validate } from 'schema-utils';
-import { Schema } from 'schema-utils/declarations/validate';
-import unTypedSchemaOptions from './schemas/plugin-options.json';
-
-const webpack = require('webpack');
-const schemaOptions = unTypedSchemaOptions as Schema;
-const svgstore = require('svgstore');
-const extend = require('extend');
-const templatePreview = require('./preview');
+} from './types';
 
 const PACKAGE_NAME = require('../package.json').name;
+const schemaOptions = unTypedSchemaOptions as Schema;
 
 /**
  * @param {string|number} a First id
  * @param {string|number} b Second id
  * @returns {-1|0|1} Compare result
  */
-const compareIds = (a: any, b: any) => {
+const compareIds = (a: string | number, b: string | number) => {
 	if (typeof a !== typeof b) {
 		return typeof a < typeof b ? -1 : 1;
 	}
@@ -118,7 +110,7 @@ class SvgChunkWebpackPlugin {
 
 		const cache = compilation.getCache('SvgChunkWebpackPlugin');
 		const entryNames = compilation.entrypoints.keys();
-		const sprites: Array<Sprite> = [];
+		const sprites: Sprite[] = [];
 		const spritesManifest: SpriteManifest = {};
 
 		await Promise.all(
@@ -192,7 +184,7 @@ class SvgChunkWebpackPlugin {
 	 * @param {Object} options
 	 * @param {Compilation} options.compilation Webpack compilation
 	 * @param {String} options.entryName Entrypoint name
-	 * @returns {Array<NormalModule>} Svgs list
+	 * @returns {NormalModule[]} Svgs list
 	 */
 	getSvgsDependenciesByEntrypoint({
 		compilation,
@@ -200,8 +192,8 @@ class SvgChunkWebpackPlugin {
 	}: {
 		compilation: Compilation;
 		entryName: string;
-	}): Array<NormalModule> {
-		const listSvgsDependencies: Array<NormalModule> = [];
+	}): NormalModule[] {
+		const listSvgsDependencies: NormalModule[] = [];
 
 		// When you use module federation you can don't have entries
 		const entries = compilation.entrypoints;
@@ -248,7 +240,7 @@ class SvgChunkWebpackPlugin {
 		svgsDependencies
 	}: {
 		compilation: Compilation;
-		svgsDependencies: Array<NormalModule>;
+		svgsDependencies: NormalModule[];
 	}): SvgsData {
 		const svgPaths: SvgsData['svgPaths'] = [];
 		const svgNames: SvgsData['svgNames'] = [];
@@ -277,10 +269,10 @@ class SvgChunkWebpackPlugin {
 
 	/**
 	 * Generate the SVG sprite with Svgstore
-	 * @param {Array<Svgs>} svgs SVGs list
+	 * @param {Svgs[]} svgs SVGs list
 	 * @returns {String} Sprite string
 	 */
-	generateSprite(svgs: Array<Svgs>): string {
+	generateSprite(svgs: Svgs[]): string {
 		const sprites = svgstore(this.options.svgstoreConfig);
 		svgs.forEach((svg: Svgs) => {
 			sprites.add(svg.name, svg.content);
@@ -302,7 +294,7 @@ class SvgChunkWebpackPlugin {
 		entryName,
 		sprite
 	}: {
-		compilation: any;
+		compilation: Compilation;
 		entryName: string;
 		sprite: string;
 	}): string {
@@ -318,7 +310,9 @@ class SvgChunkWebpackPlugin {
 		// [fullhash] corresponds to the Webpack compilation hash
 		if (/\[fullhash\]/i.test(filename)) {
 			const { hashDigestLength } = compilation.outputOptions;
-			const hash = compilation.fullHash.substring(0, hashDigestLength);
+			const hash = compilation.fullHash
+				? compilation.fullHash.substring(0, hashDigestLength)
+				: '';
 			filename = filename.replace('[fullhash]', hash);
 		}
 
@@ -327,11 +321,15 @@ class SvgChunkWebpackPlugin {
 		if (/\[contenthash\]/i.test(filename)) {
 			const { util } = compilation.compiler.webpack;
 			const { hashFunction, hashDigest, hashDigestLength } = compilation.outputOptions;
-			const hash = util
-				.createHash(hashFunction)
-				.update(sprite)
-				.digest(hashDigest)
-				.substring(0, hashDigestLength);
+			let hash = '';
+			if (hashFunction) {
+				hash = util
+					.createHash(hashFunction)
+					.update(sprite)
+					.digest(hashDigest)
+					// @ts-ignore
+					.substring(0, hashDigestLength);
+			}
 			filename = filename.replace('[contenthash]', hash);
 		}
 
@@ -381,7 +379,7 @@ class SvgChunkWebpackPlugin {
 	 * @param {Compilation} options.compilation Webpack compilation
 	 * @param {any} options.cache Webpack cache
 	 * @param {any} options.eTag Webpack eTag
-	 * @param {Array<Sprite>} options.sprites Sprites
+	 * @param {Sprite[]} options.sprites Sprites
 	 * @returns {String} Sprite filename
 	 */
 	async createSpritesPreview({
@@ -393,7 +391,7 @@ class SvgChunkWebpackPlugin {
 		compilation: Compilation;
 		cache: any;
 		eTag: any;
-		sprites: Array<Sprite>;
+		sprites: Sprite[];
 	}): Promise<void> {
 		const RawSource = compilation.compiler.webpack.sources.RawSource;
 
