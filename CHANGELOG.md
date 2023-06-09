@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 4.0.2
+
+### Updates
+
+- Optimize TypeScript ([#16](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/16))
+
 ## 4.0.1
 
 ### Updates
