@@ -5,9 +5,13 @@ import svgoConfig from '../example/svgo.config';
 import { optimize, loadConfig } from 'svgo';
 import { validate } from 'schema-utils';
 import schemaOptions from '@src/schemas/loader-options.json';
-const PACKAGE_NAME = require('../package.json').name;
+import { PACKAGE_NAME } from '@src/utils';
 
 jest.mock('schema-utils');
+jest.mock('@src/utils', () => ({
+	PACKAGE_NAME: 'svg-chunk-webpack-plugin',
+	esmResolve: jest.fn()
+}));
 jest.mock('svgo', () => {
 	const originalModule = jest.requireActual('svgo');
 	return {

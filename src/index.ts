@@ -3,10 +3,10 @@ import path from 'path';
 import { validate } from 'schema-utils';
 import svgstore from 'svgstore';
 import extend from 'extend';
-import templatePreview from './preview';
-import unTypedSchemaOptions from './schemas/plugin-options.json';
+import templatePreview from './preview.js';
+import unTypedSchemaOptions from './schemas/plugin-options.json' assert { type: 'json' };
 import type { Compiler, Compilation, NormalModule, Chunk, Module, sources } from 'webpack';
-import { Schema } from 'schema-utils/declarations/validate';
+import { Schema } from 'schema-utils/declarations/validate.js';
 import {
 	Svgs,
 	SpriteManifest,
@@ -15,9 +15,9 @@ import {
 	SvgsData,
 	PluginOptions,
 	SvgstoreConfig
-} from './types';
+} from './types.js';
+import { PACKAGE_NAME, esmResolve } from './utils.js';
 
-const PACKAGE_NAME = require('../package.json').name;
 const schemaOptions = unTypedSchemaOptions as Schema;
 
 /**
@@ -408,6 +408,6 @@ class SvgChunkWebpackPlugin {
 }
 
 // @ts-ignore
-SvgChunkWebpackPlugin.loader = require.resolve('./loader');
+SvgChunkWebpackPlugin.loader = esmResolve('./loader.js');
 
-export = SvgChunkWebpackPlugin;
+export default SvgChunkWebpackPlugin;

@@ -1,6 +1,6 @@
-import { Sprite } from './types';
+import { Sprite } from './types.js';
 
-export = function templatePreview(sprites: Sprite[]): string {
+export default function templatePreview(sprites: Sprite[]): string {
 	/* prettier-ignore */
 	return `<!DOCTYPE html>
 				<html lang="en">
@@ -71,4 +71,4 @@ export = function templatePreview(sprites: Sprite[]): string {
 						`).join('')}
 					</body>
 				</html>`;
-};
+}

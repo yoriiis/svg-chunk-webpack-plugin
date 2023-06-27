@@ -1,9 +1,13 @@
-const path = require('path');
-const TerserJSPlugin = require('terser-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const SvgChunkWebpackPlugin = require('../lib/index.js');
+import path from 'path';
+import { fileURLToPath } from 'url';
+import TerserJSPlugin from 'terser-webpack-plugin';
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import SvgChunkWebpackPlugin from '../lib/index.js';
 
-module.exports = (env, argv) => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default (env, argv) => {
 	const isProduction = argv.mode === 'production';
 
 	return {

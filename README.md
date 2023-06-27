@@ -32,9 +32,9 @@ npm install svg-chunk-webpack-plugin --save-dev
 yarn add svg-chunk-webpack-plugin --dev
 ```
 
-## Environment
-
-`svg-chunk-webpack-plugin` was built for Node.js `>=16.20.0` and Webpack `>=5.10.3`.
+> **Warning** `svg-chunk-webpack-plugin@5` is ESM only.
+>
+> **Note** Minimum supported `Node.js` version is `16.20.0` and Webpack `>=5.10.3`.
 
 ## Example
 
@@ -51,9 +51,9 @@ First, let's add the loader and the plugin to the Webpack configuration.
 **webpack.config.js**
 
 ```javascript
-const SvgChunkWebpackPlugin = require('svg-chunk-webpack-plugin');
+import SvgChunkWebpackPlugin from 'svg-chunk-webpack-plugin';
 
-module.exports = {
+export default {
   module: {
     rules: [
       {
@@ -117,7 +117,7 @@ Tells the loader whether to load the custom [SVGO configuration](https://github.
 **webpack.config.js**
 
 ```js
-module.exports = {
+export default {
   module: {
     rules: [
       {
@@ -139,7 +139,7 @@ SVGO have a default preset to optimize SVG files. See [how to configure svgo](ht
 **svgo.config.js**
 
 ```js
-module.exports = {
+export default {
   multipass: true,
   plugins: [
     {
@@ -179,7 +179,7 @@ Tells the plugin whether to personalize the default sprite filename. The placeho
 **webpack.config.js**
 
 ```javascript
-module.exports = {
+export default {
   plugins: [
     new SvgChunkWebpackPlugin({
       filename: '[name].svg'
@@ -205,7 +205,7 @@ SVG sprites are built using the `svgstore` package. Update the parameters accord
 **webpack.config.js**
 
 ```javascript
-module.exports = {
+export default {
   plugins: [
     new SvgChunkWebpackPlugin({
       svgstoreConfig: {
@@ -236,7 +236,7 @@ Tells the plugin whether to generate the `sprites-manifest.json`. The JSON file 
 **webpack.config.js**
 
 ```javascript
-module.exports = {
+export default {
   plugins: [
     new SvgChunkWebpackPlugin({
       generateSpritesManifest: true
@@ -260,7 +260,7 @@ Tells the plugin whether to generate the `sprites-preview.html`. The HTML previe
 **webpack.config.js**
 
 ```javascript
-module.exports = {
+export default {
   plugins: [
     new SvgChunkWebpackPlugin({
       generateSpritesPreview: true
@@ -286,7 +286,7 @@ The `[contenthash]` placeholder will add a unique hash based on the content of t
 **webpack.config.js**
 
 ```javascript
-module.exports = {
+export default {
   plugins: [
     new SvgChunkWebpackPlugin({
       filename: '[name].[contenthash].svg'
@@ -302,7 +302,7 @@ The `[fullhash]` placeholder will add a unique hash generated for every build. W
 **webpack.config.js**
 
 ```javascript
-module.exports = {
+export default {
   plugins: [
     new SvgChunkWebpackPlugin({
       filename: '[name].[fullhash].svg'

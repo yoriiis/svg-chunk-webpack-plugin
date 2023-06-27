@@ -1,10 +1,10 @@
 import { optimize, loadConfig } from 'svgo';
 import { validate } from 'schema-utils';
-import unTypedSchemaOptions from './schemas/loader-options.json';
-import { Schema } from 'schema-utils/declarations/validate';
-import { LoaderThis, LoaderOptions } from './types';
+import unTypedSchemaOptions from './schemas/loader-options.json' assert { type: 'json' };
+import { Schema } from 'schema-utils/declarations/validate.js';
+import { LoaderThis, LoaderOptions } from './types.js';
+import { PACKAGE_NAME } from './utils.js';
 
-const PACKAGE_NAME = require('../package.json').name;
 const schemaOptions = unTypedSchemaOptions as Schema;
 
 /**
@@ -12,7 +12,10 @@ const schemaOptions = unTypedSchemaOptions as Schema;
  * Content are not edited, just stringified
  * The plugin create sprites
  */
-export = async function SvgChunkWebpackLoader(this: LoaderThis, content: string): Promise<string> {
+export default async function SvgChunkWebpackLoader(
+	this: LoaderThis,
+	content: string
+): Promise<string> {
 	const options: LoaderOptions = this.getOptions() || {};
 
 	validate(schemaOptions, options, {
@@ -62,4 +65,4 @@ export = async function SvgChunkWebpackLoader(this: LoaderThis, content: string)
 	} catch (error) {
 		return callback(error);
 	}
-};
+}
