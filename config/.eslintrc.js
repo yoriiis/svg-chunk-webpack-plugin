@@ -37,5 +37,7 @@ module.exports = {
 			{ anonymous: 'never', asyncArrow: 'always', named: 'never' }
 		],
 		'linebreak-style': ['error', 'unix']
-	}
+	},
+
+	ignorePatterns: ['node_modules', 'coverage', 'dist', 'lib', 'types']
 };
