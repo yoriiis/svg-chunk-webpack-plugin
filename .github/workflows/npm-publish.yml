@@ -7,7 +7,9 @@ on:
 jobs:
   lint:
     uses: yoriiis/svg-chunk-webpack-plugin/.github/workflows/lint.yml@main
+
   npm:
+    needs: lint
     uses: yoriiis/actions/.github/workflows/npm-publish.yml@main
     with:
       node-version: 16
