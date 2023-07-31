@@ -6,6 +6,10 @@ import schemaOptions from '@src/schemas/plugin-options.json';
 
 jest.mock('@src/preview');
 jest.mock('schema-utils');
+jest.mock('@src/utils', () => ({
+	PACKAGE_NAME: 'svg-chunk-webpack-plugin',
+	esmResolve: jest.fn()
+}));
 jest.mock('webpack', () => {
 	return {
 		Compilation: {
