@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 5.0.0
+
+### ⚠️ Breaking changes
+
+#### **This package is now pure ESM.** Please read [Sindre Sorhus ESM note](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) for more information
+
+- Migrate to ESM with package `exports` ([#17](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/17))
+
 ## 4.0.2
 
 ### Updates
