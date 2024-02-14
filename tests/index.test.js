@@ -374,6 +374,43 @@ describe('SvgChunkWebpackPlugin', () => {
 			]);
 		});
 
+		it('Should call the getSvgsDependenciesByEntrypoint function without buildMeta', () => {
+			compilationWebpack.entrypoints.get.mockReturnValue({
+				chunks: [
+					{
+						hash: 'beb18939e5093045258b8d24a34dd844'
+					}
+				]
+			});
+			compilationWebpack.chunkGraph.getOrderedChunkModulesIterable.mockReturnValue([
+				{
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				},
+				{
+					buildInfo: {
+						hash: '4567'
+					}
+				}
+			]);
+
+			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypoint({
+				compilation: compilationWebpack,
+				entryName: 'home'
+			});
+
+			expect(result).toStrictEqual([
+				{
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				}
+			]);
+		});
+
 		it('Should call the getSvgsDependenciesByEntrypoint function with entries null', () => {
 			compilationWebpack.entrypoints = null;
 

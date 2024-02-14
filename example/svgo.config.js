@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 export default {
 	multipass: true,
 	plugins: [
@@ -14,6 +16,13 @@ export default {
 		},
 		{
 			name: 'convertStyleToAttrs' // Disabled by default since v2.1.0
+		},
+		{
+			name: 'prefixIds',
+			params: {
+				delim: '',
+				prefix: () => crypto.randomBytes(20).toString('hex').slice(0, 4)
+			}
 		}
 	]
 };
