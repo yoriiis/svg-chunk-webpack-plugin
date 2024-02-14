@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 6.0.0
+
+### ⚠️ Breaking changes
+
+- Updates SVGO and Node.js ([#23](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/23))
+  - Minimum supported `Node.js` version is `18.19.0`
+  - SVGO version 3 (see [SVGO releases](https://github.com/svg/svgo/releases) for breaking changes)
+  - Updates other packages
+
 ## 5.0.0
 
 ### ⚠️ Breaking changes

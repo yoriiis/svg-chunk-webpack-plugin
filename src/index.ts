@@ -220,7 +220,9 @@ class SvgChunkWebpackPlugin {
 					listSvgsDependencies.push(module as NormalModule);
 
 					// Mark module as not side effect free after processing in graph
-					module.buildMeta.sideEffectFree = false;
+					if (module.buildMeta) {
+						module.buildMeta.sideEffectFree = false;
+					}
 				}
 			}
 		});

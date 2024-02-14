@@ -20,9 +20,9 @@ export default (env, argv) => {
 		watchOptions: {
 			ignored: /node_modules/
 		},
-		cache: {
-			type: 'filesystem'
-		},
+		// cache: {
+		// 	type: 'filesystem'
+		// },
 		devtool: false,
 		output: {
 			path: path.resolve(__dirname, './dist'),
