@@ -26,20 +26,6 @@ export default async function SvgChunkWebpackLoader(
 	const compiler = this._compiler;
 	const callback = this.async();
 
-	// Declare all SVG files as side effect
-	// https://github.com/webpack/webpack/issues/12202#issuecomment-745537821
-	this._module.factoryMeta = this._module.factoryMeta || {};
-	this._module.factoryMeta.sideEffectFree = false;
-
-	// Flag all SVG files to find them more easily on the plugin side
-	this._module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN = true;
-
-	// Check if content is a SVG file
-	if (!content.includes('<svg')) {
-		callback(new Error(`${PACKAGE_NAME} exception. ${content}`));
-		return;
-	}
-
 	// Check if the plugin is also imported
 	const plugin = compiler.options.plugins.find(
 		(plugin: any) => plugin.PLUGIN_NAME && plugin.PLUGIN_NAME === PACKAGE_NAME
@@ -48,6 +34,20 @@ export default async function SvgChunkWebpackLoader(
 		callback(new Error(`${PACKAGE_NAME} requires the corresponding plugin`));
 		return;
 	}
+
+	// Check if content is a SVG file
+	if (!content.includes('<svg')) {
+		callback(new Error(`${PACKAGE_NAME} exception. ${content}`));
+		return;
+	}
+
+	// Declare all SVG files as side effect
+	// https://github.com/webpack/webpack/issues/12202#issuecomment-745537821
+	this._module.factoryMeta = this._module.factoryMeta || {};
+	this._module.factoryMeta.sideEffectFree = false;
+
+	// Flag all SVG files to find them more easily on the plugin side
+	this._module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN = true;
 
 	try {
 		const { configFile } = options;
