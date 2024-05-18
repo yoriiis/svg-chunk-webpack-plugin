@@ -37,6 +37,7 @@ export default async function SvgChunkWebpackLoader(
 	// Check if content is a SVG file
 	if (!content.includes('<svg')) {
 		callback(new Error(`${PACKAGE_NAME} exception. ${content}`));
+		return;
 	}
 
 	// Check if the plugin is also imported
@@ -45,6 +46,7 @@ export default async function SvgChunkWebpackLoader(
 	);
 	if (typeof plugin === 'undefined') {
 		callback(new Error(`${PACKAGE_NAME} requires the corresponding plugin`));
+		return;
 	}
 
 	try {
