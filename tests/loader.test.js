@@ -105,8 +105,12 @@ describe('Loader with errors', () => {
 	it('Should call the loader function with a wrong SVG', async () => {
 		await loader.call(_this, 'wrong svg');
 
-		expect.assertions(1);
+		expect.assertions(3);
+		expect(callback).toHaveBeenCalledTimes(1);
 		expect(callback).toHaveBeenCalledWith(new Error(`${PACKAGE_NAME} exception. wrong svg`));
+
+		// Don't set to process if SVG is bad.
+		expect(_this._module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN).toBeUndefined();
 	});
 
 	it('Should call the loader function without the plugin imported', async () => {
@@ -114,9 +118,13 @@ describe('Loader with errors', () => {
 
 		await loader.call(_this, '<svg></svg>');
 
-		expect.assertions(1);
+		expect.assertions(3);
+		expect(callback).toHaveBeenCalledTimes(1);
 		expect(callback).toHaveBeenCalledWith(
 			new Error(`${PACKAGE_NAME} requires the corresponding plugin`)
 		);
+
+		// Don't set to process if No Plugin is set to process it
+		expect(_this._module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN).toBeUndefined();
 	});
 });

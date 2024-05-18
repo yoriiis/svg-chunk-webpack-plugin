@@ -31,14 +31,12 @@ export default async function SvgChunkWebpackLoader(
 		(plugin: any) => plugin.PLUGIN_NAME && plugin.PLUGIN_NAME === PACKAGE_NAME
 	);
 	if (typeof plugin === 'undefined') {
-		callback(new Error(`${PACKAGE_NAME} requires the corresponding plugin`));
-		return;
+		return callback(new Error(`${PACKAGE_NAME} requires the corresponding plugin`));
 	}
 
 	// Check if content is a SVG file
 	if (!content.includes('<svg')) {
-		callback(new Error(`${PACKAGE_NAME} exception. ${content}`));
-		return;
+		return callback(new Error(`${PACKAGE_NAME} exception. ${content}`));
 	}
 
 	// Declare all SVG files as side effect
