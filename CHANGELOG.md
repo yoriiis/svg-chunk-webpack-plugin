@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 6.0.1
+
+### Fixes
+
+- Improve loader errors by @jvoccia ([#28](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/28))
+
 ## 6.0.0
 
 ### ⚠️ Breaking changes
@@ -42,7 +48,7 @@
 
 ### Fixes
 
-- Fix compatibility with webpack cache([#8](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/8))
+- Fix compatibility with webpack cache ([#8](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/8))
 
 ## 3.0.0
 
