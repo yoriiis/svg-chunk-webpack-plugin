@@ -4,7 +4,7 @@ import { validate } from 'schema-utils';
 import svgstore from 'svgstore';
 import extend from 'extend';
 import templatePreview from './preview.js';
-import unTypedSchemaOptions from './schemas/plugin-options.json' assert { type: 'json' };
+import unTypedSchemaOptions from './schemas/plugin-options.json' with { type: 'json' };
 import type { Compiler, Compilation, NormalModule, Chunk, Module, sources } from 'webpack';
 import { Schema } from 'schema-utils/declarations/validate.js';
 import {
