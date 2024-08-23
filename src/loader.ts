@@ -1,6 +1,6 @@
 import { optimize, loadConfig } from 'svgo';
 import { validate } from 'schema-utils';
-import unTypedSchemaOptions from './schemas/loader-options.json' assert { type: 'json' };
+import unTypedSchemaOptions from './schemas/loader-options.json' with { type: 'json' };
 import { Schema } from 'schema-utils/declarations/validate.js';
 import { LoaderThis, LoaderOptions } from './types.js';
 import { PACKAGE_NAME } from './utils.js';
