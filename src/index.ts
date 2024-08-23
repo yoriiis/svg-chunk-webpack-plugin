@@ -1,19 +1,19 @@
-import webpack from 'webpack';
+import extend from 'extend';
 import path from 'path';
 import { validate } from 'schema-utils';
+import { Schema } from 'schema-utils/declarations/validate.js';
 import svgstore from 'svgstore';
-import extend from 'extend';
+import type { Chunk, Compilation, Compiler, Module, NormalModule, sources } from 'webpack';
+import webpack from 'webpack';
 import templatePreview from './preview.js';
 import unTypedSchemaOptions from './schemas/plugin-options.json' with { type: 'json' };
-import type { Compiler, Compilation, NormalModule, Chunk, Module, sources } from 'webpack';
-import { Schema } from 'schema-utils/declarations/validate.js';
 import {
-	Svgs,
-	SpriteManifest,
-	Sprite,
 	EntryCache,
-	SvgsData,
 	PluginOptions,
+	Sprite,
+	SpriteManifest,
+	Svgs,
+	SvgsData,
 	SvgstoreConfig
 } from './types.js';
 import { PACKAGE_NAME, esmResolve } from './utils.js';
@@ -253,7 +253,7 @@ class SvgChunkWebpackPlugin {
 			const source = normalModule.originalSource();
 
 			if (source) {
-				svgPaths.push(path.relative(compilation.options.context || '', userRequest));
+				svgPaths.push(path.relative(compilation.options.context || '', userRequest).replace(/\\/g, '/'));
 				svgNames.push(path.basename(userRequest, '.svg'));
 				svgs.push({
 					name: path.basename(userRequest, '.svg'),
