@@ -1,6 +1,6 @@
 {
 	"name": "svg-chunk-webpack-plugin",
-	"version": "6.0.1",
+	"version": "7.0.0",
 	"description": "Generate SVG sprites according to entrypoint dependencies. Each page only imports its own svgs, wrapped as a sprite and optimized by svgo",
 	"keywords": [
 		"svg",
