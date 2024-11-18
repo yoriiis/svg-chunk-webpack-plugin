@@ -1,7 +1,6 @@
 import { Sprite } from './types.js';
 
 export default function templatePreview(sprites: Sprite[]): string {
-	/* prettier-ignore */
 	return `<!DOCTYPE html>
 				<html lang="en">
 					<head>
@@ -53,22 +52,30 @@ export default function templatePreview(sprites: Sprite[]): string {
 						</style>
 					</head>
 					<body>
-						${sprites.map(sprite => `
+						${sprites
+							.map(
+								(sprite) => `
 							<div class="spriteItem">
 								<h2 class="spriteItemName">${sprite.entryName}.svg</h2>
 								<div class="svgList">
-									${sprite.svgs.map(svg => `
+									${sprite.svgs
+										.map(
+											(svg) => `
 										<div class="svgListItem">
 											<svg class="svgItem-icon">
 												<use xlink:href="#${svg}"></use>
 											</svg>
 											<span class="svgItem-name">${svg}</span>
 										</div>
-									`).join('')}
+									`
+										)
+										.join('')}
 									${sprite.sprite}
 								</div>
 							</div>
-						`).join('')}
+						`
+							)
+							.join('')}
 					</body>
 				</html>`;
 }

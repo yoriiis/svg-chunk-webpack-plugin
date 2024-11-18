@@ -9,7 +9,7 @@ export default {
 			{
 				diagnostics: {
 					// Disable error reporting with import assertions
-					ignoreCodes: ['TS1343', 'TS2821']
+					ignoreCodes: ['TS2823']
 				}
 			}
 		]
