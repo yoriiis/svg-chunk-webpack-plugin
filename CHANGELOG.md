@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 7.0.0
+
+### ⚠️ Breaking changes
+
+- Updates Node.js ([#34](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/34))
+  - Minimum supported `Node.js` version is `20.18.0`
+  - Fix import assertion compatibility with Node.js 22
+  - Updates other packages
+  - Migrate ESLint/Prettier to Biome
+
 ## 6.0.1
 
 ### Fixes
