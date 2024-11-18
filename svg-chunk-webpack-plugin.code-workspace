@@ -5,8 +5,8 @@
 		}
 	],
 	"settings": {
+		"editor.defaultFormatter": "biomejs.biome",
 		"[javascript][typescript][postcss][html][markdown][json]": {
-			"editor.defaultFormatter": "biomejs.biome",
 			"editor.formatOnSave": true,
 			"editor.tabSize": 4,
 			"editor.rulers": [100]

@@ -1,6 +1,5 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserJSPlugin from 'terser-webpack-plugin';
 import SvgChunkWebpackPlugin from '../lib/index.js';
 
@@ -75,8 +74,7 @@ export default (_env, argv) => {
 			minimizer: [
 				new TerserJSPlugin({
 					extractComments: false
-				}),
-				new CssMinimizerPlugin()
+				})
 			],
 			chunkIds: 'deterministic', // or 'named'
 			removeAvailableModules: true,
