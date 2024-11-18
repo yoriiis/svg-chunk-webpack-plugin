@@ -1,4 +1,4 @@
-import { Sprite } from './types.js';
+import type { Sprite } from './types.js';
 
 export default function templatePreview(sprites: Sprite[]): string {
 	return `<!DOCTYPE html>

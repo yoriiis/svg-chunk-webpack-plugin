@@ -1,5 +1,3 @@
-'use strict';
-
 import loader from '@src/loader';
 import schemaOptions from '@src/schemas/loader-options.json';
 import { PACKAGE_NAME } from '@src/utils';
@@ -86,7 +84,7 @@ describe('Loader', () => {
 	});
 
 	it('Should call the loader function without factoryMeta object data', async () => {
-		delete _this._module.factoryMeta;
+		_this._module.factoryMeta = undefined;
 		await loader.call(_this, '<svg></svg>');
 	});
 });

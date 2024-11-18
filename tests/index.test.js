@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import SvgChunkWebpackPlugin from '@src/index';
 import templatePreview from '@src/preview';
 import schemaOptions from '@src/schemas/plugin-options.json';

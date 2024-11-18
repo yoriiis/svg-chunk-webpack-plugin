@@ -1,5 +1,5 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import TerserJSPlugin from 'terser-webpack-plugin';
 import SvgChunkWebpackPlugin from '../lib/index.js';
 

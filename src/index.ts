@@ -1,13 +1,13 @@
-import path from 'path';
+import path from 'node:path';
 import extend from 'extend';
 import { validate } from 'schema-utils';
-import { Schema } from 'schema-utils/declarations/validate.js';
+import type { Schema } from 'schema-utils/declarations/validate.js';
 import svgstore from 'svgstore';
 import webpack from 'webpack';
 import type { Chunk, Compilation, Compiler, Module, NormalModule, sources } from 'webpack';
 import templatePreview from './preview.js';
 import unTypedSchemaOptions from './schemas/plugin-options.json' with { type: 'json' };
-import {
+import type {
 	EntryCache,
 	PluginOptions,
 	Sprite,
@@ -237,7 +237,7 @@ class SvgChunkWebpackPlugin {
 					)
 			);
 			for (const module of modules) {
-				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
+				if (module.buildInfo?.SVG_CHUNK_WEBPACK_PLUGIN) {
 					listSvgsDependencies.push(module as NormalModule);
 
 					// Mark module as not side effect free after processing in graph
