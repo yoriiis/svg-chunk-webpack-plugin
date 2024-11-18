@@ -1,5 +1,3 @@
-'use strict';
-
 import preview from '@src/preview';
 
 let previewSprite;

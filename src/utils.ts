@@ -1,5 +1,5 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const PACKAGE_NAME = 'svg-chunk-webpack-plugin' as const;
 

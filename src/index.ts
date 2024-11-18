@@ -1,19 +1,19 @@
-import webpack from 'webpack';
-import path from 'path';
-import { validate } from 'schema-utils';
-import svgstore from 'svgstore';
+import path from 'node:path';
 import extend from 'extend';
+import { validate } from 'schema-utils';
+import type { Schema } from 'schema-utils/declarations/validate.js';
+import svgstore from 'svgstore';
+import webpack from 'webpack';
+import type { Chunk, Compilation, Compiler, Module, NormalModule, sources } from 'webpack';
 import templatePreview from './preview.js';
-import unTypedSchemaOptions from './schemas/plugin-options.json' assert { type: 'json' };
-import type { Compiler, Compilation, NormalModule, Chunk, Module, sources } from 'webpack';
-import { Schema } from 'schema-utils/declarations/validate.js';
-import {
-	Svgs,
-	SpriteManifest,
-	Sprite,
+import unTypedSchemaOptions from './schemas/plugin-options.json' with { type: 'json' };
+import type {
 	EntryCache,
-	SvgsData,
 	PluginOptions,
+	Sprite,
+	SpriteManifest,
+	Svgs,
+	SvgsData,
 	SvgstoreConfig
 } from './types.js';
 import { PACKAGE_NAME, esmResolve } from './utils.js';
@@ -30,8 +30,12 @@ const compareIds = (a: string | number, b: string | number) => {
 		return typeof a < typeof b ? -1 : 1;
 	}
 
-	if (a < b) return -1;
-	if (a > b) return 1;
+	if (a < b) {
+		return -1;
+	}
+	if (a > b) {
+		return 1;
+	}
 
 	return 0;
 };
@@ -133,14 +137,21 @@ class SvgChunkWebpackPlugin {
 
 				let output: EntryCache = await cacheItem.getPromise();
 				if (!output) {
-					const svgsData = this.getSvgsData({ compilation, svgsDependencies });
+					const svgsData = this.getSvgsData({
+						compilation,
+						svgsDependencies
+					});
 					const sprite = this.generateSprite(svgsData.svgs);
 					const source = new RawSource(sprite, false);
 
 					output = {
 						source,
 						sprite,
-						filename: this.getFilename({ compilation, entryName, sprite }),
+						filename: this.getFilename({
+							compilation,
+							entryName,
+							sprite
+						}),
 						svgPaths: svgsData.svgPaths,
 						svgNames: svgsData.svgNames
 					};
@@ -171,11 +182,21 @@ class SvgChunkWebpackPlugin {
 			.reduce((result, item) => cache.mergeEtags(result, item));
 
 		if (this.options.generateSpritesManifest) {
-			await this.createSpritesManifest({ compilation, cache, eTag, spritesManifest });
+			await this.createSpritesManifest({
+				compilation,
+				cache,
+				eTag,
+				spritesManifest
+			});
 		}
 
 		if (this.options.generateSpritesPreview) {
-			await this.createSpritesPreview({ compilation, cache, eTag, sprites });
+			await this.createSpritesPreview({
+				compilation,
+				cache,
+				eTag,
+				sprites
+			});
 		}
 	}
 
@@ -216,7 +237,7 @@ class SvgChunkWebpackPlugin {
 					)
 			);
 			for (const module of modules) {
-				if (module.buildInfo && module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN) {
+				if (module.buildInfo?.SVG_CHUNK_WEBPACK_PLUGIN) {
 					listSvgsDependencies.push(module as NormalModule);
 
 					// Mark module as not side effect free after processing in graph
@@ -312,9 +333,7 @@ class SvgChunkWebpackPlugin {
 		// [fullhash] corresponds to the Webpack compilation hash
 		if (/\[fullhash\]/i.test(filename)) {
 			const { hashDigestLength } = compilation.outputOptions;
-			const hash = compilation.fullHash
-				? compilation.fullHash.substring(0, hashDigestLength)
-				: '';
+			const hash = compilation.fullHash ? compilation.fullHash.substring(0, hashDigestLength) : '';
 			filename = filename.replace('[fullhash]', hash);
 		}
 

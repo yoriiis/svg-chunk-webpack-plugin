@@ -1,11 +1,9 @@
-'use strict';
-
 import loader from '@src/loader';
-import svgoConfig from '../example/svgo.config';
-import { optimize, loadConfig } from 'svgo';
-import { validate } from 'schema-utils';
 import schemaOptions from '@src/schemas/loader-options.json';
 import { PACKAGE_NAME } from '@src/utils';
+import { validate } from 'schema-utils';
+import { loadConfig, optimize } from 'svgo';
+import svgoConfig from '../example/svgo.config';
 
 jest.mock('schema-utils');
 jest.mock('@src/utils', () => ({
@@ -86,7 +84,7 @@ describe('Loader', () => {
 	});
 
 	it('Should call the loader function without factoryMeta object data', async () => {
-		delete _this._module.factoryMeta;
+		_this._module.factoryMeta = undefined;
 		await loader.call(_this, '<svg></svg>');
 	});
 });

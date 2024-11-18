@@ -1,8 +1,8 @@
-import { optimize, loadConfig } from 'svgo';
 import { validate } from 'schema-utils';
-import unTypedSchemaOptions from './schemas/loader-options.json' assert { type: 'json' };
-import { Schema } from 'schema-utils/declarations/validate.js';
-import { LoaderThis, LoaderOptions } from './types.js';
+import type { Schema } from 'schema-utils/declarations/validate.js';
+import { loadConfig, optimize } from 'svgo';
+import unTypedSchemaOptions from './schemas/loader-options.json' with { type: 'json' };
+import type { LoaderOptions, LoaderThis } from './types.js';
 import { PACKAGE_NAME } from './utils.js';
 
 const schemaOptions = unTypedSchemaOptions as Schema;
@@ -49,11 +49,11 @@ export default async function SvgChunkWebpackLoader(
 
 	try {
 		const { configFile } = options;
-		let config;
+		let config = null;
 		if (typeof configFile === 'string') {
 			try {
 				config = await loadConfig(configFile, this.context);
-			} catch (error) {
+			} catch (_error) {
 				this.emitError(new Error(`Cannot find module ${configFile}`));
 			}
 		} else if (configFile !== false) {
