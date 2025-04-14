@@ -27,7 +27,10 @@
 	"type": "module",
 	"exports": "./lib/index.js",
 	"types": "./types/index.d.ts",
-	"files": ["lib", "types"],
+	"files": [
+		"lib",
+		"types"
+	],
 	"scripts": {
 		"biome:check": "biome check",
 		"biome:fix": "biome check --write",
@@ -60,6 +63,9 @@
 		"typescript": "^5.6.3",
 		"webpack": "^5.96.1",
 		"webpack-cli": "^5.1.4"
+	},
+	"optionalDependencies": {
+		"html-webpack-plugin": "^5.6.3"
 	},
 	"peerDependencies": {
 		"webpack": ">= 5.80.0"

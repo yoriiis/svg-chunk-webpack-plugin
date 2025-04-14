@@ -1,12 +1,12 @@
 import path from 'node:path';
 import extend from 'extend';
-import { validate } from 'schema-utils';
-import type { Schema } from 'schema-utils/declarations/validate.js';
+import {validate} from 'schema-utils';
+import type {Schema} from 'schema-utils/declarations/validate.js';
 import svgstore from 'svgstore';
 import webpack from 'webpack';
-import type { Chunk, Compilation, Compiler, Module, NormalModule, sources } from 'webpack';
+import type {Chunk, Compilation, Compiler, Module, NormalModule, sources} from 'webpack';
 import templatePreview from './preview.js';
-import unTypedSchemaOptions from './schemas/plugin-options.json' with { type: 'json' };
+import unTypedSchemaOptions from './schemas/plugin-options.json' with {type: 'json'};
 import type {
 	EntryCache,
 	PluginOptions,
@@ -14,9 +14,10 @@ import type {
 	SpriteManifest,
 	Svgs,
 	SvgsData,
-	SvgstoreConfig
+	SvgstoreConfig,
+	TemplateSpriteInjectionOptions
 } from './types.js';
-import { PACKAGE_NAME, esmResolve } from './utils.js';
+import {PACKAGE_NAME, esmResolve} from './utils.js';
 
 const schemaOptions = unTypedSchemaOptions as Schema;
 
@@ -40,12 +41,17 @@ const compareIds = (a: string | number, b: string | number) => {
 	return 0;
 };
 
+
+
 class SvgChunkWebpackPlugin {
 	options: {
 		filename: string;
 		svgstoreConfig: SvgstoreConfig;
 		generateSpritesManifest: boolean;
 		generateSpritesPreview: boolean;
+		injectSpritesInTemplates: boolean | TemplateSpriteInjectionOptions;
+
+
 	};
 
 	// This need to find plugin from loader context
@@ -64,7 +70,8 @@ class SvgChunkWebpackPlugin {
 				inline: true
 			},
 			generateSpritesManifest: false,
-			generateSpritesPreview: false
+			generateSpritesPreview: false,
+			injectSpritesInTemplates: false
 		};
 
 		this.options = extend(true, DEFAULTS, options);
@@ -174,6 +181,50 @@ class SvgChunkWebpackPlugin {
 		if (!sprites.length) {
 			return;
 		}
+		let HtmlWebpackPluginImport;
+		try {
+			HtmlWebpackPluginImport = await import('html-webpack-plugin');
+		} catch (e) {
+			HtmlWebpackPluginImport = undefined;
+		}
+		if (HtmlWebpackPluginImport && HtmlWebpackPluginImport.default) {
+			const HtmlWebpackPlugin = HtmlWebpackPluginImport.default;
+			const hooks = HtmlWebpackPlugin.getCompilationHooks(compilation);
+			hooks.alterAssetTagGroups.tapAsync({name: 'SvgChunkWebpackPlugin'}, (group, callback) => {
+
+				callback(undefined, group);
+			});
+
+			if (this.options.injectSpritesInTemplates) {
+				hooks.afterTemplateExecution.tapAsync({name: 'SvgChunkWebpackPlugin'}, (data, callback) => {
+					const insertPosition = typeof this.options.injectSpritesInTemplates === 'object' ? this.options.injectSpritesInTemplates.position || 'before' : 'before';
+					const entries = typeof this.options.injectSpritesInTemplates === 'object' ? this.options.injectSpritesInTemplates.entries || [] : [];
+					if( !entries.length || entries.indexOf(data.outputName) > -1) {
+						if (insertPosition === 'before') {
+							const spritesMap = sprites.map(sprite => {
+								return sprite.sprite
+							}).join('');
+							data.html = data.html.replace(/<body([^>]*)>/i, `<body$1>${spritesMap}`);
+						} else {
+							sprites.forEach((s) => {
+								data.bodyTags.unshift(
+									{
+										tagName: 'svg',
+										voidTag: false,
+										meta: {
+											plugin: 'svg-chunk-webpack-plugin'
+										},
+										innerHTML: s.sprite.replace(/<svg[^>]*>/i, '').replace('</svg>', ''), // a bit ugly
+										attributes: {}
+									}
+								);
+							});
+						}
+					}
+					callback(undefined, data);
+				});
+			}
+		}
 
 		// Need to sort (**always**), to have deterministic build
 		const eTag = sprites
@@ -208,9 +259,9 @@ class SvgChunkWebpackPlugin {
 	 * @returns {NormalModule[]} Svgs list
 	 */
 	getSvgsDependenciesByEntrypoint({
-		compilation,
-		entryName
-	}: {
+										compilation,
+										entryName
+									}: {
 		compilation: Compilation;
 		entryName: string;
 	}): NormalModule[] {
@@ -259,9 +310,9 @@ class SvgChunkWebpackPlugin {
 	 * @returns {SvgsData} SVG data (paths, names and content)
 	 */
 	getSvgsData({
-		compilation,
-		svgsDependencies
-	}: {
+					compilation,
+					svgsDependencies
+				}: {
 		compilation: Compilation;
 		svgsDependencies: NormalModule[];
 	}): SvgsData {
@@ -270,7 +321,7 @@ class SvgChunkWebpackPlugin {
 		const svgs: SvgsData['svgs'] = [];
 
 		svgsDependencies.forEach((normalModule: NormalModule) => {
-			const { userRequest } = normalModule;
+			const {userRequest} = normalModule;
 			const source = normalModule.originalSource();
 
 			if (source) {
@@ -313,10 +364,10 @@ class SvgChunkWebpackPlugin {
 	 * @returns {String} Sprite filename
 	 */
 	getFilename({
-		compilation,
-		entryName,
-		sprite
-	}: {
+					compilation,
+					entryName,
+					sprite
+				}: {
 		compilation: Compilation;
 		entryName: string;
 		sprite: string;
@@ -332,7 +383,7 @@ class SvgChunkWebpackPlugin {
 		// Check if the filename option contains the placeholder [fullhash]
 		// [fullhash] corresponds to the Webpack compilation hash
 		if (/\[fullhash\]/i.test(filename)) {
-			const { hashDigestLength } = compilation.outputOptions;
+			const {hashDigestLength} = compilation.outputOptions;
 			const hash = compilation.fullHash ? compilation.fullHash.substring(0, hashDigestLength) : '';
 			filename = filename.replace('[fullhash]', hash);
 		}
@@ -340,8 +391,8 @@ class SvgChunkWebpackPlugin {
 		// Check if the filename option contains the placeholder [contenthash]
 		// [contenthash] corresponds to the sprite content hash
 		if (/\[contenthash\]/i.test(filename)) {
-			const { util } = compilation.compiler.webpack;
-			const { hashFunction, hashDigest, hashDigestLength } = compilation.outputOptions;
+			const {util} = compilation.compiler.webpack;
+			const {hashFunction, hashDigest, hashDigestLength} = compilation.outputOptions;
 			let hash = '';
 			if (hashFunction) {
 				hash = util
@@ -370,11 +421,11 @@ class SvgChunkWebpackPlugin {
 	 * @returns {String} Sprite filename
 	 */
 	async createSpritesManifest({
-		compilation,
-		cache,
-		eTag,
-		spritesManifest
-	}: {
+									compilation,
+									cache,
+									eTag,
+									spritesManifest
+								}: {
 		compilation: Compilation;
 		cache: any;
 		eTag: any;
@@ -404,11 +455,11 @@ class SvgChunkWebpackPlugin {
 	 * @returns {String} Sprite filename
 	 */
 	async createSpritesPreview({
-		compilation,
-		cache,
-		eTag,
-		sprites
-	}: {
+								   compilation,
+								   cache,
+								   eTag,
+								   sprites
+							   }: {
 		compilation: Compilation;
 		cache: any;
 		eTag: any;

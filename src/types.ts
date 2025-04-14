@@ -1,5 +1,6 @@
 import type { Compiler, sources } from 'webpack';
 
+
 export type EntryCache = {
 	source: sources.RawSource;
 	sprite: string;
@@ -58,9 +59,15 @@ export type SvgstoreConfig = {
 	inline?: boolean;
 };
 
+export type TemplateSpriteInjectionOptions = {
+	position: 'before' | 'after',
+	entries:Array<string>
+}
+
 export type PluginOptions = {
 	filename: string;
 	svgstoreConfig: SvgstoreConfig;
 	generateSpritesManifest: boolean;
 	generateSpritesPreview: boolean;
+	injectSpritesInTemplates: boolean | TemplateSpriteInjectionOptions
 };
