@@ -29,12 +29,14 @@ export type Sprite = {
 };
 
 export type LoaderOptions = {
-	configFile: string | boolean;
+	configFile?: string | boolean;
+	config?: Record<string,unknown> | ((resourcePath:string) => Record<string,unknown>)
 };
 
 export type LoaderThis = {
 	getOptions: () => LoaderOptions;
 	context: string;
+	resourcePath:string;
 	_compiler: Compiler;
 	async: () => (error: any, result?: string) => string;
 	_module: {

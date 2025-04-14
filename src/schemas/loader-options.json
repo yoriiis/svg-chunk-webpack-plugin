@@ -12,6 +12,9 @@
 					"type": "boolean"
 				}
 			]
+		},
+		"config": {
+			"description": "a given configuration object or a configuration object builder"
 		}
 	},
 	"additionalProperties": false

@@ -48,16 +48,26 @@ export default async function SvgChunkWebpackLoader(
 	this._module.buildInfo.SVG_CHUNK_WEBPACK_PLUGIN = true;
 
 	try {
-		const { configFile } = options;
-		let config = null;
-		if (typeof configFile === 'string') {
-			try {
-				config = await loadConfig(configFile, this.context);
-			} catch (_error) {
-				this.emitError(new Error(`Cannot find module ${configFile}`));
+
+		let { configFile, config} = options;
+		if( configFile !== undefined) {
+			if (typeof configFile === 'string') {
+				try {
+					config = await loadConfig(configFile, this.context);
+				} catch (_error) {
+					this.emitError(new Error(`Cannot find module ${configFile}`));
+				}
+			} else if (configFile) {
+				config = await loadConfig(null, this.context);
 			}
-		} else if (configFile !== false) {
-			config = await loadConfig(null, this.context);
+		} else {
+			if( config !== undefined) {
+				if (typeof config === 'function') {
+					config = config(this.resourcePath);
+				}
+			} else {
+				config = {};
+			}
 		}
 
 		const result = await optimize(content, { ...config });

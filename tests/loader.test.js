@@ -77,10 +77,10 @@ describe('Loader', () => {
 		expect(result).toStrictEqual('svg stringify');
 	});
 
-	it('Should call the loader function without the config file to load', async () => {
+	it('Should not call the loader function without the config file to load', async () => {
 		await loader.call(_this, '<svg></svg>');
 
-		expect(loadConfig).toHaveBeenCalledWith(null, './');
+		expect(loadConfig).not.toHaveBeenCalledWith(null, './');
 	});
 
 	it('Should call the loader function without factoryMeta object data', async () => {
