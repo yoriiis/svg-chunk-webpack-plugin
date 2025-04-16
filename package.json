@@ -27,10 +27,7 @@
 	"type": "module",
 	"exports": "./lib/index.js",
 	"types": "./types/index.d.ts",
-	"files": [
-		"lib",
-		"types"
-	],
+	"files": ["lib", "types"],
 	"scripts": {
 		"biome:check": "biome check",
 		"biome:fix": "biome check --write",
