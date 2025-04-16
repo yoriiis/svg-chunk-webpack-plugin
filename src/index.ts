@@ -182,7 +182,9 @@ class SvgChunkWebpackPlugin {
 			return;
 		}
 
-		await this.handleHtmlWebpackPlugin(compilation, sprites);
+		if( this.options.injectSpritesInTemplates ) {
+			await this.handleHtmlWebpackPlugin(compilation, sprites);
+		}
 
 		// Need to sort (**always**), to have deterministic build
 		const eTag = sprites
