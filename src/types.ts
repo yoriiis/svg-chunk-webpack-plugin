@@ -60,12 +60,11 @@ export type SvgstoreConfig = {
 
 export type HtmlWebpackPluginAfterEmitPayload = {
 	html: string;
-	outputName: string;
-	bodyTags: Array<any>;
-};
-export type TemplateSpriteInjectionOptions = {
-	position: 'before' | 'after';
-	entries: Array<string>;
+	plugin: {
+		options: {
+			chunks: string[];
+		};
+	};
 };
 
 export type PluginOptions = {
@@ -73,5 +72,5 @@ export type PluginOptions = {
 	svgstoreConfig: SvgstoreConfig;
 	generateSpritesManifest: boolean;
 	generateSpritesPreview: boolean;
-	injectSpritesInTemplates: boolean | TemplateSpriteInjectionOptions;
+	injectSpritesInTemplates: boolean;
 };
