@@ -34,7 +34,6 @@ yarn add svg-chunk-webpack-plugin --dev
 
 > [!WARNING]
 > Plugin `svg-chunk-webpack-plugin@5` is ESM only.
-
 > [!NOTE]
 > Minimum supported `Node.js` version is `16.20.0` and Webpack `>=5.10.3`.
 
