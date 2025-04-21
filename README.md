@@ -32,9 +32,11 @@ npm install svg-chunk-webpack-plugin --save-dev
 yarn add svg-chunk-webpack-plugin --dev
 ```
 
-> **Warning** `svg-chunk-webpack-plugin@5` is ESM only.
->
-> **Note** Minimum supported `Node.js` version is `16.20.0` and Webpack `>=5.10.3`.
+> [!WARNING]
+> Plugin `svg-chunk-webpack-plugin@5` is ESM only.
+
+> [!NOTE]
+> Minimum supported `Node.js` version is `16.20.0` and Webpack `>=5.10.3`.
 
 ## Example
 
@@ -46,7 +48,8 @@ The plugin will generate one SVG sprite for each entrypoints. Sprites are built 
 
 First, let's add the loader and the plugin to the Webpack configuration.
 
-> **Warning** The loader and the plugin need to works together.
+> [!WARNING]
+> The loader and the plugin need to works together.
 
 **webpack.config.js**
 
@@ -70,8 +73,7 @@ export default {
 };
 ```
 
-> **Note**
->
+> [!NOTE]
 > For more flexibility and better performance, inline SVG files are better. Fewer HTTP requests, CSS properties to change the style, no flickering during the page load.
 
 Then, include the sprite in the wanted pages (_we use Twig in the following example_).
@@ -188,7 +190,8 @@ export default {
 };
 ```
 
-> **Note** The `filename` parameter is compatible with Webpack caching placeholders, see the section [caching](#caching).
+> [!NOTE]
+> The `filename` parameter is compatible with Webpack caching placeholders, see the section [caching](#caching).
 
 ### `svgstoreConfig`
 
@@ -219,7 +222,8 @@ export default {
 };
 ```
 
-> **Note** To avoid LinearGradient conflicts, avoid the `display: none` property which breaks SVG definitions.
+> [!NOTE]
+> To avoid LinearGradient conflicts, avoid the `display: none` property which breaks SVG definitions.
 
 ### `generateSpritesManifest`
 
@@ -302,8 +306,7 @@ export default {
 
 With [webpack caching](https://webpack.js.org/guides/caching), several placeholders are available depending on your needs. With SVG inlined in the page, this option is not useful.
 
-> **Note**
->
+> [!NOTE]
 > The `[contenthash]` placeholder is the best option because it depends on the sprite content. Cache placeholders are expensive in build performance, use it only in production mode.
 
 ### `[contenthash]`
