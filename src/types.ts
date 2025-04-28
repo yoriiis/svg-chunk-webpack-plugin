@@ -58,9 +58,19 @@ export type SvgstoreConfig = {
 	inline?: boolean;
 };
 
+export type HtmlWebpackPluginAfterEmitPayload = {
+	html: string;
+	plugin: {
+		options: {
+			chunks: string[];
+		};
+	};
+};
+
 export type PluginOptions = {
 	filename: string;
 	svgstoreConfig: SvgstoreConfig;
 	generateSpritesManifest: boolean;
 	generateSpritesPreview: boolean;
+	injectSpritesInTemplates: boolean;
 };

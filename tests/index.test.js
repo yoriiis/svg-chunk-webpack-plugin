@@ -117,7 +117,8 @@ describe('SvgChunkWebpackPlugin', () => {
 					}
 				},
 				generateSpritesManifest: true,
-				generateSpritesPreview: true
+				generateSpritesPreview: true,
+				injectSpritesInTemplates: false
 			});
 			expect(svgChunkWebpackPlugin.PLUGIN_NAME).toBe('svg-chunk-webpack-plugin');
 			expect(validate).toHaveBeenCalledWith(schemaOptions, svgChunkWebpackPlugin.options, {
@@ -136,7 +137,8 @@ describe('SvgChunkWebpackPlugin', () => {
 					inline: true
 				},
 				generateSpritesManifest: false,
-				generateSpritesPreview: false
+				generateSpritesPreview: false,
+				injectSpritesInTemplates: false
 			});
 		});
 	});
