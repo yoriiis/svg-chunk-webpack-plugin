@@ -250,7 +250,7 @@ class SvgChunkWebpackPlugin {
 		const spriteByEntries = data.plugin.options.chunks.map((entry) =>
 			sprites.find((sprite) => sprite.entryName.includes(entry))
 		);
-		const htmlSprites = spriteByEntries.map((item: any) => item.sprite).join('') ?? '';
+		const htmlSprites = spriteByEntries.reduce((stack, item) => { item?.sprite && stack.push(item.sprite); return stack;}, [] as Array<string>).join('') ?? '';
 		data.html = data.html.replace(/<body([^>]*)>/i, `<body$1>${htmlSprites}`);
 
 		callback(null, data);
