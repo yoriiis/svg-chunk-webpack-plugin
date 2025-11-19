@@ -1,4 +1,4 @@
-import type { Compiler, sources } from 'webpack';
+import type { Compilation, Compiler, sources } from 'webpack';
 
 export type EntryCache = {
 	source: sources.RawSource;
@@ -66,6 +66,24 @@ export type HtmlWebpackPluginAfterEmitPayload = {
 		};
 	};
 };
+
+/**
+ * Minimal interface for HtmlWebpackPlugin constructor
+ * Used to avoid direct dependency on the optional html-webpack-plugin package
+ */
+export interface HtmlWebpackPluginConstructor {
+	getCompilationHooks(compilation: Compilation): {
+		afterTemplateExecution: {
+			tapAsync(
+				options: { name: string },
+				callback: (
+					data: HtmlWebpackPluginAfterEmitPayload,
+					callback: (err: null, data: HtmlWebpackPluginAfterEmitPayload) => void
+				) => void
+			): void;
+		};
+	};
+}
 
 export type PluginOptions = {
 	filename: string;

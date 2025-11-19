@@ -66,11 +66,11 @@
 		"webpack": "^5.102.1",
 		"webpack-cli": "^6.0.1"
 	},
-	"optionalDependencies": {
-		"html-webpack-plugin": "^5.6.3"
-	},
 	"peerDependencies": {
 		"webpack": ">= 5.80.0"
+	},
+	"optionalDependencies": {
+		"html-webpack-plugin": "^5.6.3"
 	},
 	"engines": {
 		"node": ">=22"
