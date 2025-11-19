@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 8.0.0
+
+### ⚠️ Breaking changes
+
+- Updates Node.js ([#35](https://github.com/yoriiis/chunks-webpack-plugin/pull/35))
+  - Minimum supported `Node.js` version is `>=22`
+  - SVGO version 4 (see [SVGO releases](https://github.com/svg/svgo/releases/tag/v4.0.0) for breaking changes)
+  - Updates other packages
+
 ## 7.0.0
 
 ### ⚠️ Breaking changes

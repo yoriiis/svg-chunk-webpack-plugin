@@ -9,8 +9,7 @@ export default {
 				overrides: {
 					inlineStyles: {
 						onlyMatchedOnce: false
-					},
-					removeViewBox: false
+					}
 				}
 			}
 		},

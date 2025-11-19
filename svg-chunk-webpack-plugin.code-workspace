@@ -30,6 +30,12 @@
 			"*.yaml": "yaml",
 			"*.yml": "yaml"
 		},
+		"[javascript][typescript][css][json]": {
+			"editor.codeActionsOnSave": {
+				"quickfix.biome": "explicit",
+				"source.organizeImports.biome": "explicit"
+			}
+		},
 		"prettier.configPath": "./config/prettier.config.cjs",
 		"files.trimTrailingWhitespace": true,
 		"search.exclude": {
