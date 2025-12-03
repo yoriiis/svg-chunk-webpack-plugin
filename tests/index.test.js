@@ -43,6 +43,7 @@ const spritesFixture = {
 const options = {
 	generateSpritesManifest: true,
 	generateSpritesPreview: true,
+	injectSpritesInTemplates: true,
 	svgstoreConfig: {
 		svgAttrs: {
 			'aria-hidden': true,
@@ -117,7 +118,8 @@ describe('SvgChunkWebpackPlugin', () => {
 					}
 				},
 				generateSpritesManifest: true,
-				generateSpritesPreview: true
+				generateSpritesPreview: true,
+				injectSpritesInTemplates: true
 			});
 			expect(svgChunkWebpackPlugin.PLUGIN_NAME).toBe('svg-chunk-webpack-plugin');
 			expect(validate).toHaveBeenCalledWith(schemaOptions, svgChunkWebpackPlugin.options, {
@@ -136,7 +138,8 @@ describe('SvgChunkWebpackPlugin', () => {
 					inline: true
 				},
 				generateSpritesManifest: false,
-				generateSpritesPreview: false
+				generateSpritesPreview: false,
+				injectSpritesInTemplates: false
 			});
 		});
 	});
@@ -184,6 +187,7 @@ describe('SvgChunkWebpackPlugin', () => {
 			svgChunkWebpackPlugin.getFilename = jest.fn();
 			svgChunkWebpackPlugin.createSpritesManifest = jest.fn();
 			svgChunkWebpackPlugin.createSpritesPreview = jest.fn();
+			svgChunkWebpackPlugin.handleHtmlWebpackPlugin = jest.fn();
 
 			compilationWebpack.entrypoints.keys.mockReturnValue(['home']);
 			compilationWebpack.getCache.mockReturnValue({
@@ -201,6 +205,7 @@ describe('SvgChunkWebpackPlugin', () => {
 			expect(compilationWebpack.getCache().getLazyHashedEtag).not.toHaveBeenCalled();
 			expect(compilationWebpack.getCache().mergeEtags).not.toHaveBeenCalled();
 			expect(compilationWebpack.getCache().getItemCache).not.toHaveBeenCalled();
+			expect(svgChunkWebpackPlugin.handleHtmlWebpackPlugin).not.toHaveBeenCalled();
 			expect(svgChunkWebpackPlugin.createSpritesManifest).not.toHaveBeenCalled();
 		});
 
@@ -244,9 +249,9 @@ describe('SvgChunkWebpackPlugin', () => {
 				source: spritesFixture
 			});
 			svgChunkWebpackPlugin.getFilename = jest.fn().mockReturnValue('home.svg');
+			svgChunkWebpackPlugin.handleHtmlWebpackPlugin = jest.fn();
 			svgChunkWebpackPlugin.createSpritesManifest = jest.fn();
 			svgChunkWebpackPlugin.createSpritesPreview = jest.fn();
-
 			compilationWebpack.entrypoints.keys.mockReturnValue(['home']);
 			compilationWebpack.getCache.mockReturnValue({
 				getLazyHashedEtag: jest
@@ -322,6 +327,209 @@ describe('SvgChunkWebpackPlugin', () => {
 			});
 			expect(compilationWebpack.getCache().getLazyHashedEtag).toHaveBeenNthCalledWith(4, {
 				source: spritesFixture
+			});
+			expect(svgChunkWebpackPlugin.handleHtmlWebpackPlugin).toHaveBeenCalled();
+		});
+	});
+
+	describe('SvgChunkWebpackPlugin handleHtmlWebpackPlugin', () => {
+		it('Should register hook when HtmlWebpackPlugin is available', async () => {
+			const tapAsyncMock = jest.fn();
+			const getCompilationHooksMock = jest.fn().mockReturnValue({
+				afterTemplateExecution: {
+					tapAsync: tapAsyncMock
+				}
+			});
+			const HtmlWebpackPlugin = {
+				getCompilationHooks: getCompilationHooksMock
+			};
+			const sprites = [{ entryName: 'home', sprite: spritesFixture.home }];
+
+			svgChunkWebpackPlugin.getHtmlWebpackPluginInstance = jest
+				.fn()
+				.mockReturnValue(HtmlWebpackPlugin);
+
+			await svgChunkWebpackPlugin.handleHtmlWebpackPlugin(compilationWebpack, sprites);
+
+			expect(svgChunkWebpackPlugin.getHtmlWebpackPluginInstance).toHaveBeenCalledWith(
+				compilationWebpack
+			);
+			expect(getCompilationHooksMock).toHaveBeenCalledWith(compilationWebpack);
+			expect(tapAsyncMock).toHaveBeenCalledWith(
+				{ name: 'SvgChunkWebpackPlugin' },
+				expect.any(Function)
+			);
+		});
+
+		it('Should not register hook when HtmlWebpackPlugin is not available', async () => {
+			const sprites = [{ entryName: 'home', sprite: spritesFixture.home }];
+
+			svgChunkWebpackPlugin.getHtmlWebpackPluginInstance = jest.fn().mockReturnValue(null);
+
+			await svgChunkWebpackPlugin.handleHtmlWebpackPlugin(compilationWebpack, sprites);
+
+			expect(svgChunkWebpackPlugin.getHtmlWebpackPluginInstance).toHaveBeenCalledWith(
+				compilationWebpack
+			);
+		});
+	});
+
+	describe('SvgChunkWebpackPlugin getHtmlWebpackPluginInstance', () => {
+		it('Should return HtmlWebpackPlugin instance when plugin is found', () => {
+			const HtmlWebpackPlugin = class HtmlWebpackPlugin {};
+			compilationWebpack.compiler.options = {
+				plugins: [{ constructor: { name: 'OtherPlugin' } }, { constructor: HtmlWebpackPlugin }]
+			};
+
+			const result = svgChunkWebpackPlugin.getHtmlWebpackPluginInstance(compilationWebpack);
+
+			expect(result).toStrictEqual(HtmlWebpackPlugin);
+		});
+
+		it('Should return null when HtmlWebpackPlugin is not found', () => {
+			compilationWebpack.compiler.options = {
+				plugins: [
+					{ constructor: { name: 'OtherPlugin' } },
+					{ constructor: { name: 'AnotherPlugin' } }
+				]
+			};
+
+			const result = svgChunkWebpackPlugin.getHtmlWebpackPluginInstance(compilationWebpack);
+
+			expect(result).toStrictEqual(null);
+		});
+
+		it('Should return null when plugins array is empty', () => {
+			compilationWebpack.compiler.options = {
+				plugins: []
+			};
+
+			const result = svgChunkWebpackPlugin.getHtmlWebpackPluginInstance(compilationWebpack);
+
+			expect(result).toStrictEqual(null);
+		});
+	});
+
+	describe('SvgChunkWebpackPlugin injectSpriteInHtmlWebpackPluginTemplate', () => {
+		it('Should inject sprite in body tag', () => {
+			const sprites = [
+				{ entryName: 'home', sprite: spritesFixture.home },
+				{ entryName: 'news', sprite: '<svg>news</svg>' }
+			];
+			const data = {
+				html: '<html><head></head><body><div>content</div></body></html>',
+				plugin: {
+					options: {
+						chunks: ['home']
+					}
+				}
+			};
+			const callback = jest.fn();
+
+			svgChunkWebpackPlugin.injectSpriteInHtmlWebpackPluginTemplate(
+				compilationWebpack,
+				sprites,
+				data,
+				callback
+			);
+
+			expect(callback).toHaveBeenCalledWith(null, {
+				html: `<html><head></head><body>${spritesFixture.home}<div>content</div></body></html>`,
+				plugin: {
+					options: {
+						chunks: ['home']
+					}
+				}
+			});
+		});
+
+		it('Should inject multiple sprites for multiple chunks', () => {
+			const sprites = [
+				{ entryName: 'home', sprite: spritesFixture.home },
+				{ entryName: 'news', sprite: '<svg>news</svg>' }
+			];
+			const data = {
+				html: '<html><body><div>content</div></body></html>',
+				plugin: {
+					options: {
+						chunks: ['home', 'news']
+					}
+				}
+			};
+			const callback = jest.fn();
+
+			svgChunkWebpackPlugin.injectSpriteInHtmlWebpackPluginTemplate(
+				compilationWebpack,
+				sprites,
+				data,
+				callback
+			);
+
+			expect(callback).toHaveBeenCalledWith(null, {
+				html: `<html><body>${spritesFixture.home}<svg>news</svg><div>content</div></body></html>`,
+				plugin: {
+					options: {
+						chunks: ['home', 'news']
+					}
+				}
+			});
+		});
+
+		it('Should not inject sprite when no matching entry', () => {
+			const sprites = [{ entryName: 'home', sprite: spritesFixture.home }];
+			const data = {
+				html: '<html><body><div>content</div></body></html>',
+				plugin: {
+					options: {
+						chunks: ['other']
+					}
+				}
+			};
+			const callback = jest.fn();
+
+			svgChunkWebpackPlugin.injectSpriteInHtmlWebpackPluginTemplate(
+				compilationWebpack,
+				sprites,
+				data,
+				callback
+			);
+
+			expect(callback).toHaveBeenCalledWith(null, {
+				html: '<html><body><div>content</div></body></html>',
+				plugin: {
+					options: {
+						chunks: ['other']
+					}
+				}
+			});
+		});
+
+		it('Should handle body tag with attributes', () => {
+			const sprites = [{ entryName: 'home', sprite: spritesFixture.home }];
+			const data = {
+				html: '<html><body class="main" id="app"><div>content</div></body></html>',
+				plugin: {
+					options: {
+						chunks: ['home']
+					}
+				}
+			};
+			const callback = jest.fn();
+
+			svgChunkWebpackPlugin.injectSpriteInHtmlWebpackPluginTemplate(
+				compilationWebpack,
+				sprites,
+				data,
+				callback
+			);
+
+			expect(callback).toHaveBeenCalledWith(null, {
+				html: `<html><body class="main" id="app">${spritesFixture.home}<div>content</div></body></html>`,
+				plugin: {
+					options: {
+						chunks: ['home']
+					}
+				}
 			});
 		});
 	});

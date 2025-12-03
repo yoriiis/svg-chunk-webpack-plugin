@@ -67,6 +67,9 @@
 	"peerDependencies": {
 		"webpack": ">= 5.80.0"
 	},
+	"optionalDependencies": {
+		"html-webpack-plugin": "^5.6.3"
+	},
 	"engines": {
 		"node": ">=22"
 	}
