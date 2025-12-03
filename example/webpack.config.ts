@@ -1,13 +1,13 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import SvgChunkWebpackPlugin from 'svg-chunk-webpack-plugin';
 import TerserJSPlugin from 'terser-webpack-plugin';
-import SvgChunkWebpackPlugin from '../lib/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default (_env, argv) => {
+export default (_env: any, argv: { mode: string }) => {
 	const isProduction = argv.mode === 'production';
 
 	return {
