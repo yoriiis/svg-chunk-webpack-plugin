@@ -280,6 +280,79 @@ class SvgChunkWebpackPlugin {
 	}
 
 	/**
+	 * Get SVGs filtered by entrypoints
+	 * @param {Object} options
+	 * @param {Compilation} options.compilation Webpack or Rspack compilation
+	 * @param {String} options.entryName Entrypoint name
+	 * @returns {NormalModule[]} Svgs list
+	 */
+	getSvgsDependenciesByEntrypoint({
+		compilation,
+		entryName
+	}: {
+		compilation: Compilation;
+		entryName: string;
+	}): NormalModule[] {
+		// When you use module federation you can don't have entries
+		const entries = compilation.entrypoints;
+		if (!entries || entries.size === 0) {
+			return [];
+		}
+
+		const entry = entries.get(entryName);
+		if (!entry) {
+			return [];
+		}
+
+		// Dispatch to the appropriate implementation
+		if ((compilation.compiler as any).rspack) {
+			return this.getSvgsDependenciesByEntrypointRspack({ compilation, entryName });
+		}
+
+		return this.getSvgsDependenciesByEntrypointWebpack({ compilation, entry });
+	}
+
+	/**
+	 * Get SVGs dependencies for Webpack using chunk graph
+	 * @param {Object} options
+	 * @param {Compilation} options.compilation Webpack compilation
+	 * @param {Entrypoint} options.entry Entry object from entrypoints
+	 * @returns {NormalModule[]} Svgs list
+	 */
+	getSvgsDependenciesByEntrypointWebpack({
+		compilation,
+		entry
+	}: {
+		compilation: Compilation;
+		entry: NonNullable<ReturnType<typeof compilation.entrypoints.get>>;
+	}): NormalModule[] {
+		const listSvgsDependencies: NormalModule[] = [];
+
+		entry.chunks.forEach((chunk: Chunk) => {
+			const modules = compilation.chunkGraph.getOrderedChunkModulesIterable(
+				chunk,
+				(a: Module, b: Module) =>
+					compareIds(
+						a.readableIdentifier(compilation.requestShortener),
+						b.readableIdentifier(compilation.requestShortener)
+					)
+			);
+			for (const module of modules) {
+				if (module.buildInfo?.SVG_CHUNK_WEBPACK_PLUGIN) {
+					listSvgsDependencies.push(module as NormalModule);
+
+					// Mark module as not side effect free after processing in graph
+					if (module.buildMeta) {
+						module.buildMeta.sideEffectFree = false;
+					}
+				}
+			}
+		});
+
+		return listSvgsDependencies;
+	}
+
+	/**
 	 * Get SVGs dependencies for Rspack using module graph traversal
 	 * @param {Object} options
 	 * @param {Compilation} options.compilation Rspack compilation
@@ -330,79 +403,6 @@ class SvgChunkWebpackPlugin {
 		}
 
 		return Array.from(svgModules);
-	}
-
-	/**
-	 * Get SVGs dependencies for Webpack using chunk graph
-	 * @param {Object} options
-	 * @param {Compilation} options.compilation Webpack compilation
-	 * @param {Entrypoint} options.entry Entry object from entrypoints
-	 * @returns {NormalModule[]} Svgs list
-	 */
-	getSvgsDependenciesByEntrypointWebpack({
-		compilation,
-		entry
-	}: {
-		compilation: Compilation;
-		entry: NonNullable<ReturnType<typeof compilation.entrypoints.get>>;
-	}): NormalModule[] {
-		const listSvgsDependencies: NormalModule[] = [];
-
-		entry.chunks.forEach((chunk: Chunk) => {
-			const modules = compilation.chunkGraph.getOrderedChunkModulesIterable(
-				chunk,
-				(a: Module, b: Module) =>
-					compareIds(
-						a.readableIdentifier(compilation.requestShortener),
-						b.readableIdentifier(compilation.requestShortener)
-					)
-			);
-			for (const module of modules) {
-				if (module.buildInfo?.SVG_CHUNK_WEBPACK_PLUGIN) {
-					listSvgsDependencies.push(module as NormalModule);
-
-					// Mark module as not side effect free after processing in graph
-					if (module.buildMeta) {
-						module.buildMeta.sideEffectFree = false;
-					}
-				}
-			}
-		});
-
-		return listSvgsDependencies;
-	}
-
-	/**
-	 * Get SVGs filtered by entrypoints
-	 * @param {Object} options
-	 * @param {Compilation} options.compilation Webpack or Rspack compilation
-	 * @param {String} options.entryName Entrypoint name
-	 * @returns {NormalModule[]} Svgs list
-	 */
-	getSvgsDependenciesByEntrypoint({
-		compilation,
-		entryName
-	}: {
-		compilation: Compilation;
-		entryName: string;
-	}): NormalModule[] {
-		// When you use module federation you can don't have entries
-		const entries = compilation.entrypoints;
-		if (!entries || entries.size === 0) {
-			return [];
-		}
-
-		const entry = entries.get(entryName);
-		if (!entry) {
-			return [];
-		}
-
-		// Dispatch to the appropriate implementation
-		if ((compilation.compiler as any).rspack) {
-			return this.getSvgsDependenciesByEntrypointRspack({ compilation, entryName });
-		}
-
-		return this.getSvgsDependenciesByEntrypointWebpack({ compilation, entry });
 	}
 
 	/**

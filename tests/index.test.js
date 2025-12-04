@@ -26,6 +26,7 @@ jest.mock('webpack', () => {
 
 let svgChunkWebpackPlugin;
 let compilationWebpack;
+let compilationRspack;
 let normalModule;
 const svgsFixture = {
 	gradient:
@@ -88,6 +89,51 @@ beforeEach(() => {
 			webpack: {
 				Compilation: {
 					PROCESS_ASSETS_STAGE_ADDITIONAL: 'webpack-stage'
+				},
+				sources: {
+					RawSource: jest.fn()
+				},
+				util: {
+					createHash: jest.fn()
+				}
+			}
+		}
+	};
+
+	compilationRspack = {
+		assets: {},
+		hash: '',
+		entrypoints: {
+			get: jest.fn(),
+			keys: jest.fn(),
+			size: 1
+		},
+		entries: {
+			get: jest.fn()
+		},
+		options: {
+			mode: 'development',
+			output: {
+				path: '/svg-chunk-webpack-plugin/example/dist-rspack',
+				publicPath: '/dist-rspack'
+			}
+		},
+		emitAsset: jest.fn(),
+		hooks: {
+			processAssets: {
+				tapPromise: jest.fn()
+			}
+		},
+		moduleGraph: {
+			getModule: jest.fn(),
+			getOutgoingConnections: jest.fn()
+		},
+		getCache: jest.fn(),
+		getPath: jest.fn(),
+		compiler: {
+			rspack: {
+				Compilation: {
+					PROCESS_ASSETS_STAGE_ADDITIONAL: 'rspack-stage'
 				},
 				sources: {
 					RawSource: jest.fn()
@@ -167,7 +213,7 @@ describe('SvgChunkWebpackPlugin', () => {
 	});
 
 	describe('SvgChunkWebpackPlugin hookCallback', () => {
-		it('Should call the hookCallback function', () => {
+		it('Should call the hookCallback function with Webpack', () => {
 			svgChunkWebpackPlugin.addAssets.bind = jest.fn();
 
 			svgChunkWebpackPlugin.hookCallback(compilationWebpack);
@@ -178,6 +224,20 @@ describe('SvgChunkWebpackPlugin', () => {
 					stage: ''
 				},
 				svgChunkWebpackPlugin.addAssets.bind(svgChunkWebpackPlugin, compilationWebpack)
+			);
+		});
+
+		it('Should call the hookCallback function with Rspack', () => {
+			svgChunkWebpackPlugin.addAssets.bind = jest.fn();
+
+			svgChunkWebpackPlugin.hookCallback(compilationRspack);
+
+			expect(compilationRspack.hooks.processAssets.tapPromise).toHaveBeenCalledWith(
+				{
+					name: 'SvgChunkWebpackPlugin',
+					stage: 'rspack-stage'
+				},
+				svgChunkWebpackPlugin.addAssets.bind(svgChunkWebpackPlugin, compilationRspack)
 			);
 		});
 	});
@@ -538,7 +598,15 @@ describe('SvgChunkWebpackPlugin', () => {
 	});
 
 	describe('SvgChunkWebpackPlugin getSvgsDependenciesByEntrypoint', () => {
-		it('Should call the getSvgsDependenciesByEntrypoint function', () => {
+		it('Should call the getSvgsDependenciesByEntrypoint function with Webpack', () => {
+			svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointWebpack = jest.fn().mockReturnValue([
+				{
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				}
+			]);
 			compilationWebpack.entrypoints.get.mockReturnValue({
 				chunks: [
 					{
@@ -546,36 +614,25 @@ describe('SvgChunkWebpackPlugin', () => {
 					}
 				]
 			});
-			compilationWebpack.chunkGraph.getOrderedChunkModulesIterable.mockReturnValue([
-				{
-					buildMeta: {
-						sideEffectFree: null
-					},
-					buildInfo: {
-						hash: '1234',
-						SVG_CHUNK_WEBPACK_PLUGIN: true
-					}
-				},
-				{
-					buildMeta: {
-						sideEffectFree: null
-					},
-					buildInfo: {
-						hash: '4567'
-					}
-				}
-			]);
 
 			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypoint({
 				compilation: compilationWebpack,
 				entryName: 'home'
 			});
 
+			expect(compilationWebpack.entrypoints.get).toHaveBeenCalledWith('home');
+			expect(svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointWebpack).toHaveBeenCalledWith({
+				compilation: compilationWebpack,
+				entry: {
+					chunks: [
+						{
+							hash: 'beb18939e5093045258b8d24a34dd844'
+						}
+					]
+				}
+			});
 			expect(result).toStrictEqual([
 				{
-					buildMeta: {
-						sideEffectFree: false
-					},
 					buildInfo: {
 						hash: '1234',
 						SVG_CHUNK_WEBPACK_PLUGIN: true
@@ -584,33 +641,29 @@ describe('SvgChunkWebpackPlugin', () => {
 			]);
 		});
 
-		it('Should call the getSvgsDependenciesByEntrypoint function without buildMeta', () => {
-			compilationWebpack.entrypoints.get.mockReturnValue({
-				chunks: [
-					{
-						hash: 'beb18939e5093045258b8d24a34dd844'
-					}
-				]
-			});
-			compilationWebpack.chunkGraph.getOrderedChunkModulesIterable.mockReturnValue([
+		it('Should call the getSvgsDependenciesByEntrypoint function with Rspack', () => {
+			svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack = jest.fn().mockReturnValue([
 				{
 					buildInfo: {
 						hash: '1234',
 						SVG_CHUNK_WEBPACK_PLUGIN: true
 					}
-				},
-				{
-					buildInfo: {
-						hash: '4567'
-					}
 				}
 			]);
+			compilationRspack.entrypoints.get.mockReturnValue({
+				chunks: []
+			});
 
 			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypoint({
-				compilation: compilationWebpack,
+				compilation: compilationRspack,
 				entryName: 'home'
 			});
 
+			expect(compilationRspack.entrypoints.get).toHaveBeenCalledWith('home');
+			expect(svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack).toHaveBeenCalledWith({
+				compilation: compilationRspack,
+				entryName: 'home'
+			});
 			expect(result).toStrictEqual([
 				{
 					buildInfo: {
@@ -652,6 +705,231 @@ describe('SvgChunkWebpackPlugin', () => {
 
 			expect(result).toStrictEqual([]);
 			expect(compilationWebpack.entrypoints.get).toHaveBeenCalledWith('home');
+		});
+	});
+
+	describe('SvgChunkWebpackPlugin getSvgsDependenciesByEntrypointWebpack', () => {
+		it('Should call the getSvgsDependenciesByEntrypointWebpack function', () => {
+			const entry = {
+				chunks: [
+					{
+						hash: 'beb18939e5093045258b8d24a34dd844'
+					}
+				]
+			};
+			compilationWebpack.chunkGraph.getOrderedChunkModulesIterable.mockReturnValue([
+				{
+					buildMeta: {
+						sideEffectFree: null
+					},
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				},
+				{
+					buildMeta: {
+						sideEffectFree: null
+					},
+					buildInfo: {
+						hash: '4567'
+					}
+				}
+			]);
+
+			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointWebpack({
+				compilation: compilationWebpack,
+				entry
+			});
+
+			expect(result).toStrictEqual([
+				{
+					buildMeta: {
+						sideEffectFree: false
+					},
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				}
+			]);
+		});
+
+		it('Should call the getSvgsDependenciesByEntrypointWebpack function without buildMeta', () => {
+			const entry = {
+				chunks: [
+					{
+						hash: 'beb18939e5093045258b8d24a34dd844'
+					}
+				]
+			};
+			compilationWebpack.chunkGraph.getOrderedChunkModulesIterable.mockReturnValue([
+				{
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				},
+				{
+					buildInfo: {
+						hash: '4567'
+					}
+				}
+			]);
+
+			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointWebpack({
+				compilation: compilationWebpack,
+				entry
+			});
+
+			expect(result).toStrictEqual([
+				{
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				}
+			]);
+		});
+	});
+
+	describe('SvgChunkWebpackPlugin getSvgsDependenciesByEntrypointRspack', () => {
+		it('Should call the getSvgsDependenciesByEntrypointRspack function', () => {
+			const svgModule = {
+				buildMeta: {
+					sideEffectFree: null
+				},
+				buildInfo: {
+					hash: '1234',
+					SVG_CHUNK_WEBPACK_PLUGIN: true
+				}
+			};
+			const entryModule = {
+				dependencies: [{ id: 'home-dep' }]
+			};
+			const mainModule = {
+				id: 'main'
+			};
+
+			compilationRspack.entries.get.mockReturnValue(entryModule);
+			compilationRspack.moduleGraph.getModule.mockReturnValue(mainModule);
+			compilationRspack.moduleGraph.getOutgoingConnections
+				.mockReturnValueOnce([{ module: svgModule }])
+				.mockReturnValueOnce([]);
+
+			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack({
+				compilation: compilationRspack,
+				entryName: 'home'
+			});
+
+			expect(compilationRspack.entries.get).toHaveBeenCalledWith('home');
+			expect(compilationRspack.moduleGraph.getModule).toHaveBeenCalledWith({ id: 'home-dep' });
+			expect(compilationRspack.moduleGraph.getOutgoingConnections).toHaveBeenCalledWith(mainModule);
+			expect(compilationRspack.moduleGraph.getOutgoingConnections).toHaveBeenCalledWith(svgModule);
+			expect(result).toStrictEqual([
+				{
+					buildMeta: {
+						sideEffectFree: false
+					},
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				}
+			]);
+		});
+
+		it('Should call the getSvgsDependenciesByEntrypointRspack function without buildMeta', () => {
+			const svgModule = {
+				buildInfo: {
+					hash: '1234',
+					SVG_CHUNK_WEBPACK_PLUGIN: true
+				}
+			};
+			const entryModule = {
+				dependencies: [{ id: 'home-dep' }]
+			};
+			const mainModule = {
+				id: 'main'
+			};
+
+			compilationRspack.entries.get.mockReturnValue(entryModule);
+			compilationRspack.moduleGraph.getModule.mockReturnValue(mainModule);
+			compilationRspack.moduleGraph.getOutgoingConnections
+				.mockReturnValueOnce([{ module: svgModule }])
+				.mockReturnValueOnce([]);
+
+			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack({
+				compilation: compilationRspack,
+				entryName: 'home'
+			});
+
+			expect(result).toStrictEqual([
+				{
+					buildInfo: {
+						hash: '1234',
+						SVG_CHUNK_WEBPACK_PLUGIN: true
+					}
+				}
+			]);
+		});
+
+		it('Should call the getSvgsDependenciesByEntrypointRspack function with no entry module', () => {
+			compilationRspack.entries.get.mockReturnValue(null);
+
+			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack({
+				compilation: compilationRspack,
+				entryName: 'home'
+			});
+
+			expect(compilationRspack.entries.get).toHaveBeenCalledWith('home');
+			expect(compilationRspack.moduleGraph.getModule).not.toHaveBeenCalled();
+			expect(result).toStrictEqual([]);
+		});
+
+		it('Should call the getSvgsDependenciesByEntrypointRspack function with no dependencies', () => {
+			const entryModule = {
+				dependencies: []
+			};
+
+			compilationRspack.entries.get.mockReturnValue(entryModule);
+
+			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack({
+				compilation: compilationRspack,
+				entryName: 'home'
+			});
+
+			expect(compilationRspack.entries.get).toHaveBeenCalledWith('home');
+			expect(compilationRspack.moduleGraph.getModule).not.toHaveBeenCalled();
+			expect(result).toStrictEqual([]);
+		});
+
+		it('Should call the getSvgsDependenciesByEntrypointRspack function and avoid circular dependencies', () => {
+			const svgModule = {
+				buildInfo: {
+					SVG_CHUNK_WEBPACK_PLUGIN: true
+				}
+			};
+			const moduleA = {
+				id: 'a'
+			};
+			const entryModule = {
+				dependencies: [{ id: 'home-dep' }]
+			};
+
+			compilationRspack.entries.get.mockReturnValue(entryModule);
+			compilationRspack.moduleGraph.getModule.mockReturnValue(moduleA);
+			compilationRspack.moduleGraph.getOutgoingConnections
+				.mockReturnValueOnce([{ module: svgModule }, { module: moduleA }]) // moduleA -> svgModule and back to itself
+				.mockReturnValueOnce([{ module: moduleA }]); // svgModule -> moduleA (circular)
+
+			const result = svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack({
+				compilation: compilationRspack,
+				entryName: 'home'
+			});
+
+			expect(compilationRspack.moduleGraph.getOutgoingConnections).toHaveBeenCalledTimes(2);
+			expect(result).toStrictEqual([svgModule]);
 		});
 	});
 

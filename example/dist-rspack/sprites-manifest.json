@@ -1,0 +1,11 @@
+{
+  "home": [
+    "src/svgs/smiley-love.svg",
+    "src/svgs/video.svg",
+    "src/svgs/gradient.svg"
+  ],
+  "news": [
+    "src/svgs/popcorn.svg",
+    "src/svgs/smiley-surprised.svg"
+  ]
+}

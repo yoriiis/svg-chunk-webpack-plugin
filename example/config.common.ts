@@ -50,9 +50,9 @@ export default function createConfig(_env: any, argv: { mode: string }) {
 						style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
 					}
 				},
-			// injectSpritesInTemplates requires HtmlWebpackPlugin or HtmlRspackPlugin
-			injectSpritesInTemplates: true
-		})
+				// injectSpritesInTemplates requires HtmlWebpackPlugin or HtmlRspackPlugin
+				injectSpritesInTemplates: true
+			})
 		],
 		stats: {
 			builtAt: false,
