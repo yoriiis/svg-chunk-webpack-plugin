@@ -307,11 +307,20 @@ class SvgChunkWebpackPlugin {
 		}
 
 		// Dispatch to the appropriate implementation
+		let svgModules: NormalModule[];
 		if ((compilation.compiler as any).rspack) {
-			return this.getSvgsDependenciesByEntrypointRspack({ compilation, entryName });
+			svgModules = this.getSvgsDependenciesByEntrypointRspack({ compilation, entryName });
+		} else {
+			svgModules = this.getSvgsDependenciesByEntrypointWebpack({ compilation, entry });
 		}
 
-		return this.getSvgsDependenciesByEntrypointWebpack({ compilation, entry });
+		// Sort modules to have deterministic build for both Webpack and Rspack
+		return svgModules.sort((a: NormalModule, b: NormalModule) =>
+			compareIds(
+				a.readableIdentifier(compilation.requestShortener),
+				b.readableIdentifier(compilation.requestShortener)
+			)
+		);
 	}
 
 	/**
@@ -319,7 +328,7 @@ class SvgChunkWebpackPlugin {
 	 * @param {Object} options
 	 * @param {Compilation} options.compilation Webpack compilation
 	 * @param {Entrypoint} options.entry Entry object from entrypoints
-	 * @returns {NormalModule[]} Svgs list
+	 * @returns {NormalModule[]} Svgs list (unsorted, will be sorted by parent function)
 	 */
 	getSvgsDependenciesByEntrypointWebpack({
 		compilation,
@@ -331,14 +340,7 @@ class SvgChunkWebpackPlugin {
 		const listSvgsDependencies: NormalModule[] = [];
 
 		entry.chunks.forEach((chunk: Chunk) => {
-			const modules = compilation.chunkGraph.getOrderedChunkModulesIterable(
-				chunk,
-				(a: Module, b: Module) =>
-					compareIds(
-						a.readableIdentifier(compilation.requestShortener),
-						b.readableIdentifier(compilation.requestShortener)
-					)
-			);
+			const modules = compilation.chunkGraph.getChunkModules(chunk);
 			for (const module of modules) {
 				if (module.buildInfo?.SVG_CHUNK_WEBPACK_PLUGIN) {
 					listSvgsDependencies.push(module as NormalModule);
@@ -359,7 +361,7 @@ class SvgChunkWebpackPlugin {
 	 * @param {Object} options
 	 * @param {Compilation} options.compilation Rspack compilation
 	 * @param {String} options.entryName Entrypoint name
-	 * @returns {NormalModule[]} Svgs list
+	 * @returns {NormalModule[]} Svgs list (unsorted, will be sorted by parent function)
 	 */
 	getSvgsDependenciesByEntrypointRspack({
 		compilation,

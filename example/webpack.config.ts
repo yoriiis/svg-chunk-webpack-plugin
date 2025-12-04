@@ -11,7 +11,9 @@ export default (env: any, argv: { mode: string }) => {
 	const config = createConfig(env, argv);
 	const isProduction = argv.mode === 'production';
 
-	// Webpack-specific: Add HtmlWebpackPlugin (required for injectSpritesInTemplates)
+	config.output.path = path.resolve(__dirname, './dist');
+	config.output.publicPath = '/dist/';
+
 	config.plugins.push(
 		new HtmlWebpackPlugin({
 			filename: 'home.html',
@@ -22,7 +24,6 @@ export default (env: any, argv: { mode: string }) => {
 		})
 	);
 
-	// Webpack-specific: Add TerserJS minimizer
 	if (isProduction) {
 		config.optimization.minimizer = [
 			new TerserJSPlugin({

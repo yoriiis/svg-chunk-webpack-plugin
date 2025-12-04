@@ -5,7 +5,7 @@ import SvgChunkWebpackPlugin from 'svg-chunk-webpack-plugin';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default function createConfig(_env: any, argv: { mode: string }) {
+export default function createConfig(_env: any, argv: { mode: string }): any {
 	const isProduction = argv.mode === 'production';
 
 	return {
@@ -18,10 +18,11 @@ export default function createConfig(_env: any, argv: { mode: string }) {
 		watchOptions: {
 			ignored: /node_modules/
 		},
+		// cache: {
+		// 	type: 'filesystem'
+		// },
 		devtool: false,
 		output: {
-			// path: path.resolve(__dirname, './dist'),
-			// publicPath: '/dist/',
 			filename: 'js/[name].js'
 		},
 		module: {
@@ -50,9 +51,8 @@ export default function createConfig(_env: any, argv: { mode: string }) {
 						style: 'position: absolute; width: 0; height: 0; overflow: hidden;'
 					}
 				},
-				// injectSpritesInTemplates requires HtmlWebpackPlugin or HtmlRspackPlugin
-				injectSpritesInTemplates: true
-			})
+				injectSpritesInTemplates: true, // Requires HtmlWebpackPlugin or HtmlRspackPlugin
+			}),
 		],
 		stats: {
 			builtAt: false,

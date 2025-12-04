@@ -81,7 +81,10 @@ beforeEach(() => {
 			}
 		},
 		chunkGraph: {
-			getOrderedChunkModulesIterable: jest.fn()
+			getChunkModules: jest.fn()
+		},
+		requestShortener: {
+			shorten: jest.fn((str) => str)
 		},
 		getCache: jest.fn(),
 		getPath: jest.fn(),
@@ -127,6 +130,9 @@ beforeEach(() => {
 		moduleGraph: {
 			getModule: jest.fn(),
 			getOutgoingConnections: jest.fn()
+		},
+		requestShortener: {
+			shorten: jest.fn((str) => str)
 		},
 		getCache: jest.fn(),
 		getPath: jest.fn(),
@@ -610,14 +616,16 @@ describe('SvgChunkWebpackPlugin', () => {
 
 	describe('SvgChunkWebpackPlugin getSvgsDependenciesByEntrypoint', () => {
 		it('Should call the getSvgsDependenciesByEntrypoint function with Webpack', () => {
-			svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointWebpack = jest.fn().mockReturnValue([
-				{
-					buildInfo: {
-						hash: '1234',
-						SVG_CHUNK_WEBPACK_PLUGIN: true
-					}
-				}
-			]);
+			const mockModule = {
+				buildInfo: {
+					hash: '1234',
+					SVG_CHUNK_WEBPACK_PLUGIN: true
+				},
+				readableIdentifier: jest.fn(() => 'module-a')
+			};
+			svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointWebpack = jest
+				.fn()
+				.mockReturnValue([mockModule]);
 			compilationWebpack.entrypoints.get.mockReturnValue({
 				chunks: [
 					{
@@ -642,25 +650,20 @@ describe('SvgChunkWebpackPlugin', () => {
 					]
 				}
 			});
-			expect(result).toStrictEqual([
-				{
-					buildInfo: {
-						hash: '1234',
-						SVG_CHUNK_WEBPACK_PLUGIN: true
-					}
-				}
-			]);
+			expect(result).toStrictEqual([mockModule]);
 		});
 
 		it('Should call the getSvgsDependenciesByEntrypoint function with Rspack', () => {
-			svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack = jest.fn().mockReturnValue([
-				{
-					buildInfo: {
-						hash: '1234',
-						SVG_CHUNK_WEBPACK_PLUGIN: true
-					}
-				}
-			]);
+			const mockModule = {
+				buildInfo: {
+					hash: '1234',
+					SVG_CHUNK_WEBPACK_PLUGIN: true
+				},
+				readableIdentifier: jest.fn(() => 'module-a')
+			};
+			svgChunkWebpackPlugin.getSvgsDependenciesByEntrypointRspack = jest
+				.fn()
+				.mockReturnValue([mockModule]);
 			compilationRspack.entrypoints.get.mockReturnValue({
 				chunks: []
 			});
@@ -675,14 +678,7 @@ describe('SvgChunkWebpackPlugin', () => {
 				compilation: compilationRspack,
 				entryName: 'home'
 			});
-			expect(result).toStrictEqual([
-				{
-					buildInfo: {
-						hash: '1234',
-						SVG_CHUNK_WEBPACK_PLUGIN: true
-					}
-				}
-			]);
+			expect(result).toStrictEqual([mockModule]);
 		});
 
 		it('Should call the getSvgsDependenciesByEntrypoint function with entries null', () => {
@@ -728,7 +724,7 @@ describe('SvgChunkWebpackPlugin', () => {
 					}
 				]
 			};
-			compilationWebpack.chunkGraph.getOrderedChunkModulesIterable.mockReturnValue([
+			compilationWebpack.chunkGraph.getChunkModules.mockReturnValue([
 				{
 					buildMeta: {
 						sideEffectFree: null
@@ -774,7 +770,7 @@ describe('SvgChunkWebpackPlugin', () => {
 					}
 				]
 			};
-			compilationWebpack.chunkGraph.getOrderedChunkModulesIterable.mockReturnValue([
+			compilationWebpack.chunkGraph.getChunkModules.mockReturnValue([
 				{
 					buildInfo: {
 						hash: '1234',
