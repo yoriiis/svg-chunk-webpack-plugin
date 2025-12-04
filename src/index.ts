@@ -99,10 +99,16 @@ class SvgChunkWebpackPlugin {
 	 */
 	async hookCallback(compilation: Compilation): Promise<void> {
 		// PROCESS_ASSETS_STAGE_ADDITIONAL: Add additional assets to the compilation
+		// Support both Webpack and Rspack by getting stage from compiler namespace
+		const compiler = compilation.compiler as any;
+		const stage =
+			(compiler.rspack || compiler.webpack)?.Compilation?.PROCESS_ASSETS_STAGE_ADDITIONAL ||
+			webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL;
+
 		compilation.hooks.processAssets.tapPromise(
 			{
 				name: 'SvgChunkWebpackPlugin',
-				stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+				stage
 			},
 			this.addAssets.bind(this, compilation)
 		);
@@ -274,31 +280,73 @@ class SvgChunkWebpackPlugin {
 	}
 
 	/**
-	 * Get SVGs filtered by entrypoints
+	 * Get SVGs dependencies for Rspack using module graph traversal
 	 * @param {Object} options
-	 * @param {Compilation} options.compilation Webpack compilation
+	 * @param {Compilation} options.compilation Rspack compilation
 	 * @param {String} options.entryName Entrypoint name
 	 * @returns {NormalModule[]} Svgs list
 	 */
-	getSvgsDependenciesByEntrypoint({
+	getSvgsDependenciesByEntrypointRspack({
 		compilation,
 		entryName
 	}: {
 		compilation: Compilation;
 		entryName: string;
 	}): NormalModule[] {
+		const visitedModules = new Set<Module>();
+		const svgModules = new Set<NormalModule>();
+
+		// Function to recursively collect all dependencies
+		const collectDependencies = (module: Module) => {
+			if (!module || visitedModules.has(module)) return;
+			visitedModules.add(module);
+
+			// Check if this module is an SVG
+			if (module.buildInfo?.SVG_CHUNK_WEBPACK_PLUGIN) {
+				svgModules.add(module as NormalModule);
+				if (module.buildMeta) {
+					module.buildMeta.sideEffectFree = false;
+				}
+			}
+
+			// Get all dependencies of this module
+			const connections = compilation.moduleGraph.getOutgoingConnections(module);
+			for (const connection of connections) {
+				if (connection.module) {
+					collectDependencies(connection.module);
+				}
+			}
+		};
+
+		// Get the entry module for this entry name
+		const entryModule = compilation.entries.get(entryName);
+
+		if (entryModule?.dependencies?.[0]) {
+			const dep = entryModule.dependencies[0];
+			const module = compilation.moduleGraph.getModule(dep);
+			if (module) {
+				collectDependencies(module);
+			}
+		}
+
+		return Array.from(svgModules);
+	}
+
+	/**
+	 * Get SVGs dependencies for Webpack using chunk graph
+	 * @param {Object} options
+	 * @param {Compilation} options.compilation Webpack compilation
+	 * @param {Entrypoint} options.entry Entry object from entrypoints
+	 * @returns {NormalModule[]} Svgs list
+	 */
+	getSvgsDependenciesByEntrypointWebpack({
+		compilation,
+		entry
+	}: {
+		compilation: Compilation;
+		entry: NonNullable<ReturnType<typeof compilation.entrypoints.get>>;
+	}): NormalModule[] {
 		const listSvgsDependencies: NormalModule[] = [];
-
-		// When you use module federation you can don't have entries
-		const entries = compilation.entrypoints;
-		if (!entries || entries.size === 0) {
-			return [];
-		}
-
-		const entry = entries.get(entryName);
-		if (!entry) {
-			return [];
-		}
 
 		entry.chunks.forEach((chunk: Chunk) => {
 			const modules = compilation.chunkGraph.getOrderedChunkModulesIterable(
@@ -322,6 +370,39 @@ class SvgChunkWebpackPlugin {
 		});
 
 		return listSvgsDependencies;
+	}
+
+	/**
+	 * Get SVGs filtered by entrypoints
+	 * @param {Object} options
+	 * @param {Compilation} options.compilation Webpack or Rspack compilation
+	 * @param {String} options.entryName Entrypoint name
+	 * @returns {NormalModule[]} Svgs list
+	 */
+	getSvgsDependenciesByEntrypoint({
+		compilation,
+		entryName
+	}: {
+		compilation: Compilation;
+		entryName: string;
+	}): NormalModule[] {
+		// When you use module federation you can don't have entries
+		const entries = compilation.entrypoints;
+		if (!entries || entries.size === 0) {
+			return [];
+		}
+
+		const entry = entries.get(entryName);
+		if (!entry) {
+			return [];
+		}
+
+		// Dispatch to the appropriate implementation
+		if ((compilation.compiler as any).rspack) {
+			return this.getSvgsDependenciesByEntrypointRspack({ compilation, entryName });
+		}
+
+		return this.getSvgsDependenciesByEntrypointWebpack({ compilation, entry });
 	}
 
 	/**
