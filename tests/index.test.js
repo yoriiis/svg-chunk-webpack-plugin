@@ -449,6 +449,17 @@ describe('SvgChunkWebpackPlugin', () => {
 			expect(result).toStrictEqual(HtmlWebpackPlugin);
 		});
 
+		it('Should return HtmlRspackPlugin instance when plugin is found', () => {
+			const HtmlRspackPlugin = class HtmlRspackPlugin {};
+			compilationRspack.compiler.options = {
+				plugins: [{ constructor: { name: 'OtherPlugin' } }, { constructor: HtmlRspackPlugin }]
+			};
+
+			const result = svgChunkWebpackPlugin.getHtmlWebpackPluginInstance(compilationRspack);
+
+			expect(result).toStrictEqual(HtmlRspackPlugin);
+		});
+
 		it('Should return null when HtmlWebpackPlugin is not found', () => {
 			compilationWebpack.compiler.options = {
 				plugins: [
