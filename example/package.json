@@ -4,11 +4,12 @@
 	"type": "module",
 	"scripts": {
 		"build": "npm run build:webpack && npm run build:rspack",
-		"build:webpack": "rm -rf ./dist/ && webpack --config=./webpack.config.ts --mode=production",
 		"build:rspack": "rm -rf ./dist-rspack/ && rspack build --config=./rspack.config.ts --mode=production",
+		"build:webpack": "rm -rf ./dist/ && webpack --config=./webpack.config.ts --mode=production",
 		"dev": "rm -rf ./dist/ && webpack --config=./webpack.config.ts --mode=development",
 		"dev:rspack": "rm -rf ./dist-rspack/ && rspack build --config=./rspack.config.ts --mode=development",
-		"inspect": "rm -rf ./dist/ && node --inspect node_modules/webpack/bin/webpack.js --config=./webpack.config.ts --mode=development",
+		"inspect:rspack": "rm -rf ./dist-rspack/ && node --inspect node_modules/@rspack/cli/bin/rspack.js --config=./rspack.config.ts --mode=development",
+		"inspect:webpack": "rm -rf ./dist/ && node --inspect node_modules/webpack/bin/webpack.js --config=./webpack.config.ts --mode=development",
 		"test": "npm run verify",
 		"verify": "node verify-build.js"
 	},
