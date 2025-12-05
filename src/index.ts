@@ -337,13 +337,13 @@ class SvgChunkWebpackPlugin {
 		compilation: Compilation;
 		entry: NonNullable<ReturnType<typeof compilation.entrypoints.get>>;
 	}): NormalModule[] {
-		const listSvgsDependencies: NormalModule[] = [];
+		const svgModules: NormalModule[] = [];
 
 		entry.chunks.forEach((chunk: Chunk) => {
 			const modules = compilation.chunkGraph.getChunkModules(chunk);
 			for (const module of modules) {
 				if (module.buildInfo?.SVG_CHUNK_WEBPACK_PLUGIN) {
-					listSvgsDependencies.push(module as NormalModule);
+					svgModules.push(module as NormalModule);
 
 					// Mark module as not side effect free after processing in graph
 					if (module.buildMeta) {
@@ -353,7 +353,7 @@ class SvgChunkWebpackPlugin {
 			}
 		});
 
-		return listSvgsDependencies;
+		return svgModules;
 	}
 
 	/**

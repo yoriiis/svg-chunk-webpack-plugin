@@ -117,9 +117,6 @@ function comparePaths(path1, path2, label) {
 	}
 }
 
-// Main
-console.log('\n=== Build Verification ===');
-
 checkBuild('Webpack', WEBPACK_DIST);
 checkBuild('Rspack', RSPACK_DIST);
 

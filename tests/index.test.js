@@ -227,7 +227,7 @@ describe('SvgChunkWebpackPlugin', () => {
 			expect(compilationWebpack.hooks.processAssets.tapPromise).toHaveBeenCalledWith(
 				{
 					name: 'SvgChunkWebpackPlugin',
-					stage: ''
+					stage: 'webpack-stage'
 				},
 				svgChunkWebpackPlugin.addAssets.bind(svgChunkWebpackPlugin, compilationWebpack)
 			);
