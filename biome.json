@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!example/dist"]
+		"includes": ["**", "!example/dist", "!example/dist-rspack"]
 	},
 	"formatter": {
 		"enabled": true,

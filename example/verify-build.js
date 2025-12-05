@@ -16,6 +16,7 @@ const errors = [];
 // Config
 const EXPECTED = JSON.parse(fs.readFileSync(path.join(__dirname, 'expected-output.json'), 'utf-8'));
 const WEBPACK_DIST = path.join(__dirname, 'dist');
+const RSPACK_DIST = path.join(__dirname, 'dist-rspack');
 
 function error(msg) {
 	errors.push(msg);
@@ -92,7 +93,51 @@ function checkBuild(name, distDir) {
 	}
 }
 
+function comparePaths(path1, path2, label) {
+	if (!fs.existsSync(path1) || !fs.existsSync(path2)) return;
+
+	const content1 = fs.readFileSync(path1, 'utf-8');
+	const content2 = fs.readFileSync(path2, 'utf-8');
+
+	if (content1 === content2) {
+		success(`Webpack vs Rspack: ${label} identical`);
+	} else {
+		// For SVGs/HTML, compare symbol order
+		const symbols1Array = extractSymbolIds(content1);
+		const symbols2Array = extractSymbolIds(content2);
+		const symbols1 = symbols1Array.join(',');
+		const symbols2 = symbols2Array.join(',');
+		if (symbols1 === symbols2) {
+			success(`Webpack vs Rspack: ${label} same symbol order`);
+		} else {
+			error(
+				`Webpack vs Rspack: ${label} different (webpack: ${symbols1Array.length}, rspack: ${symbols2Array.length})\n  Webpack: ${symbols1}\n  Rspack: ${symbols2}`
+			);
+		}
+	}
+}
+
 checkBuild('Webpack', WEBPACK_DIST);
+checkBuild('Rspack', RSPACK_DIST);
+
+console.log('\nWebpack vs Rspack:');
+comparePaths(
+	path.join(WEBPACK_DIST, 'sprites-manifest.json'),
+	path.join(RSPACK_DIST, 'sprites-manifest.json'),
+	'manifest'
+);
+for (const entry of Object.keys(EXPECTED.entries)) {
+	comparePaths(
+		path.join(WEBPACK_DIST, `sprites/${entry}.svg`),
+		path.join(RSPACK_DIST, `sprites/${entry}.svg`),
+		`${entry}.svg`
+	);
+	comparePaths(
+		path.join(WEBPACK_DIST, `${entry}.html`),
+		path.join(RSPACK_DIST, `${entry}.html`),
+		`${entry}.html`
+	);
+}
 
 console.log(
 	errors.length === 0
