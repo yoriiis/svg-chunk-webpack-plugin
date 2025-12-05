@@ -1,0 +1,12 @@
+{
+	"entries": {
+		"home": {
+			"svgs": ["gradient", "smiley-love", "video"],
+			"paths": ["src/svgs/gradient.svg", "src/svgs/smiley-love.svg", "src/svgs/video.svg"]
+		},
+		"news": {
+			"svgs": ["popcorn", "smiley-surprised"],
+			"paths": ["src/svgs/popcorn.svg", "src/svgs/smiley-surprised.svg"]
+		}
+	}
+}

@@ -86,6 +86,9 @@ beforeEach(() => {
 		getPath: jest.fn(),
 		compiler: {
 			webpack: {
+				Compilation: {
+					PROCESS_ASSETS_STAGE_ADDITIONAL: 'webpack-stage'
+				},
 				sources: {
 					RawSource: jest.fn()
 				},

@@ -6,7 +6,8 @@
 		"build": "rm -rf ./dist/ && webpack --config=./webpack.config.ts --mode=production",
 		"dev": "rm -rf ./dist/ && webpack --config=./webpack.config.ts --mode=development",
 		"inspect": "rm -rf ./dist/ && node --inspect node_modules/webpack/bin/webpack.js --config=./webpack.config.ts --mode=development",
-		"test": "echo 'No local tests' && exit 0"
+		"test": "npm run verify",
+		"verify": "node verify-build.js"
 	},
 	"devDependencies": {
 		"html-webpack-plugin": "^5.6.3",
