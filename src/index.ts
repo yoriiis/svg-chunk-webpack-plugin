@@ -54,6 +54,9 @@ class SvgChunkWebpackPlugin {
 	// This need to find plugin from loader context
 	PLUGIN_NAME = PACKAGE_NAME;
 
+	// Static loader path
+	static loader: string;
+
 	/**
 	 * Instanciate the constructor
 	 * @param {options}
@@ -497,7 +500,6 @@ class SvgChunkWebpackPlugin {
 	}
 }
 
-// @ts-expect-error
 SvgChunkWebpackPlugin.loader = esmResolve('./loader.js');
 
 export default SvgChunkWebpackPlugin;
