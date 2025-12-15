@@ -17,7 +17,10 @@
 	],
 	"homepage": "https://github.com/yoriiis/svg-chunk-webpack-plugin",
 	"bugs": "https://github.com/yoriiis/svg-chunk-webpack-plugin/issues",
-	"repository": "https://github.com/yoriiis/svg-chunk-webpack-plugin.git",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/yoriiis/svg-chunk-webpack-plugin.git"
+	},
 	"funding": {
 		"type": "individual",
 		"url": "https://github.com/sponsors/yoriiis"

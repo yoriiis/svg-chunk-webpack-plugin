@@ -32,14 +32,18 @@ npm install svg-chunk-webpack-plugin --save-dev
 yarn add svg-chunk-webpack-plugin --dev
 ```
 
+<!-- markdownlint-disable MD028 -->
+
 > [!WARNING]
-> Plugin `svg-chunk-webpack-plugin@5` is ESM only.
+> Plugin `svg-chunk-webpack-plugin@5` is ESM only.\n
 
 > [!NOTE]
 > Minimum supported `Node.js` version is `16.20.0` and Webpack `>=5.10.3`.
 
 > [!NOTE]
 > The plugin is compatible with [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) (optional dependency). Use the [`injectSpritesInTemplates`](#injectspritesintemplates) option to automatically inject sprites into your HTML templates.
+
+<!-- markdownlint-enable MD028 -->
 
 ## Example
 
