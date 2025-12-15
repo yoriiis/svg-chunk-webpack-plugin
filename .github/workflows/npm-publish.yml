@@ -39,5 +39,3 @@ jobs:
   npm:
     needs: [build-root, build-example, lint]
     uses: yoriiis/actions/.github/workflows/npm-publish.yml@main
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
