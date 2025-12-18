@@ -20,5 +20,5 @@ jobs:
     uses: yoriiis/svg-chunk-webpack-plugin/.github/workflows/lint.yml@main
 
   npm:
-    needs: [build-root, build-example, lint]
+    needs: [build, lint]
     uses: yoriiis/actions/.github/workflows/npm-publish.yml@main
