@@ -4,10 +4,13 @@
 
 ### ⚠️ Breaking changes
 
-- Updates Node.js ([#35](https://github.com/yoriiis/chunks-webpack-plugin/pull/35))
+- Updates Node.js ([#40](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/40))
   - Minimum supported `Node.js` version is `>=22`
   - SVGO version 4 (see [SVGO releases](https://github.com/svg/svgo/releases/tag/v4.0.0) for breaking changes)
   - Updates other packages
+- Add support for `html-webpack-plugin` by @ceonizm ([#37](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/37))
+- Fix types and use package inside demo ([#43](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/43))
+- Add verify script to check dist content ([#45](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/45))
 
 ## 7.0.0
 
