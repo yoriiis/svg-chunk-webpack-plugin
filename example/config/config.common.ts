@@ -1,19 +1,19 @@
+import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import SvgChunkWebpackPlugin from 'svg-chunk-webpack-plugin';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const appDirectory = fs.realpathSync(process.cwd());
+const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 
 export default function createConfig(_env: any, argv: { mode: string }): any {
 	const isProduction = argv.mode === 'production';
 
 	return {
-		context: __dirname,
+		context: appDirectory,
 		watch: !isProduction,
 		entry: {
-			home: `${path.resolve(__dirname, './src/js/home.js')}`,
-			news: `${path.resolve(__dirname, './src/js/news.js')}`
+			home: `${resolveApp('src/js/home.ts')}`,
+			news: `${resolveApp('src/js/news.ts')}`
 		},
 		watchOptions: {
 			ignored: /node_modules/
@@ -28,12 +28,39 @@ export default function createConfig(_env: any, argv: { mode: string }): any {
 		module: {
 			rules: [
 				{
+					test: /\.js$/,
+					include: [resolveApp('src'), resolveApp('../')],
+					use: [
+						{
+							loader: 'babel-loader',
+							options: {
+								extends: resolveApp('config/babel.config.js')
+							}
+						}
+					]
+				},
+				{
+					test: /\.ts$/,
+					include: [resolveApp('src'), resolveApp('../')],
+					use: [
+						{
+							loader: 'babel-loader',
+							options: {
+								extends: resolveApp('config/babel.config.js')
+							}
+						},
+						{
+							loader: 'ts-loader'
+						}
+					]
+				},
+				{
 					test: /\.svg$/,
 					use: [
 						{
 							loader: SvgChunkWebpackPlugin.loader,
 							options: {
-								configFile: path.resolve(__dirname, './svgo.config.js')
+								configFile: resolveApp('config/svgo.config.js')
 							}
 						}
 					]
@@ -54,6 +81,13 @@ export default function createConfig(_env: any, argv: { mode: string }): any {
 				injectSpritesInTemplates: true // Requires HtmlWebpackPlugin or HtmlRspackPlugin
 			})
 		],
+		resolve: {
+			extensions: ['.js', '.ts', '.css'],
+			extensionAlias: {
+				'.js': ['.ts', '.js']
+			},
+			modules: [resolveApp('node_modules')]
+		},
 		stats: {
 			builtAt: false,
 			assets: true,
