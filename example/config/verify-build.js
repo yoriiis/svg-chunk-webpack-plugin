@@ -15,8 +15,8 @@ const errors = [];
 
 // Config
 const EXPECTED = JSON.parse(fs.readFileSync(path.join(__dirname, 'expected-output.json'), 'utf-8'));
-const WEBPACK_DIST = path.join(__dirname, 'dist');
-const RSPACK_DIST = path.join(__dirname, 'dist-rspack');
+const WEBPACK_DIST = path.join(__dirname, '../dist');
+const RSPACK_DIST = path.join(__dirname, '../dist-rspack');
 
 function error(msg) {
 	errors.push(msg);
