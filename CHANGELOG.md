@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 8.1.0
+
+### Updates
+
+- Add compatibility with Rspack ([#44](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/44))
+- Transform demo in TypeScript ([#49](https://github.com/yoriiis/svg-chunk-webpack-plugin/pull/49))
+
 ## 8.0.0
 
 ### ⚠️ Breaking changes
