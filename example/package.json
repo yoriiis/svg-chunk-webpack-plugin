@@ -24,7 +24,7 @@
 		"html-webpack-plugin": "^5.6.3",
 		"prettier": "^3.6.2",
 		"svg-chunk-webpack-plugin": "../",
-		"terser-webpack-plugin": "^5.3.14",
+		"terser-webpack-plugin": "^5.4.0",
 		"ts-loader": "^9.5.4",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.9.3",
