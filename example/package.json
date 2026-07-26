@@ -15,7 +15,7 @@
 		"verify": "node config/verify-build.js"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.28.5",
+		"@babel/core": "^7.29.6",
 		"@babel/plugin-proposal-class-properties": "^7.18.6",
 		"@babel/preset-env": "^7.28.5",
 		"@rspack/cli": "^1.6.6",
